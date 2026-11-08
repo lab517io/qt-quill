@@ -4,6 +4,9 @@ add_library(quillqt_widgets STATIC
     include/quill/Formats.h
     Colors.cpp
     DeltaDocument.cpp
+    Export.cpp
+    ImageSize.cpp
+    ImageSize.h
     Formats.cpp
 )
 add_library(QuillQt::Widgets ALIAS quillqt_widgets)

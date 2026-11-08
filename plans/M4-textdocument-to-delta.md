@@ -128,20 +128,20 @@ struct ExportOptions {
 
 ## Tasks
 
-- [ ] `inlineAttributes()` with derive-then-overlay rule.
-- [ ] `lineAttributes()` with list/marker/heading mapping and conflict rules.
-- [ ] `toDelta(doc)` and `toDelta(doc, from, to)` sharing one walker.
-- [ ] Normalisation of soft breaks, frames, tables, empty document.
-- [ ] `tst_roundtrip`: for each fixture in `tests/fixtures/documents/`,
+- [x] `inlineAttributes()` with derive-then-overlay rule.
+- [x] `lineAttributes()` with list/marker/heading mapping and conflict rules.
+- [x] `toDelta(doc)` and `toDelta(doc, from, to)` sharing one walker.
+- [x] Normalisation of soft breaks, frames, tables, empty document.
+- [x] `tst_roundtrip`: for each fixture in `tests/fixtures/documents/`,
       `toDelta(load(d)) == d` (Delta equality, which is JSON deep equality
       after `push` merging; fixtures are stored pre-normalised with merged
       runs so equality is exact).
-- [ ] `tst_export_edits`: build documents using only `QTextCursor` calls a
+- [x] `tst_export_edits`: build documents using only `QTextCursor` calls a
       user action would make (merge char format bold, `createList`,
       `setHeadingLevel`, insert image, Shift+Enter soft break) and assert the
       expected Delta JSON literally.
-- [ ] `tst_normalize`: table/frame flattening, soft break splitting.
-- [ ] Sub-range export tests: `toDelta(doc, a, b) == toDelta(doc).slice(a, b)`
+- [x] `tst_normalize`: table/frame flattening, soft break splitting.
+- [x] Sub-range export tests: `toDelta(doc, a, b) == toDelta(doc).slice(a, b)`
       for many random ranges on each fixture.
 
 ## Tests
@@ -164,3 +164,56 @@ because change Deltas are built from sub-range exports.
 - Qt may split fragments at arbitrary points (e.g. after undo); exporter must
   never depend on fragment boundaries, only on formats. `push` merging makes
   the output canonical.
+
+## Outcome (2026-11-08)
+
+Done. Debug, Release and ASan/UBSan builds clean; 10 test executables green.
+`tst_export` has 38 cases:
+
+| Check | Coverage |
+|---|---|
+| Round trip `toDelta(load(d)) == d` | all 9 fixtures incl. the flutter_quill example, unknown attributes, embeds, custom style |
+| Sub-range export equals `slice` | 300 random ranges per fixture |
+| Fixed point after random Qt edits | 25 × 12 random `QTextCursor` edits per fixture; export → load → export must be identical (≥ 20 of 25 iterations must actually change the document) |
+| Qt-API edits | inline flags, script, colours, link, font, sizes, removals, typing, heading/list/checklist/indent/RTL/line-height, Enter in a header, Shift+Enter, images, image resize, HTML import, tables |
+| Performance | 5000 lines export in ~75 ms (Debug) |
+
+### How derivation works (refines the plan)
+
+- **Compare against the expected format.** Start from the stored
+  attributes, compute the format they produce, derive an attribute only for
+  Qt properties that differ. Loader styling never leaks; unknown attributes
+  and original spellings (`"red"`, `"15.0"`) survive edits to the same text.
+- **Line context of inline attributes.** Text in a block styled by quill-qt
+  is compared against the line attributes stored on the block (what it was
+  styled for), not the line as it is now; otherwise removing a header with
+  Qt calls made the leftover header styling look like `bold` + `size`.
+  Blocks Qt created itself (HTML import, `setPlainText`) have no stored
+  attributes and use the current line.
+- **Structural first.** `link` is derived before the other properties, and
+  those are compared against a format that includes it, so a link's own
+  underline and colour are not reported again.
+- **`QTextList::remove()`** adds the list indent to the block indent; the
+  exporter compensates (Quill keeps the indent level when a list is removed),
+  and `regroupLists` now restores the line's indent after removal.
+- **New values**: sizes are written as `"small"/"large"/"huge"` when they
+  match, else a numeric string (`"14"`); colours as flutter_quill
+  `#AARRGGBB` unless the original spelling still matches; resized images get
+  `width`/`height` strings and those properties are removed from `style`
+  (which would otherwise win on reload).
+
+### Deviations
+
+- `ExportOptions` holds only an optional `StyleOptions`. `load()` stores
+  the style it used on the document (`documentStyle()`), so export matches
+  the load without the caller passing anything. `emitNumericSizes` and
+  `argbHexColors` were dropped; the colour dialect comes from the style.
+- Not derived from Qt formats (only settable through attributes, i.e. the M5
+  editor API): inline `code`, `blockquote`, `code-block`, `small`. Plain Qt
+  has no unambiguous representation for them.
+- Tables/frames are exported as plain lines with a warning; sub-range
+  positions are not guaranteed to align inside them. The editor (M5) will not
+  create them.
+- Test JSON in `tst_export` uses single quotes in ordinary string literals:
+  Qt 6.4's moc cannot tokenize raw strings containing escapes like `"\n"`
+  and silently drops the test class.

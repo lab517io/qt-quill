@@ -139,6 +139,21 @@ one undo step.
 - From M2: `transformPosition(i, true)` keeps a cursor before a concurrent
   insert at `i`.
 
+### Notes from M4
+
+- Editor API methods should write the new attributes into
+  `prop::InlineAttributes` / `prop::BlockAttributes` and restyle with
+  `formats::charFormat` / `formats::blockFormat`, so actual == expected and
+  the export is exact. Plain `QTextEdit` actions (Ctrl+B, HTML paste) still
+  export correctly through derivation, but only for the properties M4 can
+  derive (not `code`, `blockquote`, `code-block`, `small`).
+- Change Deltas from `contentsChange` can use
+  `DeltaDocument::toDelta(doc, from, to)`; it equals `slice` of the full
+  export (tested on random ranges).
+- When a line's attributes change, re-run `formats::charFormat` on its
+  text: inline styling depends on line attributes (header sizes, code-block
+  font, quote colour).
+
 ### Keyboard behaviour (keyPressEvent)
 
 | Key | Context | Behaviour (Quill default keyboard module) |

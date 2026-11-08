@@ -32,10 +32,14 @@ inline QJsonDocument loadJson(const QString& relative)
 }
 
 /// Parses Delta JSON written inline in a test; fails hard on invalid input.
+/// Single quotes are accepted in place of double quotes, so JSON can be
+/// written in plain string literals: "[{'insert':'a\\n'}]".
 inline quill::Delta delta(const char* json)
 {
     QString error;
-    std::optional<quill::Delta> d = quill::Delta::fromJson(QByteArray(json), &error);
+    QByteArray bytes(json);
+    bytes.replace('\'', '"');
+    std::optional<quill::Delta> d = quill::Delta::fromJson(bytes, &error);
     if (!d)
         qFatal("invalid delta literal %s: %s", json, qPrintable(error));
     return *d;

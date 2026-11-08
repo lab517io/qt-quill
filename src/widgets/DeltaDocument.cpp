@@ -1,5 +1,7 @@
 #include "quill/DeltaDocument.h"
 
+#include "ImageSize.h"
+
 #include <QByteArray>
 #include <QHash>
 #include <QImage>
@@ -30,42 +32,6 @@ AttributeMap inlineSubset(const AttributeMap& attrs)
     for (auto it = attrs.begin(); it != attrs.end(); ++it) {
         if (formats::inlineKeys().contains(it.key()))
             out.insert(it.key(), it.value());
-    }
-    return out;
-}
-
-// Parses an image dimension the way flutter_quill_extensions does: a bare
-// number or a CSS length in px / em / rem (16 px per em). Percentages and
-// viewport units need a layout context and are ignored.
-std::optional<double> parseLength(const QJsonValue& v)
-{
-    if (v.isDouble())
-        return v.toDouble() > 0 ? std::optional<double>(v.toDouble()) : std::nullopt;
-    QString s = v.toString().trimmed();
-    if (s.isEmpty())
-        return std::nullopt;
-    double scale = 1.0;
-    if (s.endsWith(QLatin1String("px"))) {
-        s.chop(2);
-    } else if (s.endsWith(QLatin1String("rem"))) {
-        s.chop(3);
-        scale = 16.0;
-    } else if (s.endsWith(QLatin1String("em"))) {
-        s.chop(2);
-        scale = 16.0;
-    }
-    bool ok = false;
-    const double d = s.trimmed().toDouble(&ok);
-    return ok && d > 0 ? std::optional<double>(d * scale) : std::nullopt;
-}
-
-QHash<QString, QString> parseCss(const QString& css)
-{
-    QHash<QString, QString> out;
-    for (const QString& decl : css.split(QLatin1Char(';'))) {
-        const QStringList parts = decl.split(QLatin1Char(':'));
-        if (parts.size() == 2)
-            out.insert(parts.at(0).trimmed(), parts.at(1).trimmed());
     }
     return out;
 }
@@ -156,14 +122,7 @@ private:
 
     void applyImageSize(QTextImageFormat& img, const AttributeMap& attrs)
     {
-        std::optional<double> width = parseLength(attrs.value(QLatin1String("width")));
-        std::optional<double> height = parseLength(attrs.value(QLatin1String("height")));
-        // flutter_quill_extensions: the "style" declaration wins.
-        const QHash<QString, QString> css = parseCss(attrs.value(QLatin1String("style")).toString());
-        if (auto w = parseLength(css.value(QStringLiteral("width"))))
-            width = w;
-        if (auto h = parseLength(css.value(QStringLiteral("height"))))
-            height = h;
+        const auto [width, height] = detail::imageSize(attrs);
         if (width)
             img.setWidth(*width);
         if (height)
@@ -195,6 +154,18 @@ private:
     QTextCursor m_cursor;
 };
 
+// QTextList::remove() adds the list's indent to the block to keep the text
+// in place; restore the indent the line attributes ask for.
+void removeFromList(QTextList* list, const QTextBlock& block, const AttributeMap& line,
+                    const StyleOptions& style)
+{
+    list->remove(block);
+    QTextCursor c(block);
+    QTextBlockFormat f = block.blockFormat();
+    f.setIndent(formats::blockFormat(line, style).indent());
+    c.setBlockFormat(f);
+}
+
 AttributeMap lineAttributesOf(const QTextBlock& block)
 {
     return block.blockFormat().property(prop::BlockAttributes).toJsonObject();
@@ -208,6 +179,23 @@ StyleOptions DeltaDocument::effectiveStyle(const QTextDocument* doc, const Style
     if (s.baseFont.family().isEmpty() && s.baseFont.families().isEmpty())
         s.baseFont = doc->defaultFont();
     return s;
+}
+
+namespace {
+constexpr char kStyleProperty[] = "_quillqt_style";
+}
+
+StyleOptions DeltaDocument::documentStyle(const QTextDocument* doc)
+{
+    const QVariant v = doc->property(kStyleProperty);
+    if (v.canConvert<StyleOptions>())
+        return v.value<StyleOptions>();
+    return effectiveStyle(doc, StyleOptions());
+}
+
+void DeltaDocument::setDocumentStyle(QTextDocument* doc, const StyleOptions& style)
+{
+    doc->setProperty(kStyleProperty, QVariant::fromValue(effectiveStyle(doc, style)));
 }
 
 LoadResult DeltaDocument::load(QTextDocument* doc, const Delta& deltaIn, const LoadOptions& options)
@@ -235,6 +223,7 @@ LoadResult DeltaDocument::load(QTextDocument* doc, const Delta& deltaIn, const L
         doc->setBaseUrl(options.baseUrl);
 
     Loader(doc, options, style).run(delta, result);
+    setDocumentStyle(doc, style);
 
     doc->setUndoRedoEnabled(undo);
     doc->setModified(false);
@@ -271,7 +260,7 @@ void DeltaDocument::regroupLists(const QTextBlock& firstIn, const QTextBlock& la
         if (group.isEmpty()) {
             stack.clear();
             if (current)
-                current->remove(b);
+                removeFromList(current, b, line, style);
         } else {
             const int level = formats::indentLevel(line);
             stack.resize(size_t(level) + 1);
@@ -284,7 +273,7 @@ void DeltaDocument::regroupLists(const QTextBlock& firstIn, const QTextBlock& la
             } else {
                 QTextCursor c(b);
                 if (current)
-                    current->remove(b);
+                    removeFromList(current, b, line, style);
                 slot.list = c.createList(wanted);
                 slot.group = group;
             }

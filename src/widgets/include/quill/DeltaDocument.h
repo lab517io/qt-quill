@@ -4,8 +4,12 @@
 #include "quill/Formats.h"
 
 #include <QStringList>
+#include <QUrl>
+
+#include <optional>
 
 class QTextBlock;
+class QTextCharFormat;
 class QTextDocument;
 
 namespace quill {
@@ -16,6 +20,14 @@ struct LoadOptions
     /// Base URL for relative image URLs ("assets/x.png"). Empty: relative
     /// URLs resolve against the current directory.
     QUrl baseUrl;
+};
+
+struct ExportOptions
+{
+    /// Styling the document was loaded with. When unset, the options stored
+    /// on the document by load() are used (see documentStyle()). Export
+    /// compares formats against this styling, so it must match the load.
+    std::optional<StyleOptions> style;
 };
 
 struct LoadResult
@@ -37,6 +49,24 @@ public:
     /// Undo history is cleared and the document is marked unmodified.
     static LoadResult load(QTextDocument* doc, const Delta& delta, const LoadOptions& options = {});
 
+    /// Exports the whole document. The result is a document Delta ending
+    /// with "\n" whose length equals doc->characterCount().
+    static Delta toDelta(const QTextDocument* doc, const ExportOptions& options = {},
+                         QStringList* warnings = nullptr);
+    /// Exports positions [from, to). Equals toDelta(doc).slice(from, to) for
+    /// documents without tables or frames.
+    static Delta toDelta(const QTextDocument* doc, int from, int to,
+                         const ExportOptions& options = {}, QStringList* warnings = nullptr);
+
+    /// Inline attributes of text with format `format`: the stored attributes,
+    /// updated for every property where `format` differs from what those
+    /// attributes would produce on a line with `lineAttrs`. Pass the line
+    /// attributes the text was styled for (the block's stored attributes).
+    static AttributeMap inlineAttributes(const QTextCharFormat& format, const AttributeMap& lineAttrs,
+                                         const StyleOptions& style);
+    /// Line attributes of `block`, derived the same way, plus list membership.
+    static AttributeMap lineAttributes(const QTextBlock& block, const StyleOptions& style);
+
     /// Recomputes list membership for the blocks from `first` to `last`
     /// (inclusive, extended to the whole contiguous run of list lines around
     /// them) from their line attributes, reproducing flutter_quill's numbering:
@@ -47,6 +77,9 @@ public:
 
     /// The style options `load` actually used for `doc` (base font filled in).
     static StyleOptions effectiveStyle(const QTextDocument* doc, const StyleOptions& style);
+    /// The style stored on `doc` by load(), or the defaults for `doc`.
+    static StyleOptions documentStyle(const QTextDocument* doc);
+    static void setDocumentStyle(QTextDocument* doc, const StyleOptions& style);
 };
 
 } // namespace quill

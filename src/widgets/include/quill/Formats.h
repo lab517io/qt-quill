@@ -13,6 +13,7 @@
 #include "quill/Colors.h"
 
 #include <QColor>
+#include <QMetaType>
 #include <QFont>
 #include <QSet>
 #include <QString>
@@ -120,3 +121,5 @@ QStringList validate(const AttributeMap& attrs, bool line, const StyleOptions& s
 
 } // namespace formats
 } // namespace quill
+
+Q_DECLARE_METATYPE(quill::StyleOptions)
