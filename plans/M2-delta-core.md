@@ -170,20 +170,20 @@ Keep the Apache-2.0 notice in the source header and in
 
 ## Tasks
 
-- [ ] `Attributes.h/.cpp` with the four functions and `tst_attributes`
+- [x] `Attributes.h/.cpp` with the four functions and `tst_attributes`
       ported from `test/attributes/*.ts`.
-- [ ] `Op`, `OpIterator`, `Delta` builder (`insert/retain/remove/push/chop`)
+- [x] `Op`, `OpIterator`, `Delta` builder (`insert/retain/remove/push/chop`)
       with `tst_delta_builder` from `test/delta/builder.ts`.
-- [ ] `length/changeLength/slice/concat/eachLine` + `tst_delta_helpers`
+- [x] `length/changeLength/slice/concat/eachLine` + `tst_delta_helpers`
       from `test/delta/helpers.ts`.
-- [ ] `compose` + `tst_delta_compose` from `test/delta/compose.ts`.
-- [ ] `transform`/`transformPosition` + tests from `test/delta/transform.ts`,
+- [x] `compose` + `tst_delta_compose` from `test/delta/compose.ts`.
+- [x] `transform`/`transformPosition` + tests from `test/delta/transform.ts`,
       `transformPosition.ts`.
-- [ ] `FastDiff` port; `diff` + `tst_delta_diff` from `test/delta/diff.ts`.
-- [ ] `invert` + `tst_delta_invert` from `test/delta/invert.ts`.
-- [ ] JSON parse/serialize + `tst_json` (both shapes, error cases,
+- [x] `FastDiff` port; `diff` + `tst_delta_diff` from `test/delta/diff.ts`.
+- [x] `invert` + `tst_delta_invert` from `test/delta/invert.ts`.
+- [x] JSON parse/serialize + `tst_json` (both shapes, error cases,
       flutter_quill fixture files in `tests/fixtures/flutter_quill/`).
-- [ ] `THIRD_PARTY_NOTICES.md`.
+- [x] `THIRD_PARTY_NOTICES.md`.
 
 ## Tests
 
@@ -208,3 +208,56 @@ Keep the Apache-2.0 notice in the source header and in
   property tests are there to catch what the ported cases miss.
 - fast-diff port diverging on surrogate pairs; include a test with emoji
   (flutter_quill users type emoji constantly).
+
+## Outcome (2026-11-08)
+
+All tasks done. Debug, Release and clang builds have zero warnings; all
+suites also pass under AddressSanitizer and UBSan.
+
+| Suite | Cases | Checks |
+|---|---|---|
+| `tst_slab_recorded` | 662 | every call slab/delta's 180 specs make, replayed |
+| `tst_fastdiff` | 1510 | fast-diff 1.3.0 outputs, incl. cursor and emoji cases |
+| `tst_op` | 17 | hand port of op and iterator tests |
+| `tst_delta_api` | 15 | callback helpers, errors, embed handlers, cursor hint |
+| `tst_json` | 20 | both JSON shapes, error cases, flutter_quill example |
+| `tst_properties` | 8 × 2000 | diff, invert, TP1 convergence, transformPosition, associativity, JSON, slice |
+
+### Deviations from the plan
+
+- **Test porting strategy.** Instead of retyping ~1500 lines of TypeScript,
+  `tools/oracle/record-slab-tests.sh` runs slab/delta's own suite with a
+  recorder and `tst_slab_recorded` replays every call (result, receiver
+  mutation, thrown message). This covers more than the assertions do,
+  including intermediate builder results. Tests whose subject is not a Delta
+  call (iterator, `Op.length`, callback helpers) are hand-ported.
+- **`AttributeMap` is `QJsonObject`**, not `QMap<QString, QJsonValue>`, and
+  the attribute functions return a map instead of `std::optional`. An empty
+  map stands for JavaScript `undefined`; the recorded tests confirm no
+  observable difference.
+- **Embed changes are fully supported**, not treated as opaque: the Quill 2
+  embed-handler registry (`Delta::registerEmbed`) is ported, because the
+  upstream tests exercise it and it costs ~60 lines.
+- **No separate `Json.h`.** JSON lives on `Delta` (`fromJson`, `toJson`,
+  `toJsonArray`, `toJsonObject`) and `Op` (`fromJson`, `toJson`).
+- **Errors are exceptions** (`quill::DeltaError`) with the upstream
+  messages, for misuse slab/delta also throws on.
+- **Byte-identical JSON is not achievable**: `QJsonObject` sorts keys, so
+  attribute key order inside an op is alphabetical. Serialisation writes the
+  operation key first and `attributes` last (Quill.js and flutter_quill
+  order), and values round-trip exactly. Exit criterion changed to semantic
+  equality, which `tst_json` checks on the flutter_quill example document.
+- **`invert` compares object attribute values deeply**; JavaScript uses
+  reference inequality there, which only differs for object-valued
+  attributes and is a JavaScript artefact.
+
+### Findings worth knowing
+
+- `transformPosition(i, priority)` uses priority in the opposite sense from
+  `transform(x, priority)`: `transformPosition(i, true)` keeps the cursor
+  before a concurrent insert at `i`. Verified against quill-delta and
+  encoded in `tst_properties`. Matters for M5 cursor handling.
+- fast-diff's semantic cleanup lets its equality stack index reach -1 and
+  reads `equalities[-1]` as a plain property; the port emulates this.
+- `Delta.diff()` runs fast-diff with cleanup and surrogate fixing at the top
+  level only; recursive calls use neither. The port keeps that distinction.

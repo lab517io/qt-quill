@@ -1,11 +1,14 @@
+set(QUILLQT_TESTS_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+
 # quillqt_add_test(<name> SOURCES <files...> LIBS <targets...>)
 function(quillqt_add_test name)
     cmake_parse_arguments(ARG "" "" "SOURCES;LIBS" ${ARGN})
     add_executable(${name} ${ARG_SOURCES})
-    quillqt_target_defaults(${name})
+    quillqt_target_defaults(${name} RELAXED_STRINGS)
+    target_include_directories(${name} PRIVATE ${QUILLQT_TESTS_DIR}/common)
     target_link_libraries(${name} PRIVATE Qt6::Test ${ARG_LIBS})
     target_compile_definitions(${name} PRIVATE
-        QUILLQT_FIXTURES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures"
+        QUILLQT_FIXTURES_DIR="${QUILLQT_TESTS_DIR}/fixtures"
         QUILLQT_TEST_OUTPUT_DIR="${CMAKE_BINARY_DIR}/test-output")
     add_test(NAME ${name} COMMAND ${name})
     # Unit tests never need a display.
@@ -13,3 +16,4 @@ function(quillqt_add_test name)
 endfunction()
 
 add_subdirectory(smoke)
+add_subdirectory(delta)

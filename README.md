@@ -5,7 +5,7 @@ the [Quill Delta](https://quilljs.com/docs/delta) format, compatible with
 [flutter_quill](https://pub.dev/packages/flutter_quill) and
 [Quill](https://github.com/slab/quill).
 
-**Status:** milestone M1 (environment and skeleton) done. See
+**Status:** milestones M1 (skeleton) and M2 (Delta core) done. See
 [PLAN.md](PLAN.md) for the design and [plans/](plans/README.md) for the
 milestone plans.
 
@@ -41,6 +41,28 @@ there are no install rules.
 | `QuillQt::Delta` | Delta model and operational transform | Core |
 | `QuillQt::Widgets` | editor widget, toolbar, converters | Core, Gui, Widgets, Network |
 
+## Delta core
+
+`QuillQt::Delta` is a C++ port of [slab/delta](https://github.com/slab/delta)
+5.1 with identical semantics, checked against the upstream test-suite and
+fast-diff outputs (see [tools/oracle](tools/oracle/README.md)).
+
+```cpp
+#include <quill/Delta.h>
+
+using quill::Delta;
+
+Delta doc = *Delta::fromJson(QByteArray(R"([{"insert":"Hello\n"}])"));
+Delta change = Delta().retain(5, {{"bold", true}});
+Delta result = doc.compose(change);   // [{"insert":"Hello","attributes":{"bold":true}},{"insert":"\n"}]
+Delta undo = change.invert(doc);      // [{"retain":5,"attributes":{"bold":null}}]
+Delta mine = change.transform(Delta().insert("Hi "), /*priority*/ true);
+QByteArray json = result.toJson();    // flutter_quill shape; JsonShape::OpsObject for Quill.js
+```
+
+Lengths and indices are UTF-16 code units, like JavaScript and
+`QTextDocument`.
+
 ## Building and testing
 
 ```sh
@@ -57,5 +79,6 @@ src/widgets/   QuillQt::Widgets sources, public headers in include/quill/
 apps/demo/     quill-demo
 tests/         QtTest suites and fixtures
 ci/            provider-neutral build and test scripts
+tools/oracle/  Node.js scripts that record reference behaviour into tests/fixtures
 plans/         milestone plans
 ```
