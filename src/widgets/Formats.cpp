@@ -109,6 +109,18 @@ void applyMonospace(QTextCharFormat& f, const StyleOptions& style)
 
 } // namespace
 
+StyleOptions StyleOptions::dark()
+{
+    StyleOptions s;
+    s.linkColor = QColor(0x64, 0xB5, 0xF6);            // blue.shade300
+    s.inlineCodeBackground = QColor(0x42, 0x42, 0x42); // grey.shade800
+    s.codeBlockBackground = QColor(0x30, 0x30, 0x30);
+    s.codeBlockForeground = QColor(0x90, 0xCA, 0xF9);  // blue.shade200
+    s.blockquoteForeground = QColor(255, 255, 255, 170);
+    s.blockquoteBarColor = QColor(0x61, 0x61, 0x61);   // grey.shade700
+    return s;
+}
+
 double StyleOptions::basePointSize() const
 {
     const double pt = baseFont.pointSizeF();

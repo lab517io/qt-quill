@@ -13,6 +13,11 @@ find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Widgets Network)
 
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/QuillQtWarnings.cmake)
 
+if(QUILLQT_BUILD_TESTS)
+    find_package(Qt6 6.4 REQUIRED COMPONENTS Test)
+    enable_testing()
+endif()
+
 add_subdirectory(src/delta)
 add_subdirectory(src/widgets)
 
@@ -21,7 +26,5 @@ if(QUILLQT_BUILD_DEMO)
 endif()
 
 if(QUILLQT_BUILD_TESTS)
-    find_package(Qt6 6.4 REQUIRED COMPONENTS Test)
-    enable_testing()
     add_subdirectory(tests)
 endif()

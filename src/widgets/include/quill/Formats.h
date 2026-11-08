@@ -91,6 +91,9 @@ struct StyleOptions
     QColor blockquoteBarColor = QColor(0xE0, 0xE0, 0xE0);
     double blockquoteBarWidth = 4;
 
+    /// Colours for a dark palette (text colour itself comes from the palette).
+    static StyleOptions dark();
+
     /// Point size for a size expressed in Delta units (relative to referenceSize).
     double pointSizeFor(double deltaSize) const;
     double basePointSize() const;

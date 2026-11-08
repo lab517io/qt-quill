@@ -687,6 +687,7 @@ StyleOptions QuillEditor::styleOptions() const { return d->style; }
 void QuillEditor::setStyleOptions(const StyleOptions& style)
 {
     d->style = style;
+    d->style.codeBlockBackgroundOnBlocks = false; // the editor paints its own panel
     d->reload();
     viewport()->update();
 }

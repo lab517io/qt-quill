@@ -115,3 +115,13 @@ remote (GitHub/GitLab) decides the workflow file syntax; the scripts under
   pinning plus the drift job make this visible instead of silent.
 - Random generator must produce valid documents for `diff` (insert-only,
   trailing newline); validate in the generator.
+
+## Notes from M6
+
+- `ci/screenshot.sh` already renders every demo sample (light and dark) and
+  ctest runs `quill-demo --screenshot` as a smoke test; the CI job can
+  upload `build/*/screenshots/` as artefacts.
+- Visible difference to flutter_quill: no vertical spacing around headings
+  and paragraphs (flutter_quill's DefaultStyles have per-header
+  `VerticalSpacing`). Map it to block top/bottom margins in
+  `formats::blockFormat` (pure, so export stays exact).

@@ -75,16 +75,16 @@ honours the application palette for dark themes.
 
 ## Tasks
 
-- [ ] `QuillToolbar` groups, actions, state sync, visibility API.
-- [ ] Icons (`.svg`) and resource file; dark-palette check.
-- [ ] `LinkDialog`, `ColorButton`.
-- [ ] Demo main window, inspector, file I/O, samples, screenshot flag.
-- [ ] `ci/screenshot.sh` producing one PNG per fixture into
+- [x] `QuillToolbar` groups, actions, state sync, visibility API.
+- [x] Icons (`.svg`) and resource file; dark-palette check.
+- [x] `LinkDialog`, `ColorButton`.
+- [x] Demo main window, inspector, file I/O, samples, screenshot flag.
+- [x] `ci/screenshot.sh` producing one PNG per fixture into
       `build/*/screenshots/`.
-- [ ] `tst_toolbar`: toggling each action produces the expected change
+- [x] `tst_toolbar`: toggling each action produces the expected change
       Delta; selecting formatted text updates button checked states; header
       combo reflects the current line.
-- [ ] README section "Demo" with a screenshot.
+- [x] README section "Demo" with a screenshot.
 
 ## Tests
 
@@ -115,3 +115,63 @@ honours the application palette for dark themes.
 - `linkRequested()` (Ctrl+K) is emitted for the toolbar's link dialog.
 - `quill-demo [file.json] [--log]` already exists as a minimal stand-in.
 - Toolbar configuration (the plan's `setReadOnlyFormats`) was left to M6.
+
+## Outcome (2026-11-08)
+
+Done. Debug, Release and ASan/UBSan builds clean, no leaks from quill-qt or
+demo code; 15 ctest entries green (`tst_toolbar` and a demo smoke test
+added).
+
+- `QuillToolbar` with the groups and action names of the plan
+  (`action(name)`, `groupActions(group)`, `setGroupVisible`), combo choices
+  configurable (`setFontFamilies`, `setFontSizes`, `setPaletteColors`), state
+  synced on `editorChange`, cursor moves and `currentCharFormatChanged`,
+  everything disabled for a read-only editor. Dialogs are virtual
+  (`promptLink`, `promptImage`, `promptVideo`, `promptFormula`,
+  `promptColor`), which is also how `tst_toolbar` scripts them.
+- `QuillFindBar` (public): highlights all matches as extra selections (the
+  document is not changed), Enter / Shift+Enter / Escape, match case, count,
+  follows edits; the toolbar's search action toggles it.
+- Demo: toolbar, editor, find bar, "Delta" dock (document, one op per line in
+  Delta key order; change stream with source, details with old contents),
+  File (New, Open, Load sample, Save, Save As, Quill.js shape toggle, Export
+  HTML / plain text), Edit, View (inspector, read-only, dark palette),
+  status bar (index, selection, length, line attributes), command line
+  `[file] --sample --dark --log --screenshot`. 10 embedded samples (all
+  fixtures plus `showcase.json`).
+- `ci/screenshot.sh`: light and dark PNG per sample into
+  `build/<cfg>/screenshots/`, xvfb-run when present, offscreen otherwise.
+
+`tst_toolbar` (15 cases): action and group listing, every inline toggle,
+typing format on a collapsed selection, exclusive scripts, lists and
+indent, alignment and direction, exclusive blocks, header / font / size
+combos (including an unlisted size such as `"15.0"`, Clear), colour swatch,
+"More..." and clear in both colour dialects, clear formatting, link insert
+/ edit / replace text / remove / Ctrl+K, image / video / formula insert and
+cancel, undo / redo enabling, read-only, find bar, icons drawn in the
+palette's text colour for light and dark palettes.
+
+### Deviations
+
+- **Icons are painted, not SVG files**: a `QIconEngine` draws each glyph
+  with `QPainter` in the palette's text colour, so icons follow dark
+  palettes and there is no icon licence to track.
+- **Quill.js shape** is a File menu toggle instead of a checkbox inside the
+  save dialog (native dialogs cannot host extra widgets).
+- **`small` is hidden by default**, as in flutter_quill.
+- **Embeds are inserted inline at the cursor** (replacing the selection);
+  placing block embeds on their own line is left to M7.
+- **`StyleOptions::dark()`** added for dark palettes; `QuillEditor`
+  always keeps `codeBlockBackgroundOnBlocks` off, whatever style it is given.
+- **Collapsed "clear formatting"** clears the typing format only; with a
+  selection it is `removeFormat` (Quill semantics, line formats included).
+- **Exit criterion not checked here**: re-opening saved files in the
+  flutter_quill example app needs a machine with Flutter (still manual).
+
+### Findings
+
+- During `destroyed()` a `QPointer<QuillEditor>` is still set while the
+  object is already only a `QWidget`; UBSan flags any use. Toolbar and find
+  bar drop their connections and pointer without touching the editor.
+- No vertical spacing around headings and paragraphs yet (flutter_quill has
+  header and paragraph spacing); noted for M8 fidelity.

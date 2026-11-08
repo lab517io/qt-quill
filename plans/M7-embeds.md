@@ -113,6 +113,15 @@ strings in flutter_quill style (`"300"`), emitting a change Delta via
   their own object types.
 - Pasted images go through `QuillEditor::imageSourceFor()` (virtual).
 
+## Notes from M6
+
+- The toolbar's image / video / formula actions already exist
+  (`QuillToolbar::insertEmbed`, prompts are virtual: image returns a file
+  URL). They insert inline at the cursor; switch them to own-line block
+  insertion here if that is the chosen layout.
+- `quill-demo --sample embeds.json` and `flutter_quill_example.json` show the
+  current placeholders; `ci/screenshot.sh` captures both palettes.
+
 ## Tasks
 
 - [ ] `EmbedHandler`, `EmbedRegistry`, attach to document layout; generic

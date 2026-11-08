@@ -3,6 +3,8 @@ add_library(quillqt_widgets STATIC
     include/quill/DeltaDocument.h
     include/quill/Formats.h
     include/quill/QuillEditor.h
+    include/quill/QuillFindBar.h
+    include/quill/QuillToolbar.h
     include/quill/Range.h
     include/quill/Source.h
     Colors.cpp
@@ -16,6 +18,14 @@ add_library(quillqt_widgets STATIC
     QuillEditor.cpp
     QuillEditor_p.h
     QuillEditorKeys.cpp
+    QuillFindBar.cpp
+    QuillToolbar.cpp
+    ColorButton.cpp
+    ColorButton.h
+    Icons.cpp
+    Icons.h
+    LinkDialog.cpp
+    LinkDialog.h
 )
 add_library(QuillQt::Widgets ALIAS quillqt_widgets)
 quillqt_target_defaults(quillqt_widgets)

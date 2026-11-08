@@ -5,7 +5,7 @@ the [Quill Delta](https://quilljs.com/docs/delta) format, compatible with
 [flutter_quill](https://pub.dev/packages/flutter_quill) and
 [Quill](https://github.com/slab/quill).
 
-**Status:** milestones M1 (skeleton), M2 (Delta core), M3 (Delta → QTextDocument), M4 (QTextDocument → Delta) and M5 (editor widget) done. See
+**Status:** milestones M1 (skeleton), M2 (Delta core), M3 (Delta → QTextDocument), M4 (QTextDocument → Delta), M5 (editor widget) and M6 (toolbar, demo) done. See
 [PLAN.md](PLAN.md) for the design and [plans/](plans/README.md) for the
 milestone plans.
 
@@ -93,6 +93,7 @@ colour dialect (flutter_quill or CSS).
 #include <quill/QuillEditor.h>
 
 quill::QuillEditor editor;
+quill::QuillToolbar toolbar(&editor);         // optional, flutter_quill's default controls
 editor.setContents(delta);
 QObject::connect(&editor, &quill::QuillEditor::textChange,
                  [](const quill::Delta& change, const quill::Delta& old, quill::Source source) {
@@ -115,12 +116,28 @@ line start outdents or removes the block format, `1. ` / `- ` / `[] ` start
 lists, Ctrl+B/I/U/Shift+X toggle formats. `DeltaDocument::apply()` applies a
 change Delta to a plain `QTextDocument` without the widget.
 
+## Demo
+
+![quill-demo](docs/screenshot.png)
+
+`quill-demo` puts `QuillToolbar` (the flutter_quill default toolbar:
+history, font and size, inline formats, colours, headings, lists, alignment,
+quote and code blocks, links, images, video, formulas, search) on a
+`QuillEditor`, with a dock showing the live document Delta and the stream of
+change Deltas. It opens and saves flutter_quill JSON (or Quill.js
+`{"ops": [...]}`) and has a dark palette.
+
+```sh
+build/debug/apps/demo/quill-demo [file.json] [--sample showcase.json] [--dark] [--log]
+ci/screenshot.sh       # one PNG per embedded sample, light and dark
+```
+
 ## Building and testing
 
 ```sh
 ci/build.sh            # Debug and Release into build/debug, build/release
 ci/test.sh             # ctest with QT_QPA_PLATFORM=offscreen, no display needed
-build/debug/apps/demo/quill-demo tests/fixtures/flutter_quill/example_default_sample.json --log
+build/debug/apps/demo/quill-demo --sample showcase.json
 ```
 
 ## Layout

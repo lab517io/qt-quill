@@ -1,0 +1,14 @@
+<RCC>
+  <qresource prefix="/samples">
+    <file alias="align_rtl_indent.json">../../tests/fixtures/documents/align_rtl_indent.json</file>
+    <file alias="basic_inline.json">../../tests/fixtures/documents/basic_inline.json</file>
+    <file alias="blockquote_code.json">../../tests/fixtures/documents/blockquote_code.json</file>
+    <file alias="checklist.json">../../tests/fixtures/documents/checklist.json</file>
+    <file alias="embeds.json">../../tests/fixtures/documents/embeds.json</file>
+    <file alias="headers.json">../../tests/fixtures/documents/headers.json</file>
+    <file alias="lists_nested.json">../../tests/fixtures/documents/lists_nested.json</file>
+    <file alias="unknown_attributes.json">../../tests/fixtures/documents/unknown_attributes.json</file>
+    <file alias="flutter_quill_example.json">../../tests/fixtures/flutter_quill/example_default_sample.json</file>
+    <file alias="showcase.json">samples/showcase.json</file>
+  </qresource>
+</RCC>
