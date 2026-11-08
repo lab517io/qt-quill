@@ -8,6 +8,7 @@
 #include <QJsonArray>
 #include <QJsonValue>
 #include <QList>
+#include <QMetaType>
 
 #include <functional>
 #include <optional>
@@ -140,3 +141,5 @@ private:
 };
 
 } // namespace quill
+
+Q_DECLARE_METATYPE(quill::Delta)

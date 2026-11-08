@@ -103,6 +103,16 @@ strings in flutter_quill style (`"300"`), emitting a change Delta via
   (`display: block` in the example document). Decide between a block
   layout for embeds alone on their line and inline rendering otherwise.
 
+## Notes from M5
+
+- Embeds are inserted and restyled through `detail::embedCharFormat()`
+  (`src/widgets/DocumentEdit.cpp`), shared by load and apply; registry
+  dispatch belongs there.
+- Typed text after an embed gets a sanitised typing format
+  (`QuillEditorPrivate::sanitizeTypingFormat`); keep that when embeds get
+  their own object types.
+- Pasted images go through `QuillEditor::imageSourceFor()` (virtual).
+
 ## Tasks
 
 - [ ] `EmbedHandler`, `EmbedRegistry`, attach to document layout; generic

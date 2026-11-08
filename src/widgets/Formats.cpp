@@ -256,8 +256,10 @@ QTextBlockFormat blockFormat(const AttributeMap& line, const StyleOptions& style
     if (quote)
         f.setLeftMargin(style.blockquoteMargin);
     if (codeBlock) {
-        f.setBackground(style.codeBlockBackground);
-        f.setNonBreakableLines(false);
+        if (style.codeBlockBackgroundOnBlocks)
+            f.setBackground(style.codeBlockBackground);
+        f.setLeftMargin(style.codeBlockPadding);
+        f.setRightMargin(style.codeBlockPadding);
     }
 
     if (list) {

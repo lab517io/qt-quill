@@ -104,3 +104,14 @@ honours the application palette for dark themes.
   (e.g. Lucide, ISC); record in `THIRD_PARTY_NOTICES.md`.
 - `QColorDialog` is modal and heavy in tests; test via the palette popup
   path only.
+
+## Notes from M5
+
+- Use `format(name, value, Source::User)`; with a collapsed selection it sets
+  the typing format and emits no textChange, so refresh button states on
+  `QTextEdit::currentCharFormatChanged` as well as `editorChange`.
+- `getFormat()` returns arrays for mixed values (Quill's combineFormats);
+  show such buttons as unchecked / indeterminate.
+- `linkRequested()` (Ctrl+K) is emitted for the toolbar's link dialog.
+- `quill-demo [file.json] [--log]` already exists as a minimal stand-in.
+- Toolbar configuration (the plan's `setReadOnlyFormats`) was left to M6.

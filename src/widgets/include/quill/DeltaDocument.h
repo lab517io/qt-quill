@@ -58,6 +58,20 @@ public:
     static Delta toDelta(const QTextDocument* doc, int from, int to,
                          const ExportOptions& options = {}, QStringList* warnings = nullptr);
 
+    /// Applies the change Delta `change` to `doc`, whose current contents are
+    /// `contents` (== toDelta(doc)), and returns the contents it now has.
+    ///
+    /// Delta semantics, with Quill's editing rules: inline attributes apply
+    /// to text and embeds and line attributes to newlines only; `false`
+    /// removes a known attribute; "\r" and Unicode line separators in inserted
+    /// text become "\n"; operations past the end are dropped; the document
+    /// always keeps a final "\n" (one without attributes when the change
+    /// deletes it). Text is edited with QTextCursor calls in one edit block,
+    /// so this is one undo step and one contentsChange signal.
+    static Delta apply(QTextDocument* doc, const Delta& contents, const Delta& change);
+    /// As above, exporting the current contents first.
+    static Delta apply(QTextDocument* doc, const Delta& change);
+
     /// Inline attributes of text with format `format`: the stored attributes,
     /// updated for every property where `format` differs from what those
     /// attributes would produce on a line with `lineAttrs`. Pass the line

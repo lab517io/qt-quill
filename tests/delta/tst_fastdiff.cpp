@@ -80,6 +80,29 @@ private slots:
             diff(c.value("a").toString(), c.value("b").toString(), cursor, c.value("cleanup").toBool());
         QCOMPARE(render(actual), render(expected));
     }
+
+    // fast-diff 1.3.0 overflows the stack here (deviation, see FastDiff.cpp).
+    void splitSurrogatePairDoesNotRecurseForever()
+    {
+        const QString a = QStringLiteral("\U0001F600");
+        const QString b = QString(a.at(0)) + QLatin1Char('x') + a.at(1);
+        QCOMPARE(render(diff(a, b)), QStringLiteral("-%1|+%2|").arg(a, b));
+        QCOMPARE(render(diff(QStringLiteral("ab") + a + QStringLiteral("cd"), QStringLiteral("ab") + b + QStringLiteral("cd"))),
+                 QStringLiteral("=ab|-%1|+%2|=cd|").arg(a, b));
+        // Second fast-diff 1.3.0 overflow (merge sweeps never settle); the
+        // result only has to be a valid diff.
+        const QString c = QStringLiteral("\n") + QChar(0xD83D) + QLatin1Char('a') + QChar(0xD83D);
+        const QString d = QStringLiteral("b") + QChar(0xD83D) + QChar(0xDE00) + QLatin1Char('\n') + QChar(0xD83D);
+        QString before, after;
+        for (const Diff& part : diff(c, d)) {
+            if (part.first != Operation::Insert)
+                before += part.second;
+            if (part.first != Operation::Delete)
+                after += part.second;
+        }
+        QCOMPARE(before, c);
+        QCOMPARE(after, d);
+    }
 };
 
 QTEST_GUILESS_MAIN(TestFastDiff)

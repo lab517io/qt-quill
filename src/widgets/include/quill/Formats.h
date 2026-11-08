@@ -72,6 +72,12 @@ struct StyleOptions
     double indentWidth = 24;
     /// Extra left margin of blockquote lines (flutter_quill: one font size).
     double blockquoteMargin = 16;
+    /// Left and right margin of code-block lines, inside the code background.
+    double codeBlockPadding = 8;
+    /// Set the code-block background on each block format, which is what a
+    /// plain QTextDocument can render. QuillEditor turns this off and paints
+    /// one rounded panel behind each run of code lines instead.
+    bool codeBlockBackgroundOnBlocks = true;
 
     QStringList monospaceFamilies{QStringLiteral("Roboto Mono"), QStringLiteral("Menlo"),
                                   QStringLiteral("DejaVu Sans Mono"), QStringLiteral("Consolas"),
@@ -81,6 +87,9 @@ struct StyleOptions
     QColor codeBlockBackground = QColor(0xFA, 0xFA, 0xFA);    // Colors.grey.shade50
     QColor codeBlockForeground = QColor(0x0D, 0x47, 0xA1, 230); // blue.shade900, 90%
     QColor blockquoteForeground = QColor(0, 0, 0, 153);       // text at 60%
+    /// Bar left of blockquote lines, painted by QuillEditor (grey.shade300).
+    QColor blockquoteBarColor = QColor(0xE0, 0xE0, 0xE0);
+    double blockquoteBarWidth = 4;
 
     /// Point size for a size expressed in Delta units (relative to referenceSize).
     double pointSizeFor(double deltaSize) const;

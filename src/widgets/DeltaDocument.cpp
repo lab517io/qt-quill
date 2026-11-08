@@ -1,5 +1,6 @@
 #include "quill/DeltaDocument.h"
 
+#include "DocumentEdit.h"
 #include "ImageSize.h"
 
 #include <QByteArray>
@@ -26,16 +27,6 @@ QString compactJson(const QJsonValue& v)
     return QString::fromUtf8(a.mid(1, a.size() - 2));
 }
 
-AttributeMap inlineSubset(const AttributeMap& attrs)
-{
-    AttributeMap out;
-    for (auto it = attrs.begin(); it != attrs.end(); ++it) {
-        if (formats::inlineKeys().contains(it.key()))
-            out.insert(it.key(), it.value());
-    }
-    return out;
-}
-
 class Loader
 {
 public:
@@ -52,7 +43,7 @@ public:
             lineIndex = i;
             checkAttributes(lineAttrs, true, i, result);
             const QTextBlockFormat bf = formats::blockFormat(lineAttrs, m_style);
-            const QTextCharFormat bcf = formats::charFormat(inlineSubset(lineAttrs), lineAttrs, m_style);
+            const QTextCharFormat bcf = detail::blockCharFormat(lineAttrs, m_style);
             if (i == 0) {
                 m_cursor.setBlockFormat(bf);
                 m_cursor.setBlockCharFormat(bcf);
@@ -99,53 +90,15 @@ private:
                     .arg(lineIndex + 1)
                     .arg(compactJson(embed)));
         }
-        QTextCharFormat base = formats::charFormat(op.attributes(), lineAttrs, m_style);
-        base.setProperty(prop::EmbedType, type);
-        base.setProperty(prop::Embed, embed);
-
-        const QJsonValue data = embed.value(type);
-        if (type == QLatin1String("image") && data.isString()) {
-            QTextImageFormat img;
-            img.merge(base);
-            const QString source = data.toString();
-            img.setName(source);
-            applyImageSize(img, op.attributes());
-            registerImageResource(source);
-            m_cursor.insertImage(img);
-            return;
+        const QTextCharFormat format = detail::embedCharFormat(embed, op.attributes(), lineAttrs, m_style);
+        if (format.isImageFormat()) {
+            detail::registerImageResource(m_doc, format.toImageFormat().name());
+            m_cursor.insertImage(format.toImageFormat());
+        } else {
+            // Other embeds render through a QTextObjectInterface registered
+            // for EmbedObjectType (milestone M7); until then they take no space.
+            m_cursor.insertText(QString(QChar::ObjectReplacementCharacter), format);
         }
-        // Other embeds render through a QTextObjectInterface registered for
-        // EmbedObjectType (milestone M7); until then they take no space.
-        base.setObjectType(prop::EmbedObjectType);
-        m_cursor.insertText(QString(QChar::ObjectReplacementCharacter), base);
-    }
-
-    void applyImageSize(QTextImageFormat& img, const AttributeMap& attrs)
-    {
-        const auto [width, height] = detail::imageSize(attrs);
-        if (width)
-            img.setWidth(*width);
-        if (height)
-            img.setHeight(*height);
-    }
-
-    void registerImageResource(const QString& source)
-    {
-        // data: URLs are decoded here; QTextDocument loads file and qrc URLs
-        // itself, remote URLs are fetched by the editor (M7).
-        if (!source.startsWith(QLatin1String("data:")))
-            return;
-        const qsizetype comma = source.indexOf(QLatin1Char(','));
-        if (comma < 0)
-            return;
-        const QString meta = source.mid(5, comma - 5);
-        const QByteArray payload = source.mid(comma + 1).toLatin1();
-        const QByteArray bytes = meta.endsWith(QLatin1String(";base64"))
-                                     ? QByteArray::fromBase64(payload)
-                                     : QByteArray::fromPercentEncoding(payload);
-        QImage image;
-        if (image.loadFromData(bytes))
-            m_doc->addResource(QTextDocument::ImageResource, QUrl(source), image);
     }
 
     QTextDocument* m_doc;

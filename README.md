@@ -5,7 +5,7 @@ the [Quill Delta](https://quilljs.com/docs/delta) format, compatible with
 [flutter_quill](https://pub.dev/packages/flutter_quill) and
 [Quill](https://github.com/slab/quill).
 
-**Status:** milestones M1 (skeleton), M2 (Delta core), M3 (Delta → QTextDocument) and M4 (QTextDocument → Delta) done. See
+**Status:** milestones M1 (skeleton), M2 (Delta core), M3 (Delta → QTextDocument), M4 (QTextDocument → Delta) and M5 (editor widget) done. See
 [PLAN.md](PLAN.md) for the design and [plans/](plans/README.md) for the
 milestone plans.
 
@@ -87,12 +87,40 @@ Styling follows flutter_quill's defaults, scaled to the document's font;
 see `quill::StyleOptions` to change sizes, colours, indent width or the
 colour dialect (flutter_quill or CSS).
 
+## The editor widget
+
+```cpp
+#include <quill/QuillEditor.h>
+
+quill::QuillEditor editor;
+editor.setContents(delta);
+QObject::connect(&editor, &quill::QuillEditor::textChange,
+                 [](const quill::Delta& change, const quill::Delta& old, quill::Source source) {
+                     // send `change` to collaborators, save, ...
+                 });
+editor.formatText(0, 5, {{"bold", true}});
+editor.formatLine(0, 1, {{"list", "ordered"}});
+editor.updateContents(remoteChange);          // Quill change Delta
+quill::Delta doc = editor.getContents();
+```
+
+The API follows Quill's (`getContents`, `setContents`, `updateContents`,
+`insertText`, `insertEmbed`, `deleteText`, `format`, `formatText`,
+`formatLine`, `removeFormat`, `getFormat`, `getSelection`, `setSelection`).
+Every edit, whether typed, pasted, undone or made through the API, emits one
+`textChange` with a Quill-shaped change Delta and its source (`Api`, `User`,
+`Silent`). Keyboard behaviour follows Quill and flutter_quill: lists continue
+on Enter and end on an empty item, Tab indents list items, Backspace at a
+line start outdents or removes the block format, `1. ` / `- ` / `[] ` start
+lists, Ctrl+B/I/U/Shift+X toggle formats. `DeltaDocument::apply()` applies a
+change Delta to a plain `QTextDocument` without the widget.
+
 ## Building and testing
 
 ```sh
 ci/build.sh            # Debug and Release into build/debug, build/release
 ci/test.sh             # ctest with QT_QPA_PLATFORM=offscreen, no display needed
-build/debug/apps/demo/quill-demo
+build/debug/apps/demo/quill-demo tests/fixtures/flutter_quill/example_default_sample.json --log
 ```
 
 ## Layout

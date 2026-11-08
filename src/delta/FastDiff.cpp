@@ -116,7 +116,7 @@ qsizetype diffCommonOverlap(QString text1, QString text2);
 std::optional<std::vector<QString>> diffHalfMatch(const QString& text1, const QString& text2);
 void diffCleanupSemantic(Diffs& diffs);
 void diffCleanupSemanticLossless(Diffs& diffs);
-void diffCleanupMerge(Diffs& diffs, bool fixUnicode);
+void diffCleanupMerge(Diffs& diffs, bool fixUnicode, int depth = 0);
 std::optional<Diffs> findCursorEditDiff(const QString& oldText, const QString& newText,
                                         const CursorInfo& cursor);
 
@@ -279,6 +279,12 @@ Diffs diffBisect(const QString& text1, const QString& text2)
 
 Diffs diffBisectSplit(const QString& text1, const QString& text2, qsizetype x, qsizetype y)
 {
+    // Deviation from fast-diff 1.3.0: when a surrogate pair is split in one
+    // text only (e.g. "\uD83D\uDE00" vs "\uD83Dx\uDE00"), the surrogate-aware
+    // prefix/suffix trimming makes no progress and the split is the whole
+    // input, so the JavaScript recurses until the stack overflows.
+    if ((x == 0 && y == 0) || (x == text1.size() && y == text2.size()))
+        return {{DIFF_DELETE, text1}, {DIFF_INSERT, text2}};
     Diffs diffs = diffMain(substring(text1, 0, x), substring(text2, 0, y), std::nullopt, false, false);
     diffs.append(diffMain(substring(text1, x), substring(text2, y), std::nullopt, false, false));
     return diffs;
@@ -581,7 +587,7 @@ void diffCleanupSemanticLossless(Diffs& diffs)
     }
 }
 
-void diffCleanupMerge(Diffs& diffs, bool fixUnicode)
+void diffCleanupMerge(Diffs& diffs, bool fixUnicode, int depth)
 {
     diffs.append({DIFF_EQUAL, QString()}); // dummy entry at the end
     qsizetype pointer = 0;
@@ -735,8 +741,12 @@ void diffCleanupMerge(Diffs& diffs, bool fixUnicode)
         pointer++;
     }
     // If shifts were made, the diff needs reordering and another shift sweep.
-    if (changes)
-        diffCleanupMerge(diffs, fixUnicode);
+    // Deviation from fast-diff 1.3.0: with lone surrogates (a pair split in
+    // one text only) the surrogate fix-up undoes the shift every sweep and the
+    // JavaScript recurses until the stack overflows. Every sweep keeps the
+    // diff valid, so stopping after a bounded number only costs canonicity.
+    if (changes && depth < 64)
+        diffCleanupMerge(diffs, fixUnicode, depth + 1);
 }
 
 Diffs removeEmptyTuples(const Diffs& tuples)

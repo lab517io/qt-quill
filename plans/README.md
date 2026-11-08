@@ -15,7 +15,7 @@ Decisions fixed on 2026-11-08 (see `../PLAN.md`, section 8):
 | 2 ✅ | [M2-delta-core.md](M2-delta-core.md) | `libquilldelta`: Delta/Op/AttributeMap, OT functions, JSON I/O, ported tests | 1 |
 | 3 ✅ | [M3-delta-to-textdocument.md](M3-delta-to-textdocument.md) | Loading a Delta into `QTextDocument` | 2 |
 | 4 ✅ | [M4-textdocument-to-delta.md](M4-textdocument-to-delta.md) | Exporting `QTextDocument` to Delta, normalisation, round-trip tests | 3 |
-| 5 | [M5-editor-widget.md](M5-editor-widget.md) | `QuillEditor`: Quill-like API, change Deltas, keyboard behaviour, decorations | 4 |
+| 5 ✅ | [M5-editor-widget.md](M5-editor-widget.md) | `QuillEditor`: Quill-like API, change Deltas, keyboard behaviour, decorations | 4 |
 | 6 | [M6-toolbar-demo.md](M6-toolbar-demo.md) | `QuillToolbar`, demo application, file I/O | 5 |
 | 7 | [M7-embeds.md](M7-embeds.md) | Embed registry: image loading, video, formula, flutter_quill `custom` | 5 |
 | 8 | [M8-fidelity-ci.md](M8-fidelity-ci.md) | quill-delta oracle, flutter_quill fixtures, CI pipeline | 2, 4 |

@@ -261,3 +261,14 @@ suites also pass under AddressSanitizer and UBSan.
   reads `equalities[-1]` as a plain property; the port emulates this.
 - `Delta.diff()` runs fast-diff with cleanup and surrogate fixing at the top
   level only; recursive calls use neither. The port keeps that distinction.
+
+### Later fix (M5)
+
+The M5 random editing tests found two inputs on which fast-diff 1.3.0
+recurses until the JavaScript stack overflows (confirmed with the npm
+package): a surrogate pair split in only one of the two texts, e.g.
+`"😀"` vs `"\uD83Dx\uDE00"`. The port now returns delete + insert
+when a bisect split makes no progress and stops `diffCleanupMerge` after 64
+sweeps (each sweep keeps the diff valid). Regression cases are in
+`tst_fastdiff::splitSurrogatePairDoesNotRecurseForever`; a 10-minute random
+fuzz of short strings with lone surrogates found no further crash.

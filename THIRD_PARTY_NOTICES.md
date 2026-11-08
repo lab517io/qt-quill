@@ -34,7 +34,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 `src/delta/FastDiff.cpp` and `src/delta/include/quill/FastDiff.h` are a C++
 port of fast-diff 1.3.0 (https://github.com/jhchen/fast-diff), which
 modifies Neil Fraser's diff-match-patch. The port changes the language and
-replaces JavaScript string helpers; the algorithm is unchanged.
+replaces JavaScript string helpers; the algorithm is unchanged, except for
+two guards against unbounded recursion that fast-diff 1.3.0 itself hits
+(stack overflow in JavaScript) when a surrogate pair is split in only one of
+the two texts: `diffBisectSplit` returns delete + insert when the split makes
+no progress, and `diffCleanupMerge` stops after 64 merge sweeps.
 `tests/fixtures/delta/fastdiff-cases.json` contains outputs of fast-diff
 1.3.0 and inputs from its test-suite.
 
