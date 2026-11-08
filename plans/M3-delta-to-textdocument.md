@@ -159,21 +159,21 @@ struct LoadOptions {
 
 ## Tasks
 
-- [ ] `Formats.h`: property ids, `charFormatFor`, `blockFormatsFor`,
+- [x] `Formats.h`: property ids, `charFormatFor`, `blockFormatsFor`,
       list format tables.
-- [ ] `Colors.cpp` + `tst_colors` (parse/format cases incl. ARGB hex).
-- [ ] `DeltaDocument::load` with eachLine walk, list stack, header sizing.
-- [ ] Image embeds (local/data URLs), generic placeholder for others.
-- [ ] Fixtures: `tests/fixtures/documents/` with
+- [x] `Colors.cpp` + `tst_colors` (parse/format cases incl. ARGB hex).
+- [x] `DeltaDocument::load` with eachLine walk, list stack, header sizing.
+- [x] Image embeds (local/data URLs), generic placeholder for others.
+- [x] Fixtures: `tests/fixtures/documents/` with
       `basic_inline.json`, `headers.json`, `lists_nested.json`,
       `checklist.json`, `blockquote_code.json`, `align_rtl_indent.json`,
       `sizes_fonts_colors.json` (flutter_quill size and colour forms),
       `line_height.json`, `embeds.json`, `flutter_quill_sample_*.json`
       (real exports from the flutter_quill example app, bare-array shape).
-- [ ] `tst_load`: per fixture assert block count, each block's `BlockKind`,
+- [x] `tst_load`: per fixture assert block count, each block's `BlockKind`,
       heading level, list membership and numbering (`QTextList::itemNumber`),
       marker type, selected char formats at known offsets, image presence.
-- [ ] Render each fixture to `QImage` offscreen (no assertion beyond
+- [x] Render each fixture to `QImage` offscreen (no assertion beyond
       non-blank) to catch layout crashes.
 
 ## Tests
@@ -197,3 +197,56 @@ struct LoadOptions {
   `headers.json` test.
 - flutter_quill colour and size value forms vary across versions; the fixture
   set should include at least 9.x and 10.x/11.x exports.
+
+## Outcome (2026-11-08)
+
+Done. Debug and Release build with zero warnings; ASan/UBSan clean, no leaks
+from quill-qt code. 9 test executables green.
+
+| Suite | Cases | Checks |
+|---|---|---|
+| `tst_colors` | 25 | flutter and CSS dialects, hex/rgb/hsl forms, format round-trip |
+| `tst_load` | 32 | per-fixture structure check (length, blocks, stored attributes at every position, embeds), warnings, every mapping, numbering, options, 5000-line load |
+
+Rendered fixtures are written to `build/<cfg>/test-output/load_*.png`; they
+were reviewed by eye against flutter_quill's look (headers, nested numbering
+1./a./i., checklists, quote, code, alignment, RTL, sizes).
+
+### Decisions that refine the plan
+
+- **flutter_quill's numbers are used, measured from its source** (commit
+  `e880534`): headers 34/30/24/20/18/16, sizes small/large/huge
+  10/18/22, `small` 12, inline code 14, code block 13, all at a 16 base.
+  Everything is scaled relative to `StyleOptions::referenceSize` (16), so
+  numeric sizes like `"14"` keep their proportion at any Qt base font,
+  instead of being taken as points as the plan said.
+- **Colour dialect**: flutter_quill names are Material colours (`red` =
+  #F44336, `black54`), 8-digit hex is AARRGGBB, and flutter_quill writes new
+  colours as `#AARRGGBB` uppercase. `ColorDialect::Css` covers Quill.js.
+  This replaces the plan's `argbHexColors` flag.
+- **Image size**: the CSS `style` wins over `width`/`height` attributes,
+  as in flutter_quill_extensions; px, bare numbers, em/rem are accepted.
+- **Embeds store the whole embed object** (`prop::Embed`, a QJsonObject)
+  instead of separate type/data properties, so odd embeds (several keys)
+  still round-trip. `prop::EmbedType` stays for dispatch.
+- **List grouping is a separate pass**, `DeltaDocument::regroupLists()`,
+  driven only by line attributes. `load()` runs it on the whole document;
+  M5 reuses it on edited ranges. Checked and unchecked items share one list
+  per level; the check state is the block marker.
+- **No strict mode**: `load()` always loads and returns `warnings` (unknown
+  attributes, unsupported values, missing trailing newline). Callers decide.
+- **`DeltaDocument::insert(cursor, delta)` moved to M5**, where it is needed
+  for paste and `updateContents`. Quill semantics to implement there: a
+  `"\n"` with attributes A splits the current block; the part before the
+  cursor gets A, the new block keeps the original line's format.
+- **Formats are a pure function of the attributes** and carry the original
+  JSON (`prop::InlineAttributes`, `prop::BlockAttributes`). M4 builds on
+  this (see the note in M4).
+
+### Known visual gaps, handled in M7
+
+- Missing or remote images show Qt's file icon stretched to the requested
+  size; M7 adds loading and a proper placeholder.
+- Image embeds are inline; flutter_quill renders them as blocks (the
+  example document's owl image makes its line very tall).
+- Non-image embeds take no space until M7 registers a text object handler.

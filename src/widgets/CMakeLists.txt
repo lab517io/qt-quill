@@ -1,6 +1,10 @@
 add_library(quillqt_widgets STATIC
-    include/quill/Widgets.h
-    Widgets.cpp
+    include/quill/Colors.h
+    include/quill/DeltaDocument.h
+    include/quill/Formats.h
+    Colors.cpp
+    DeltaDocument.cpp
+    Formats.cpp
 )
 add_library(QuillQt::Widgets ALIAS quillqt_widgets)
 quillqt_target_defaults(quillqt_widgets)

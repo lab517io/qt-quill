@@ -1,0 +1,217 @@
+[
+ {
+  "insert": "plain "
+ },
+ {
+  "insert": "bold",
+  "attributes": {
+   "bold": true
+  }
+ },
+ {
+  "insert": " "
+ },
+ {
+  "insert": "italic",
+  "attributes": {
+   "italic": true
+  }
+ },
+ {
+  "insert": " "
+ },
+ {
+  "insert": "under",
+  "attributes": {
+   "underline": true
+  }
+ },
+ {
+  "insert": " "
+ },
+ {
+  "insert": "strike",
+  "attributes": {
+   "strike": true
+  }
+ },
+ {
+  "insert": " "
+ },
+ {
+  "insert": "code",
+  "attributes": {
+   "code": true
+  }
+ },
+ {
+  "insert": " H"
+ },
+ {
+  "insert": "2",
+  "attributes": {
+   "script": "sub"
+  }
+ },
+ {
+  "insert": "O x"
+ },
+ {
+  "insert": "2",
+  "attributes": {
+   "script": "super"
+  }
+ },
+ {
+  "insert": "\n"
+ },
+ {
+  "insert": "link",
+  "attributes": {
+   "link": "https://quilljs.com"
+  }
+ },
+ {
+  "insert": " "
+ },
+ {
+  "insert": "red",
+  "attributes": {
+   "color": "#FFF44336"
+  }
+ },
+ {
+  "insert": " "
+ },
+ {
+  "insert": "named",
+  "attributes": {
+   "color": "red"
+  }
+ },
+ {
+  "insert": " "
+ },
+ {
+  "insert": "css",
+  "attributes": {
+   "color": "rgba(0, 128, 0, 0.5)"
+  }
+ },
+ {
+  "insert": " "
+ },
+ {
+  "insert": "bg",
+  "attributes": {
+   "background": "#FFFFEB3B"
+  }
+ },
+ {
+  "insert": " "
+ },
+ {
+  "insert": "serif",
+  "attributes": {
+   "font": "serif"
+  }
+ },
+ {
+  "insert": " "
+ },
+ {
+  "insert": "mono",
+  "attributes": {
+   "font": "monospace"
+  }
+ },
+ {
+  "insert": " "
+ },
+ {
+  "insert": "Pacifico",
+  "attributes": {
+   "font": "Pacifico"
+  }
+ },
+ {
+  "insert": "\n"
+ },
+ {
+  "insert": "small",
+  "attributes": {
+   "size": "small"
+  }
+ },
+ {
+  "insert": " "
+ },
+ {
+  "insert": "large",
+  "attributes": {
+   "size": "large"
+  }
+ },
+ {
+  "insert": " "
+ },
+ {
+  "insert": "huge",
+  "attributes": {
+   "size": "huge"
+  }
+ },
+ {
+  "insert": " "
+ },
+ {
+  "insert": "fourteen",
+  "attributes": {
+   "size": "14"
+  }
+ },
+ {
+  "insert": " "
+ },
+ {
+  "insert": "twenty",
+  "attributes": {
+   "size": 20
+  }
+ },
+ {
+  "insert": " "
+ },
+ {
+  "insert": "cleared",
+  "attributes": {
+   "size": "0"
+  }
+ },
+ {
+  "insert": " "
+ },
+ {
+  "insert": "smallflag",
+  "attributes": {
+   "small": true
+  }
+ },
+ {
+  "insert": "\n"
+ },
+ {
+  "insert": "everything",
+  "attributes": {
+   "bold": true,
+   "italic": true,
+   "underline": true,
+   "color": "#FF2196F3",
+   "background": "#FFFFFFFF",
+   "link": "https://example.com"
+  }
+ },
+ {
+  "insert": "\n"
+ }
+]

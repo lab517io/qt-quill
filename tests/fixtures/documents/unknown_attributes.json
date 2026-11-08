@@ -1,0 +1,64 @@
+[
+ {
+  "insert": "custom",
+  "attributes": {
+   "x-custom": {
+    "a": 1
+   }
+  }
+ },
+ {
+  "insert": " token",
+  "attributes": {
+   "token": "abc"
+  }
+ },
+ {
+  "insert": " placeholder",
+  "attributes": {
+   "placeholder": true
+  }
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "x-line": "keep"
+  }
+ },
+ {
+  "insert": "bad header"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "header": 7
+  }
+ },
+ {
+  "insert": "bad color",
+  "attributes": {
+   "color": "not-a-color"
+  }
+ },
+ {
+  "insert": "\n"
+ },
+ {
+  "insert": "bad list"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "weird"
+  }
+ },
+ {
+  "insert": "inline attr on newline"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "bold": true
+  }
+ }
+]

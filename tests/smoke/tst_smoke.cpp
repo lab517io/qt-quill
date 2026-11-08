@@ -1,7 +1,6 @@
 // M1 smoke test. Confirms the toolchain, headless widgets, and the Qt facts
 // later milestones depend on.
 #include <quill/Version.h>
-#include <quill/Widgets.h>
 
 #include <QAbstractTextDocumentLayout>
 #include <QImage>
@@ -48,7 +47,7 @@ private slots:
     void libraryLinks()
     {
         QCOMPARE(quill::version(), QStringLiteral("0.1.0"));
-        QVERIFY(quill::qtRuntimeVersion().startsWith(QStringLiteral("6.")));
+        QVERIFY(QString::fromLatin1(qVersion()).startsWith(QStringLiteral("6.")));
     }
 
     // FACT for M3-M5: QTextDocument positions equal Delta indices.

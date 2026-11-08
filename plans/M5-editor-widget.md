@@ -127,6 +127,18 @@ one undo step.
 - `setContents`: `suppress` on, `DeltaDocument::load`, `suppress` off,
   `d->contents = doc`, emit one change `old.diff(new)`.
 
+### Notes from M3
+
+- Implement `DeltaDocument::insert(QTextCursor&, const Delta&)` here
+  (moved from M3) for paste and `updateContents`. Quill semantics: a
+  `"\n"` with attributes A splits the current block; the part before the
+  cursor gets A, the new block keeps the original line's format.
+- After any edit that changes `list` or `indent`, call
+  `DeltaDocument::regroupLists(first, last, style)` on the affected blocks;
+  it extends itself to the surrounding list run.
+- From M2: `transformPosition(i, true)` keeps a cursor before a concurrent
+  insert at `i`.
+
 ### Keyboard behaviour (keyPressEvent)
 
 | Key | Context | Behaviour (Quill default keyboard module) |

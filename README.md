@@ -5,7 +5,7 @@ the [Quill Delta](https://quilljs.com/docs/delta) format, compatible with
 [flutter_quill](https://pub.dev/packages/flutter_quill) and
 [Quill](https://github.com/slab/quill).
 
-**Status:** milestones M1 (skeleton) and M2 (Delta core) done. See
+**Status:** milestones M1 (skeleton), M2 (Delta core) and M3 (Delta → QTextDocument) done. See
 [PLAN.md](PLAN.md) for the design and [plans/](plans/README.md) for the
 milestone plans.
 
@@ -62,6 +62,21 @@ QByteArray json = result.toJson();    // flutter_quill shape; JsonShape::OpsObje
 
 Lengths and indices are UTF-16 code units, like JavaScript and
 `QTextDocument`.
+
+## Loading a Delta into a QTextDocument
+
+```cpp
+#include <quill/DeltaDocument.h>
+
+QTextEdit edit;
+quill::LoadResult r = quill::DeltaDocument::load(edit.document(), delta);
+for (const QString& w : r.warnings)   // unknown attributes etc., preserved anyway
+    qWarning() << w;
+```
+
+Styling follows flutter_quill's defaults, scaled to the document's font;
+see `quill::StyleOptions` to change sizes, colours, indent width or the
+colour dialect (flutter_quill or CSS).
 
 ## Building and testing
 

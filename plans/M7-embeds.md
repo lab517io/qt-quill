@@ -92,6 +92,17 @@ Image resize handles on selection, writing `width`/`height` attributes as
 strings in flutter_quill style (`"300"`), emitting a change Delta via
 `formatText` on the embed's index.
 
+## Notes from M3
+
+- M3 stores the whole embed object in `prop::Embed` (QJsonObject) and its
+  key in `prop::EmbedType`; non-image embeds use object type
+  `prop::EmbedObjectType` and currently take no space.
+- Missing or not-yet-loaded images show Qt's file icon stretched to the
+  requested size; replace it with a neutral placeholder box.
+- flutter_quill renders image and video embeds as blocks
+  (`display: block` in the example document). Decide between a block
+  layout for embeds alone on their line and inline rendering otherwise.
+
 ## Tasks
 
 - [ ] `EmbedHandler`, `EmbedRegistry`, attach to document layout; generic

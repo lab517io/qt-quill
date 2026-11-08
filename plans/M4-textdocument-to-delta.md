@@ -44,6 +44,19 @@ the final block's terminator corresponds to the Delta's trailing `\n`, so
 `toDelta(doc)` always ends with `\n` and `toDelta(doc).length() ==
 doc->characterCount()`.
 
+### Note from M3: derive by comparing with the expected format
+
+M3 made every char and block format a pure function of the attributes
+(`formats::charFormat`, `formats::blockFormat`) and stored the original
+attributes on it. The exporter should therefore start from the stored
+attributes, recompute the expected Qt format from them, and derive an
+attribute only for Qt properties where the actual format differs from the
+expected one (a user edit). Loader styling (header sizes and weight, code
+backgrounds, link and quote colours) then never leaks into the Delta, and the
+rules below only run on edited properties. Text typed by the user inherits
+the neighbouring format, including the stored attributes, so it exports
+correctly with no extra work. The embed object is in `prop::Embed`.
+
 ### Deriving inline attributes
 
 Derive the canonical Quill attributes from the Qt format first, then overlay

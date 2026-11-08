@@ -13,7 +13,7 @@ Decisions fixed on 2026-11-08 (see `../PLAN.md`, section 8):
 |---|---|---|---|
 | 1 ✅ | [M1-environment-skeleton.md](M1-environment-skeleton.md) | Qt 6 install, CMake layout, offscreen test runner | — |
 | 2 ✅ | [M2-delta-core.md](M2-delta-core.md) | `libquilldelta`: Delta/Op/AttributeMap, OT functions, JSON I/O, ported tests | 1 |
-| 3 | [M3-delta-to-textdocument.md](M3-delta-to-textdocument.md) | Loading a Delta into `QTextDocument` | 2 |
+| 3 ✅ | [M3-delta-to-textdocument.md](M3-delta-to-textdocument.md) | Loading a Delta into `QTextDocument` | 2 |
 | 4 | [M4-textdocument-to-delta.md](M4-textdocument-to-delta.md) | Exporting `QTextDocument` to Delta, normalisation, round-trip tests | 3 |
 | 5 | [M5-editor-widget.md](M5-editor-widget.md) | `QuillEditor`: Quill-like API, change Deltas, keyboard behaviour, decorations | 4 |
 | 6 | [M6-toolbar-demo.md](M6-toolbar-demo.md) | `QuillToolbar`, demo application, file I/O | 5 |

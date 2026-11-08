@@ -17,3 +17,4 @@ endfunction()
 
 add_subdirectory(smoke)
 add_subdirectory(delta)
+add_subdirectory(widgets)

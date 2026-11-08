@@ -1,0 +1,77 @@
+[
+ {
+  "insert": "Image: "
+ },
+ {
+  "insert": {
+   "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAEElEQVR4nGP4zwAE/xkgFAAb8gP91pbyKwAAAABJRU5ErkJggg=="
+  },
+  "attributes": {
+   "width": "40",
+   "height": "30"
+  }
+ },
+ {
+  "insert": "\n"
+ },
+ {
+  "insert": {
+   "image": "assets/images/missing.png"
+  },
+  "attributes": {
+   "width": "100",
+   "height": "100",
+   "style": "width:200px; height:50px;"
+  }
+ },
+ {
+  "insert": "\n"
+ },
+ {
+  "insert": {
+   "video": "https://www.youtube.com/watch?v=V4hgdKhIqtc"
+  }
+ },
+ {
+  "insert": "\n"
+ },
+ {
+  "insert": "Formula "
+ },
+ {
+  "insert": {
+   "formula": "e^{i\\pi}+1=0"
+  }
+ },
+ {
+  "insert": " inline"
+ },
+ {
+  "insert": "\n"
+ },
+ {
+  "insert": {
+   "custom": "{\"notes\":\"[{\\\"insert\\\":\\\"hello\\\\n\\\"}]\"}"
+  }
+ },
+ {
+  "insert": "\n"
+ },
+ {
+  "insert": {
+   "mention": {
+    "id": 42,
+    "name": "Ada"
+   }
+  },
+  "attributes": {
+   "bold": true
+  }
+ },
+ {
+  "insert": " after mention"
+ },
+ {
+  "insert": "\n"
+ }
+]

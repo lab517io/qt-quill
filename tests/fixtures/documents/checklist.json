@@ -1,0 +1,49 @@
+[
+ {
+  "insert": "todo"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "unchecked"
+  }
+ },
+ {
+  "insert": "done"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "checked"
+  }
+ },
+ {
+  "insert": "nested todo"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "unchecked",
+   "indent": 1
+  }
+ },
+ {
+  "insert": "nested done"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "checked",
+   "indent": 1
+  }
+ },
+ {
+  "insert": "back"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "unchecked"
+  }
+ }
+]

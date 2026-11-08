@@ -1,0 +1,78 @@
+[
+ {
+  "insert": "A quote"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "blockquote": true
+  }
+ },
+ {
+  "insert": "with "
+ },
+ {
+  "insert": "bold",
+  "attributes": {
+   "bold": true
+  }
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "blockquote": true
+  }
+ },
+ {
+  "insert": "var x = 1;"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "code-block": true
+  }
+ },
+ {
+  "insert": "  return x;"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "code-block": true
+  }
+ },
+ {
+  "insert": "const y = 2;"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "code-block": "javascript"
+  }
+ },
+ {
+  "insert": "Text with "
+ },
+ {
+  "insert": "inline code",
+  "attributes": {
+   "code": true
+  }
+ },
+ {
+  "insert": " inside."
+ },
+ {
+  "insert": "\n"
+ },
+ {
+  "insert": "Indented quote"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "blockquote": true,
+   "indent": 1
+  }
+ }
+]

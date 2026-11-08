@@ -1,0 +1,102 @@
+[
+ {
+  "insert": "left"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "align": "left"
+  }
+ },
+ {
+  "insert": "center"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "align": "center"
+  }
+ },
+ {
+  "insert": "right"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "align": "right"
+  }
+ },
+ {
+  "insert": "justify justify justify justify justify justify justify justify justify justify justify justify"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "align": "justify"
+  }
+ },
+ {
+  "insert": "שלום עולם"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "direction": "rtl"
+  }
+ },
+ {
+  "insert": "مرحبا"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "direction": "rtl",
+   "align": "left"
+  }
+ },
+ {
+  "insert": "indent one"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "indent": 1
+  }
+ },
+ {
+  "insert": "indent two"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "indent": 2
+  }
+ },
+ {
+  "insert": "line height 1.5"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "line-height": 1.5
+  }
+ },
+ {
+  "insert": "line height 2"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "line-height": 2.0
+  }
+ },
+ {
+  "insert": "line height 1.15"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "line-height": 1.15
+  }
+ }
+]

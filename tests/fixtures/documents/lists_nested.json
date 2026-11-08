@@ -1,0 +1,141 @@
+[
+ {
+  "insert": "one"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "ordered"
+  }
+ },
+ {
+  "insert": "two"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "ordered"
+  }
+ },
+ {
+  "insert": "two.a"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "ordered",
+   "indent": 1
+  }
+ },
+ {
+  "insert": "two.b"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "ordered",
+   "indent": 1
+  }
+ },
+ {
+  "insert": "two.b.i"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "ordered",
+   "indent": 2
+  }
+ },
+ {
+  "insert": "two.b.ii"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "ordered",
+   "indent": 2
+  }
+ },
+ {
+  "insert": "two.c"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "ordered",
+   "indent": 1
+  }
+ },
+ {
+  "insert": "three"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "ordered"
+  }
+ },
+ {
+  "insert": "bullet a"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "bullet"
+  }
+ },
+ {
+  "insert": "bullet b"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "bullet",
+   "indent": 1
+  }
+ },
+ {
+  "insert": "bullet c"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "bullet",
+   "indent": 2
+  }
+ },
+ {
+  "insert": "restart one"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "ordered"
+  }
+ },
+ {
+  "insert": "paragraph"
+ },
+ {
+  "insert": "\n"
+ },
+ {
+  "insert": "again one"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "ordered"
+  }
+ },
+ {
+  "insert": "again two"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "ordered"
+  }
+ }
+]
