@@ -1,0 +1,14 @@
+[
+    {
+        "insert": "Raw "
+    },
+    {
+        "attributes": {
+            "bold": true
+        },
+        "insert": "CF_HTML"
+    },
+    {
+        "insert": " header kept by some apps\n"
+    }
+]

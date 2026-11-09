@@ -312,17 +312,20 @@ private slots:
         const QImage img = e->viewport()->grab().toImage();
         img.save(QStringLiteral(QUILLQT_TEST_OUTPUT_DIR "/editor_decorations.png"));
         auto* layout = e->document()->documentLayout();
+        // The grab is in device pixels (QT_SCALE_FACTOR=2 in the HiDPI run).
+        const qreal dpr = img.devicePixelRatio();
+        const auto pixel = [&](qreal x, qreal y) { return img.pixelColor(int(x * dpr), int(y * dpr)); };
         const QRectF quote = layout->blockBoundingRect(e->document()->firstBlock());
         const qreal margin = e->document()->documentMargin();
-        QCOMPARE(img.pixelColor(int(margin + 1), int(quote.center().y())), style.blockquoteBarColor);
+        QCOMPARE(pixel(margin + 1, quote.center().y()), style.blockquoteBarColor);
         // One panel behind both code lines, including the gap between them.
         const QTextBlock code1 = e->document()->findBlockByNumber(2);
         const QRectF r1 = layout->blockBoundingRect(code1);
         const QRectF r2 = layout->blockBoundingRect(code1.next());
-        const int x = int(e->viewport()->width() - margin - 6);
-        QCOMPARE(img.pixelColor(x, int(r1.center().y())), style.codeBlockBackground);
-        QCOMPARE(img.pixelColor(x, int(r2.top())), style.codeBlockBackground);
-        QCOMPARE(img.pixelColor(x, int(r2.bottom()) + 4), e->viewport()->palette().color(QPalette::Base));
+        const qreal x = e->viewport()->width() - margin - 6;
+        QCOMPARE(pixel(x, r1.center().y()), style.codeBlockBackground);
+        QCOMPARE(pixel(x, r2.top()), style.codeBlockBackground);
+        QCOMPARE(pixel(x, r2.bottom() + 4), e->viewport()->palette().color(QPalette::Base));
     }
 
     void renderFlutterQuillSample()

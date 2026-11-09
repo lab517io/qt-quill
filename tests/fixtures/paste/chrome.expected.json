@@ -1,0 +1,68 @@
+[
+    {
+        "insert": "Getting started"
+    },
+    {
+        "attributes": {
+            "header": 2
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "Install the "
+    },
+    {
+        "attributes": {
+            "link": "https://pub.dev/packages/flutter_quill"
+        },
+        "insert": "flutter_quill"
+    },
+    {
+        "insert": " package and call "
+    },
+    {
+        "attributes": {
+            "code": true
+        },
+        "insert": "QuillEditor.basic"
+    },
+    {
+        "insert": ".\nToolbar"
+    },
+    {
+        "attributes": {
+            "list": "bullet"
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "Editor"
+    },
+    {
+        "attributes": {
+            "list": "bullet"
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "Quoted"
+    },
+    {
+        "attributes": {
+            "blockquote": true
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "final c = QuillController.basic();"
+    },
+    {
+        "attributes": {
+            "code-block": true
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "\n"
+    }
+]

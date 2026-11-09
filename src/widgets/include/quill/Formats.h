@@ -82,9 +82,11 @@ struct StyleOptions
     /// one rounded panel behind each run of code lines instead.
     bool codeBlockBackgroundOnBlocks = true;
 
-    QStringList monospaceFamilies{QStringLiteral("Roboto Mono"), QStringLiteral("Menlo"),
+    /// Tried in order; "Courier New" exists on every Windows and macOS, and
+    /// the system fixed font is appended after these.
+    QStringList monospaceFamilies{QStringLiteral("Roboto Mono"),      QStringLiteral("Menlo"),
                                   QStringLiteral("DejaVu Sans Mono"), QStringLiteral("Consolas"),
-                                  QStringLiteral("monospace")};
+                                  QStringLiteral("Courier New"),      QStringLiteral("monospace")};
     QColor linkColor = QColor(0x15, 0x65, 0xC0);
     QColor inlineCodeBackground = QColor(0xF5, 0xF5, 0xF5);     // Colors.grey.shade100
     QColor codeBlockBackground = QColor(0xFA, 0xFA, 0xFA);      // Colors.grey.shade50

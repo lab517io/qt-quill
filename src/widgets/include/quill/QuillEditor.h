@@ -113,7 +113,8 @@ public:
     void setStyleOptions(const StyleOptions& style);
     EditingRules editingRules() const;
     void setEditingRules(EditingRules rules);
-    /// Attributes dropped from pasted HTML. Default: font, size, color, background.
+    /// Attributes dropped from pasted HTML. Default: font, size, color,
+    /// background, line-height (pages and office suites set them everywhere).
     QStringList pasteIgnoredAttributes() const;
     void setPasteIgnoredAttributes(const QStringList& keys);
 

@@ -4,6 +4,9 @@
 #include <quill/DeltaDocument.h>
 
 #include <QDir>
+#include <QElapsedTimer>
+#include <QGuiApplication>
+#include <QPalette>
 #include <QRandomGenerator>
 #include <QTest>
 #include <QTextBlock>
@@ -545,16 +548,25 @@ private slots:
                                    "<a href=\"https://x.y\">link</a></p>"
                                    "<ul><li>first</li><li>second</li></ul><ol><li>num</li></ol>"
                                    "<p align=\"center\">mid</p>"));
-        check(DeltaDocument::toDelta(&doc),
-              delta("[{'insert':'Title'},{'insert':'\\n','attributes':{'header':1}},"
-                    "{'insert':'bold','attributes':{'bold':true}},{'insert':' and '},"
-                    "{'insert':'it','attributes':{'italic':true}},{'insert':' '},"
-                    "{'insert':'link','attributes':{'color':'#FF0000FF','link':'https://x.y'}},{'insert':'\\n'},"
-                    "{'insert':'first'},{'insert':'\\n','attributes':{'list':'bullet'}},"
-                    "{'insert':'second'},{'insert':'\\n','attributes':{'list':'bullet'}},"
-                    "{'insert':'num'},{'insert':'\\n','attributes':{'list':'ordered'}},"
-                    "{'insert':'mid'},{'insert':'\\n','attributes':{'align':'center'}}]"),
-              __LINE__);
+        // Qt colours imported links with the platform palette's link colour.
+        const QString linkColor =
+            QStringLiteral("#%1")
+                .arg(QGuiApplication::palette().color(QPalette::Link).rgba(), 8, 16, QLatin1Char('0'))
+                .toUpper();
+        check(
+            DeltaDocument::toDelta(&doc),
+            delta(QStringLiteral("[{'insert':'Title'},{'insert':'\\n','attributes':{'header':1}},"
+                                 "{'insert':'bold','attributes':{'bold':true}},{'insert':' and '},"
+                                 "{'insert':'it','attributes':{'italic':true}},{'insert':' '},"
+                                 "{'insert':'link','attributes':{'color':'%1','link':'https://x.y'}},{'insert':'\\n'},"
+                                 "{'insert':'first'},{'insert':'\\n','attributes':{'list':'bullet'}},"
+                                 "{'insert':'second'},{'insert':'\\n','attributes':{'list':'bullet'}},"
+                                 "{'insert':'num'},{'insert':'\\n','attributes':{'list':'ordered'}},"
+                                 "{'insert':'mid'},{'insert':'\\n','attributes':{'align':'center'}}]")
+                      .arg(linkColor)
+                      .toUtf8()
+                      .constData()),
+            __LINE__);
     }
 
     void tablesAreFlattenedWithWarning()

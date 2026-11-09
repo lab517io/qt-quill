@@ -4,116 +4,13 @@
     },
     {
         "attributes": {
-            "align": "center",
-            "header": 2,
-            "list": "bullet"
+            "header": 1,
+            "list": "checked"
         },
         "insert": "\n"
     },
     {
         "insert": "x"
-    },
-    {
-        "attributes": {
-            "align": "center",
-            "header": 2,
-            "list": "bullet"
-        },
-        "insert": "\n"
-    },
-    {
-        "insert": "y"
-    },
-    {
-        "attributes": {
-            "strike": true
-        },
-        "insert": "t"
-    },
-    {
-        "attributes": {
-            "strike": true,
-            "underline": true
-        },
-        "insert": "e"
-    },
-    {
-        "insert": "ext"
-    },
-    {
-        "attributes": {
-            "align": "center",
-            "header": 2,
-            "list": "bullet"
-        },
-        "insert": "\n"
-    },
-    {
-        "insert": "taalpha γ"
-    },
-    {
-        "attributes": {
-            "code": true
-        },
-        "insert": "γ"
-    },
-    {
-        "insert": "xx"
-    },
-    {
-        "attributes": {
-            "align": "center",
-            "header": 2,
-            "list": "bullet"
-        },
-        "insert": "\n"
-    },
-    {
-        "attributes": {
-            "code": true
-        },
-        "insert": " beta"
-    },
-    {
-        "insert": " yt"
-    },
-    {
-        "attributes": {
-            "underline": true
-        },
-        "insert": "alph"
-    },
-    {
-        "attributes": {
-            "bold": true,
-            "code": true,
-            "underline": true
-        },
-        "insert": "a"
-    },
-    {
-        "attributes": {
-            "bold": true
-        },
-        "insert": "γ"
-    },
-    {
-        "attributes": {
-            "bold": true,
-            "code": true,
-            "underline": true
-        },
-        "insert": "x"
-    },
-    {
-        "insert": "alpha"
-    },
-    {
-        "attributes": {
-            "bold": true,
-            "code": true
-        },
-        "insert": "xγ"
     },
     {
         "attributes": {
@@ -123,20 +20,93 @@
         "insert": "\n"
     },
     {
-        "insert": "y"
+        "insert": "yt"
+    },
+    {
+        "attributes": {
+            "strike": true
+        },
+        "insert": "eext"
+    },
+    {
+        "attributes": {
+            "align": "center",
+            "header": 1
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "taalpha γγxx"
+    },
+    {
+        "attributes": {
+            "align": "center",
+            "header": 1
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": " beta yt"
     },
     {
         "attributes": {
             "code": true
         },
-        "insert": "γ"
+        "insert": "a"
     },
     {
-        "insert": "x\ny😀😀 betatext γ"
+        "insert": "lph"
     },
     {
         "attributes": {
-            "header": 2
+            "bold": true
+        },
+        "insert": "a"
+    },
+    {
+        "insert": "γ"
+    },
+    {
+        "attributes": {
+            "bold": true
+        },
+        "insert": "x"
+    },
+    {
+        "insert": "alpha"
+    },
+    {
+        "attributes": {
+            "bold": true
+        },
+        "insert": "x"
+    },
+    {
+        "insert": "γ"
+    },
+    {
+        "attributes": {
+            "align": "center",
+            "header": 2,
+            "list": "checked"
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "yγx"
+    },
+    {
+        "attributes": {
+            "list": "bullet"
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "y😀😀 betatext γ"
+    },
+    {
+        "attributes": {
+            "code-block": true
         },
         "insert": "\n"
     }

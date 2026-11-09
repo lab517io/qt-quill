@@ -70,3 +70,18 @@ that and fixes what differs.
 - `tests/lsan.supp` and the Asan config are Linux/GCC specific.
 - `ci/check-flutter.sh` and `ci/check-oracle.sh` are platform independent and
   need to run on one platform only.
+
+## Notes from M9a
+
+Covered on Linux already (see M9a outcome): Qt 6.8 / 6.12 behaviour,
+clang, a Windows cross-build passing the whole suite under Wine, HiDPI and
+widget-style runs, Windows image paths, generic fonts, clipboard HTML,
+TLS failures. What remains for M9:
+
+1. Push to a remote and get `build-windows` (MSVC) and `build-macos` green;
+   expect MSVC warnings first (`/W4 /WX`).
+2. Walk `M9-checklist.md` on each platform (IME, real clipboard, HiDPI
+   monitors, dark mode, deployment).
+3. Replace the hand-built clipboard fixtures with real captures.
+4. Check font assertions with the native platforms (offscreen on Windows has
+   no font database).

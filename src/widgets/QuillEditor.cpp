@@ -8,6 +8,7 @@
 
 #include "QuillEditor_p.h"
 
+#include "ClipboardHtml.h"
 #include "DocumentEdit.h"
 #include "quill/DeltaDocument.h"
 
@@ -432,18 +433,11 @@ Delta QuillEditorPrivate::htmlToDelta(const QString& html) const
 {
     QTextDocument scratch;
     scratch.setDefaultFont(q->document()->defaultFont());
-    scratch.setHtml(html);
+    scratch.setHtml(detail::normalizeClipboardHtml(html));
+    detail::markImportedBlocks(&scratch);
     ExportOptions options;
     options.style = docStyle();
-    const Delta raw = DeltaDocument::toDelta(&scratch, options);
-    Delta out;
-    for (Op op : raw.ops()) {
-        AttributeMap attrs = op.attributes();
-        for (const QString& k : pasteIgnored)
-            attrs.remove(k);
-        op.setAttributes(attrs);
-        out.push(op);
-    }
+    Delta out = detail::cleanPastedDelta(DeltaDocument::toDelta(&scratch, options), pasteIgnored);
     // Quill: a trailing plain newline is the end of the pasted fragment, not a line.
     if (!out.isEmpty() && detail::lastAttributes(out).isEmpty())
         out = out.slice(0, out.length() - 1);
@@ -482,7 +476,7 @@ Delta QuillEditorPrivate::plainTextChange(const Range& r, const QString& textIn)
 QuillEditor::QuillEditor(QWidget* parent) : QTextEdit(parent), d(std::make_unique<QuillEditorPrivate>(this))
 {
     d->style.codeBlockBackgroundOnBlocks = false;
-    d->pasteIgnored = {key("font"), key("size"), key("color"), key("background")};
+    d->pasteIgnored = {key("font"), key("size"), key("color"), key("background"), key("line-height")};
     d->verify = qEnvironmentVariableIntValue("QUILLQT_VERIFY") == 1;
     d->embeds = new EmbedRegistry(this);
     d->embeds->setRemoteImagesEnabled(true);

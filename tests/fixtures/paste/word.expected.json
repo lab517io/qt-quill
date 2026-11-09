@@ -1,0 +1,75 @@
+[
+    {
+        "insert": "Meeting notes"
+    },
+    {
+        "attributes": {
+            "header": 1
+        },
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "bold": true
+        },
+        "insert": "Decisions"
+    },
+    {
+        "insert": " and "
+    },
+    {
+        "attributes": {
+            "italic": true
+        },
+        "insert": "actions"
+    },
+    {
+        "insert": ":\nShip M9a"
+    },
+    {
+        "attributes": {
+            "list": "bullet"
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "Plan M9"
+    },
+    {
+        "attributes": {
+            "list": "bullet"
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "First step"
+    },
+    {
+        "attributes": {
+            "list": "ordered"
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "Sub step"
+    },
+    {
+        "attributes": {
+            "indent": 1,
+            "list": "ordered"
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "Second step"
+    },
+    {
+        "attributes": {
+            "list": "ordered"
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "\n"
+    }
+]

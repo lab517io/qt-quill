@@ -478,7 +478,7 @@ private slots:
         auto e = testutil::makeEditor(false);
         ChangeRecorder rec(e.get());
         e->setContents(doc);
-        QRandomGenerator rng(qHash(file));
+        QRandomGenerator rng(quint32(qHash(file)));
         const QList<AttributeMap> inlineChoices{
             attrs("{'bold':true}"),         attrs("{'bold':null}"),    attrs("{'italic':true,'underline':true}"),
             attrs("{'color':'#FF00FF00'}"), attrs("{'size':'large'}"), attrs("{'link':'https://l'}"),

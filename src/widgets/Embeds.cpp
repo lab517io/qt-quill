@@ -166,7 +166,7 @@ void ImageEmbed::paint(QPainter* p, const QRectF& rect, const EmbedContext& c) c
     const QPointF center = rect.center() - QPointF(0, caption ? fm.height() * 0.6 : 0);
     drawPictureGlyph(p, center, glyph, withAlpha(fg, 0.45), broken);
     if (caption) {
-        QString text = QFileInfo(QUrl(source).path()).fileName();
+        QString text = QFileInfo(EmbedRegistry::resolveImageUrl(c.document, source).path()).fileName();
         if (text.isEmpty())
             text = source.startsWith(str("data:")) ? str("data:") : source;
         if (state == EmbedRegistry::ImageState::Loading)

@@ -22,7 +22,7 @@ run() {
 samples=$(sed -n 's/.*alias="\([^"]*\)".*/\1/p' "$ROOT/apps/demo/samples.qrc")
 for s in $samples; do
     name="${s%.json}"
-    run "$DEMO" --sample "$s" --screenshot "$OUT/$name.png"
-    run "$DEMO" --sample "$s" --dark --screenshot "$OUT/$name-dark.png"
+    run "$DEMO" --offline --sample "$s" --screenshot "$OUT/$name.png"
+    run "$DEMO" --offline --sample "$s" --dark --screenshot "$OUT/$name-dark.png"
 done
 echo "screenshots in $OUT"

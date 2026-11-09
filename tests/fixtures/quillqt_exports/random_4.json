@@ -4,7 +4,7 @@
     },
     {
         "attributes": {
-            "italic": true
+            "bold": true
         },
         "insert": "a😀"
     },
@@ -13,7 +13,6 @@
     },
     {
         "attributes": {
-            "indent": 1,
             "list": "checked"
         },
         "insert": "\n"
@@ -30,80 +29,29 @@
         "attributes": {
             "underline": true
         },
-        "insert": " "
+        "insert": " beta"
     },
     {
-        "insert": "beta alphata"
+        "insert": " alphata"
     },
     {
         "attributes": {
             "strike": true
         },
-        "insert": " e"
+        "insert": " ete"
     },
     {
-        "attributes": {
-            "italic": true,
-            "strike": true
-        },
-        "insert": "t"
+        "insert": "tttext😀tetextxt"
     },
     {
         "attributes": {
             "bold": true,
-            "italic": true,
-            "strike": true
-        },
-        "insert": "e"
-    },
-    {
-        "attributes": {
-            "strike": true
-        },
-        "insert": "tt"
-    },
-    {
-        "insert": "te"
-    },
-    {
-        "attributes": {
-            "bold": true
-        },
-        "insert": "xt"
-    },
-    {
-        "attributes": {
-            "bold": true,
-            "code": true
-        },
-        "insert": "😀"
-    },
-    {
-        "insert": "tetextxt"
-    },
-    {
-        "attributes": {
-            "bold": true,
-            "code": true,
-            "strike": true
+            "italic": true
         },
         "insert": "γ"
     },
     {
         "insert": " beta "
-    },
-    {
-        "attributes": {
-            "indent": 1,
-            "list": "checked"
-        },
-        "insert": "\n"
-    },
-    {
-        "attributes": {
-            "bold": true
-        },
-        "insert": "😀"
     },
     {
         "attributes": {
@@ -113,41 +61,61 @@
     },
     {
         "attributes": {
-            "blockquote": true,
-            "header": 2
+            "bold": true
+        },
+        "insert": "😀"
+    },
+    {
+        "attributes": {
+            "list": "ordered"
         },
         "insert": "\n"
     },
     {
         "attributes": {
-            "code": true
+            "header": 1,
+            "list": "ordered"
         },
-        "insert": "😀"
-    },
-    {
-        "insert": "text"
+        "insert": "\n"
     },
     {
         "attributes": {
-            "underline": true
+            "strike": true
+        },
+        "insert": "😀t"
+    },
+    {
+        "insert": "ext"
+    },
+    {
+        "attributes": {
+            "strike": true
         },
         "insert": "be"
     },
     {
         "attributes": {
-            "blockquote": true,
-            "header": 1,
-            "indent": 1
+            "blockquote": true
         },
         "insert": "\n"
     },
     {
         "attributes": {
-            "code": true
+            "italic": true,
+            "strike": true
         },
         "insert": "x"
     },
     {
-        "insert": "\nta t\n"
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "italic": true
+        },
+        "insert": "ta "
+    },
+    {
+        "insert": "t\n"
     }
 ]

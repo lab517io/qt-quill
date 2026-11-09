@@ -1,0 +1,77 @@
+[
+    {
+        "insert": "Summary"
+    },
+    {
+        "attributes": {
+            "header": 2
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "Plain, "
+    },
+    {
+        "attributes": {
+            "bold": true
+        },
+        "insert": "bold"
+    },
+    {
+        "insert": ", "
+    },
+    {
+        "attributes": {
+            "italic": true
+        },
+        "insert": "italic"
+    },
+    {
+        "insert": ", "
+    },
+    {
+        "attributes": {
+            "underline": true
+        },
+        "insert": "underlined"
+    },
+    {
+        "insert": " and "
+    },
+    {
+        "attributes": {
+            "strike": true
+        },
+        "insert": "struck"
+    },
+    {
+        "insert": ".\nOne"
+    },
+    {
+        "attributes": {
+            "list": "ordered"
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "Two"
+    },
+    {
+        "attributes": {
+            "list": "ordered"
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "Centred"
+    },
+    {
+        "attributes": {
+            "align": "center"
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "\n"
+    }
+]

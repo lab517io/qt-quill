@@ -15,15 +15,29 @@ concurrency:
 
 jobs:
   build-test-linux:
-    name: build and test (${{ matrix.config }})
+    name: linux (${{ matrix.config }})
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        config: [Debug, Release, Asan]
+        # Debug/Release/Asan/Clang: Ubuntu's Qt 6.4.2 (the supported floor).
+        # Qt-6.8.3: the Qt LTS the Windows and macOS jobs use (aqtinstall).
+        # Mingw: Windows cross-build with llvm-mingw, tests under Wine.
+        config: [Debug, Release, Asan, Clang, Qt-6.8.3, Mingw]
+    env:
+      QUILLQT_WERROR: "ON"
     steps:
       - uses: actions/checkout@v4
       - run: ci/install-deps-ubuntu.sh
+      - if: matrix.config == 'Clang'
+        run: sudo apt-get install -y --no-install-recommends clang
+      - if: matrix.config == 'Mingw'
+        run: sudo apt-get install -y --no-install-recommends wine64
+      - if: startsWith(matrix.config, 'Qt-') || matrix.config == 'Mingw'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/quillqt-qt
+          key: qt-${{ matrix.config }}-${{ hashFiles('ci/install-qt.sh', 'ci/setup-mingw.sh') }}
       - run: ci/build.sh ${{ matrix.config }}
       - run: ci/test.sh ${{ matrix.config }}
       - if: failure()
@@ -33,6 +47,41 @@ jobs:
           path: |
             build/*/Testing/Temporary/LastTest.log
             build/*/test-output/
+
+  # Not verified yet: no Windows / macOS machine or remote so far (M9).
+  build-windows:
+    name: windows (MSVC 2022, Qt 6.8.3)
+    runs-on: windows-2022
+    env:
+      QUILLQT_WERROR: "ON"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - uses: seanmiddleditch/gha-setup-ninja@v5
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: 6.8.3
+          arch: win64_msvc2022_64
+          cache: true
+      - run: ./ci/build.ps1 Debug,Release
+        shell: pwsh
+      - run: ./ci/test.ps1 Debug,Release
+        shell: pwsh
+
+  build-macos:
+    name: macos (arm64, Qt 6.8.3)
+    runs-on: macos-14
+    env:
+      QUILLQT_WERROR: "ON"
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install ninja
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: 6.8.3
+          cache: true
+      - run: QUILLQT_CMAKE_ARGS="-DCMAKE_PREFIX_PATH=$QT_ROOT_DIR" ci/build.sh Debug Release
+      - run: ci/test.sh Debug Release
 
   oracle:
     name: OT oracle drift (quill-delta, dart_quill_delta)

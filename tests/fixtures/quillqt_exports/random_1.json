@@ -2,7 +2,7 @@
     {
         "attributes": {
             "bold": true,
-            "strike": true
+            "code": true
         },
         "insert": "x"
     },
@@ -11,7 +11,8 @@
     },
     {
         "attributes": {
-            "blockquote": true
+            "align": "center",
+            "list": "checked"
         },
         "insert": "\n\n"
     },
@@ -25,33 +26,31 @@
     },
     {
         "attributes": {
-            "blockquote": true
-        },
-        "insert": "\n"
-    },
-    {
-        "attributes": {
-            "strike": true
-        },
-        "insert": {
-            "image": "https://example.com/i.png"
-        }
-    },
-    {
-        "attributes": {
+            "align": "center",
             "list": "checked"
         },
         "insert": "\n"
     },
     {
         "attributes": {
-            "strike": true
+            "underline": true
+        },
+        "insert": {
+            "image": "https://example.com/i.png"
+        }
+    },
+    {
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "underline": true
         },
         "insert": "at"
     },
     {
         "attributes": {
-            "list": "checked"
+            "align": "center"
         },
         "insert": "\n"
     },
@@ -61,56 +60,39 @@
         }
     },
     {
-        "insert": "\next"
-    },
-    {
-        "attributes": {
-            "bold": true
-        },
-        "insert": "p"
-    },
-    {
-        "insert": "text"
-    },
-    {
-        "attributes": {
-            "bold": true
-        },
-        "insert": "h"
-    },
-    {
-        "insert": "tal beta "
-    },
-    {
-        "attributes": {
-            "bold": true
-        },
-        "insert": "p😀"
-    },
-    {
-        "insert": "x"
-    },
-    {
-        "attributes": {
-            "list": "checked"
-        },
-        "insert": "\n"
-    },
-    {
-        "insert": "yγha"
+        "insert": "\nextptexthtal beta "
     },
     {
         "attributes": {
             "italic": true
         },
-        "insert": "γex"
+        "insert": "p"
     },
     {
-        "insert": "t😀exxalpha"
+        "insert": "😀x"
     },
     {
         "attributes": {
-            "code-block": true
+            "align": "center"
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "yγhaγext😀ex"
+    },
+    {
+        "attributes": {
+            "bold": true
+        },
+        "insert": "x"
+    },
+    {
+        "insert": "alpha"
+    },
+    {
+        "attributes": {
+            "align": "center",
+            "list": "checked"
         },
         "insert": "\n"
     },
@@ -119,18 +101,12 @@
     },
     {
         "attributes": {
-            "underline": true
+            "code": true
         },
         "insert": "ex"
     },
     {
-        "insert": "textt"
-    },
-    {
-        "attributes": {
-            "list": "checked"
-        },
-        "insert": "\n"
+        "insert": "textt\n"
     },
     {
         "insert": {
@@ -138,22 +114,25 @@
         }
     },
     {
-        "insert": "\n 😀ytex"
+        "insert": "\n 😀"
     },
     {
         "attributes": {
-            "list": "checked"
+            "bold": true
         },
-        "insert": "\n"
+        "insert": "y"
     },
     {
         "insert": "t"
     },
     {
         "attributes": {
-            "list": "checked"
+            "bold": true
         },
-        "insert": "\n"
+        "insert": "ex"
+    },
+    {
+        "insert": "\nt\n"
     },
     {
         "insert": {
@@ -161,11 +140,22 @@
         }
     },
     {
-        "insert": "\nt\n beta \n"
+        "insert": "\n"
     },
     {
         "attributes": {
-            "code": true
+            "bold": true,
+            "italic": true
+        },
+        "insert": "t"
+    },
+    {
+        "insert": "\n beta \n"
+    },
+    {
+        "attributes": {
+            "bold": true,
+            "italic": true
         },
         "insert": "γ"
     },

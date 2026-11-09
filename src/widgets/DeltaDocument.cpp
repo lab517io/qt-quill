@@ -31,9 +31,7 @@ QString compactJson(const QJsonValue& v)
 class Loader
 {
 public:
-    Loader(QTextDocument* doc, const LoadOptions& options, const StyleOptions& style)
-        : m_doc(doc), m_options(options), m_style(style), m_cursor(doc)
-    {}
+    Loader(QTextDocument* doc, const StyleOptions& style) : m_doc(doc), m_style(style), m_cursor(doc) {}
 
     void run(const Delta& delta, LoadResult& result)
     {
@@ -100,7 +98,6 @@ private:
     }
 
     QTextDocument* m_doc;
-    const LoadOptions& m_options;
     StyleOptions m_style;
     QTextCursor m_cursor;
 };
@@ -173,7 +170,7 @@ LoadResult DeltaDocument::load(QTextDocument* doc, const Delta& deltaIn, const L
         doc->setBaseUrl(options.baseUrl);
 
     (options.embeds ? options.embeds : EmbedRegistry::shared())->attachTo(doc);
-    Loader(doc, options, style).run(delta, result);
+    Loader(doc, style).run(delta, result);
     setDocumentStyle(doc, style);
 
     doc->setUndoRedoEnabled(undo);

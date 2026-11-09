@@ -19,7 +19,7 @@ Decisions fixed on 2026-11-08 (see `../PLAN.md`, section 8):
 | 6 ✅ | [M6-toolbar-demo.md](M6-toolbar-demo.md) | `QuillToolbar`, demo application, file I/O | 5 |
 | 7 ✅ | [M7-embeds.md](M7-embeds.md) | Embed registry: image loading, video, formula, flutter_quill `custom` | 5 |
 | 8 ✅ | [M8-fidelity-ci.md](M8-fidelity-ci.md) | quill-delta oracle, flutter_quill fixtures, CI pipeline | 2, 4 |
-| 9a | [M9a-portability-on-linux.md](M9a-portability-on-linux.md) | Qt 6.8/6.11 and clang on Linux, Windows cross-build under Wine, platform differences reproducible on Linux, CI jobs for M9 | 8 |
+| 9a ✅ | [M9a-portability-on-linux.md](M9a-portability-on-linux.md) | Qt 6.8/6.12 and clang on Linux, Windows cross-build under Wine, platform differences reproducible on Linux, CI jobs for M9 | 8 |
 | 9 ⏸ | [M9-cross-platform.md](M9-cross-platform.md) | Windows and macOS builds, platform differences (deferred: no Windows/macOS machines yet) | 6, 9a |
 
 Each plan has the same sections: Goal, Deliverables, Design, Tasks, Tests,

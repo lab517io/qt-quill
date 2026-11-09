@@ -5,6 +5,9 @@
 
 #include <QAbstractTextDocumentLayout>
 #include <QDir>
+#include <QElapsedTimer>
+#include <QFontDatabase>
+#include <QFontInfo>
 #include <QImage>
 #include <QPainter>
 #include <QTest>
@@ -466,6 +469,45 @@ private slots:
         qInfo("loaded 5000 lines in %lld ms", qlonglong(t.elapsed()));
         QCOMPARE(doc.blockCount(), 5000);
         QVERIFY(t.elapsed() < 5000);
+    }
+
+    void genericFontNamesWorkEverywhere()
+    {
+        // Quill's generic names have no family of that name on Windows; the
+        // formats carry a style hint and families present on each platform.
+        const StyleOptions style;
+        const auto fmt = [&](const char* font) {
+            return formats::charFormat(AttributeMap{{QStringLiteral("font"), QString::fromLatin1(font)}}, {}, style);
+        };
+        const QTextCharFormat mono = fmt("monospace");
+        QCOMPARE(mono.fontStyleHint(), QFont::Monospace);
+        QVERIFY(mono.fontFixedPitch());
+        const QStringList monoFamilies = mono.fontFamilies().toStringList();
+        for (const char* family : {"Consolas", "Courier New", "Menlo", "DejaVu Sans Mono"})
+            QVERIFY2(monoFamilies.contains(QString::fromLatin1(family)), family);
+        QVERIFY(monoFamilies.contains(QFontDatabase::systemFont(QFontDatabase::FixedFont).family()));
+        // Resolving needs a font database; Qt's offscreen platform on Windows
+        // has none. With the windows platform, the style hint does not help
+        // when no listed family exists: the family list must cover Windows.
+        if (!QFontDatabase::families().isEmpty())
+            QVERIFY2(QFontInfo(mono.font()).fixedPitch(), qPrintable(QFontInfo(mono.font()).family()));
+
+        const QTextCharFormat serif = fmt("serif");
+        QCOMPARE(serif.fontStyleHint(), QFont::Serif);
+        for (const char* family : {"Times New Roman", "Times"})
+            QVERIFY2(serif.fontFamilies().toStringList().contains(QString::fromLatin1(family)), family);
+        const QTextCharFormat sans = fmt("sans-serif");
+        QCOMPARE(sans.fontStyleHint(), QFont::SansSerif);
+        for (const char* family : {"Arial", "Helvetica"})
+            QVERIFY2(sans.fontFamilies().toStringList().contains(QString::fromLatin1(family)), family);
+
+        // Export writes the Quill name back, whatever family was used.
+        QTextDocument doc;
+        const Delta input = testutil::delta(
+            "[{'insert':'a','attributes':{'font':'monospace'}},{'insert':'b','attributes':{'font':'serif'}},"
+            "{'insert':'c','attributes':{'font':'sans-serif'}},{'insert':'\\n'}]");
+        DeltaDocument::load(&doc, input);
+        QCOMPARE(DeltaDocument::toDelta(&doc), input);
     }
 };
 

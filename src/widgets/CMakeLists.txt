@@ -9,6 +9,8 @@ add_library(quillqt_widgets STATIC
     include/quill/QuillToolbar.h
     include/quill/Range.h
     include/quill/Source.h
+    ClipboardHtml.cpp
+    ClipboardHtml.h
     Colors.cpp
     DeltaDocument.cpp
     DocumentEdit.cpp

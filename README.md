@@ -5,7 +5,7 @@ the [Quill Delta](https://quilljs.com/docs/delta) format, compatible with
 [flutter_quill](https://pub.dev/packages/flutter_quill) and
 [Quill](https://github.com/slab/quill).
 
-**Status:** milestones M1 (skeleton), M2 (Delta core), M3 (Delta → QTextDocument), M4 (QTextDocument → Delta), M5 (editor widget), M6 (toolbar, demo), M7 (embeds) and M8 (fidelity harness, CI) done. See
+**Status:** milestones M1 (skeleton), M2 (Delta core), M3 (Delta → QTextDocument), M4 (QTextDocument → Delta), M5 (editor widget), M6 (toolbar, demo), M7 (embeds), M8 (fidelity harness, CI) and M9a (portability groundwork on Linux) done; M9 (native Windows and macOS) waits for those machines. See
 [PLAN.md](PLAN.md) for the design and [plans/](plans/README.md) for the
 milestone plans.
 
@@ -184,11 +184,34 @@ inner data is not a JSON string, and cannot lay out text with lone
 surrogates. quill-qt writes custom embeds as strings
 (`CustomEmbedRenderer::encode`).
 
+## Platform notes
+
+| | Linux | Windows | macOS |
+|---|---|---|---|
+| Status | supported, CI | cross-built and tested under Wine (llvm-mingw); MSVC CI job prepared, not yet run | CI job prepared, not yet run |
+| Qt | 6.4 (Ubuntu 24.04) to 6.12; CI also tests 6.8 LTS | 6.8 LTS | 6.8 LTS |
+
+- **Fonts:** Quill's generic names (`monospace`, `serif`, `sans-serif`) map to
+  a style hint plus families found on each platform (Consolas / Menlo /
+  DejaVu Sans Mono, Times New Roman / Times, Arial / Helvetica); code uses the
+  system fixed-width font. Documents keep the generic name.
+- **Shortcuts:** Ctrl+B/I/U, Ctrl+K, Ctrl+Shift+X and Ctrl+click on links are
+  Cmd on macOS (Qt maps Control to Command).
+- **Images:** plain file paths as flutter_quill stores them load on every
+  platform (`C:\Users\me\pic.png`, `\\server\share\pic.png`, `/home/me/pic.png`);
+  the document keeps the path as written.
+- **Clipboard:** HTML from Word, LibreOffice, Google Docs, browsers and
+  Windows CF_HTML is normalised (lists, quotes, code, no fonts or colours).
+- **Deployment** (not yet verified): `windeployqt quill-demo.exe`,
+  `macdeployqt quill-demo.app`.
+
 ## Building and testing
 
 ```sh
-ci/build.sh            # Debug and Release into build/debug, build/release (Asan: sanitizers)
-ci/test.sh             # ctest with QT_QPA_PLATFORM=offscreen, no display needed
+ci/build.sh            # Debug and Release into build/debug, build/release
+                       # also: Asan, Clang, Qt-6.8.3 (via ci/install-qt.sh), Mingw (Windows cross-build)
+ci/test.sh             # ctest with QT_QPA_PLATFORM=offscreen, no display needed (Mingw: under Wine)
+ci/build.ps1, test.ps1 # Windows / MSVC equivalents
 ci/check-oracle.sh     # regenerate the OT oracle (Node, optional Dart) and fail on drift
 ci/check-flutter.sh    # flutter_quill compatibility (Flutter)
 ci/format-check.sh     # clang-format-18 (--fix to format)

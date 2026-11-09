@@ -118,18 +118,18 @@ README "Platform notes"          what differs, deployment commands (windeployqt 
 
 ## Tasks
 
-- [ ] `ci/install-qt.sh`; Qt 6.8.3 and 6.11.x installed; `Qt68` / `Qt611` configs.
-- [ ] Full suite, fuzz, parity and screenshots on 6.8 and 6.11; fix and pin differences.
-- [ ] `Clang` config, `QUILLQT_WERROR`; MSVC-ism review.
-- [ ] llvm-mingw cross-build (compile); Wine test run (best effort, timeboxed).
-- [ ] Generic font mapping via style hints; font test.
-- [ ] Checklist hit-test under other styles.
-- [ ] Windows file URL fixtures and audit.
-- [ ] HiDPI test runs and fixes.
-- [ ] Clipboard HTML fixtures and `tst_paste`; CRLF at paste level.
-- [ ] TLS / connection failure tests for `ImageLoader`.
-- [ ] CI matrix and Windows/macOS jobs; `build.ps1` / `test.ps1`.
-- [ ] README platform notes; `M9-checklist.md`; M9 plan update.
+- [x] `ci/install-qt.sh`; Qt 6.8.3 and 6.11.x installed; `Qt68` / `Qt611` configs.
+- [x] Full suite, fuzz, parity and screenshots on 6.8 and 6.11; fix and pin differences.
+- [x] `Clang` config, `QUILLQT_WERROR`; MSVC-ism review.
+- [x] llvm-mingw cross-build (compile); Wine test run (best effort, timeboxed).
+- [x] Generic font mapping via style hints; font test.
+- [x] Checklist hit-test under other styles.
+- [x] Windows file URL fixtures and audit.
+- [x] HiDPI test runs and fixes.
+- [x] Clipboard HTML fixtures and `tst_paste`; CRLF at paste level.
+- [x] TLS / connection failure tests for `ImageLoader`.
+- [x] CI matrix and Windows/macOS jobs; `build.ps1` / `test.ps1`.
+- [x] README platform notes; `M9-checklist.md`; M9 plan update.
 
 ## Exit criteria
 
@@ -155,3 +155,75 @@ README "Platform notes"          what differs, deployment commands (windeployqt 
   platform here, use HTML published in Qt's and Quill's own clipboard tests
   and mark the provenance.
 - Downloads (≈ 4 GB total) depend on the network being available.
+
+## Outcome (2026-11-09)
+
+Done. All goals met, including the optional Wine test run.
+
+| Configuration | Result |
+|---|---|
+| GCC 13, Qt 6.4.2 (Debug, Release, ASan+UBSan) | 34/34 ctest entries |
+| clang 18, Qt 6.4.2, `-Wshorten-64-to-32`, `-Werror` | 34/34, no warnings |
+| GCC, Qt 6.8.3 LTS (aqtinstall) | 34/34; fuzz 3000 API steps / 60 000 keys clean |
+| GCC, Qt 6.12.0 (local build in ~/Qt) | 34/34; fuzz clean |
+| Windows x86_64, llvm-mingw 17 + Qt 6.8.3, under Wine | builds (library, demo, all tests); 34/34 |
+| HiDPI (`QT_SCALE_FACTOR=2`), Fusion and Windows styles | widget suites as extra ctest entries, green everywhere |
+
+Screenshots are identical on Qt 6.4.2, 6.8.3 and 6.12.0. The supported
+floor stays Qt 6.4.
+
+### Found and fixed
+
+- **Qt-version**: no behaviour differences between 6.4, 6.8 and 6.12 in
+  the editor; only missing transitive includes (`QElapsedTimer`) that 6.12
+  no longer provides.
+- **Compiler**: argument evaluation order in a test (several
+  `rnd.next()` calls in one call) gave different documents with GCC and
+  clang; an unused field and a pedantic `QSKIP` warning under clang.
+- **Windows image paths**: plain paths as flutter_quill stores picked
+  images (`C:\Users\...\pic.png`, `C:/...`, UNC `\\server\share\...`,
+  absolute `/home/...`) did not load: `QUrl` takes `C:` for a scheme. They
+  now load; the document keeps the path as written.
+- **Fonts**: on Windows the Monospace style hint does not help when no listed
+  family exists (Qt fell back to a serif face); "Courier New", present on
+  every Windows and macOS, added to the monospace families. Qt's offscreen
+  platform on Windows has an empty font database, so font assertions only
+  run where fonts exist.
+- **Clipboard HTML** (`ClipboardHtml.cpp`, `tst_paste` with 7 fixtures):
+  Word `mso-list` paragraphs become bullet / ordered lists with levels;
+  `<blockquote>`, `<pre>` and inline `<code>` keep their Quill formats;
+  `<strike>` / `<del>` strike; Google Docs' `font-weight:normal` wrapper and
+  Apple's interchange newline are dropped; a raw CF_HTML header is skipped;
+  whitespace HTML collapses at a line end is trimmed; `line-height` joined
+  the default paste-ignored attributes (Docs sets 1.38, which flutter_quill
+  does not support).
+- **Demo / CI**: the screenshot smoke test failed in a fresh tree (output
+  directory missing); `--offline` keeps screenshots and the smoke test off
+  the network.
+- **Wine**: it does not pass `QT_QPA_PLATFORM` to Windows processes, so the
+  cross-built GUI tests get `-platform offscreen` as an argument
+  (`QUILLQT_TEST_ARGS`, `quillqt_add_test(... GUI ...)`).
+- `ImageLoader` failures (connection reset, TLS against a plain server) end
+  as broken images without blocking (`remoteImageFailuresDoNotBlock`).
+- UBSan caught a test downcasting `QuillEditor` to a helper subclass to
+  reach `insertFromMimeData`; `tst_paste` uses a real subclass now.
+
+### Scripts and CI
+
+`ci/install-qt.sh` (aqtinstall into `~/.cache/quillqt-qt`), `ci/build.sh`
+configs `Clang`, `Qt-<version>`, `Mingw` (with `ci/setup-mingw.sh` and
+`cmake/toolchains/llvm-mingw.cmake`), `QUILLQT_WERROR`; scripts work with
+macOS's bash 3.2. `ci/build.ps1` / `ci/test.ps1` for MSVC. The workflow's
+Linux matrix gains Clang, Qt-6.8.3 and Mingw (cached Qt); `build-windows`
+(MSVC 2022, Qt 6.8.3) and `build-macos` (arm64) jobs are written but not
+yet run (no remote). `plans/M9-checklist.md` lists the manual checks.
+
+### Deviations
+
+- Clipboard fixtures are hand-built from each application's documented
+  format (provenance in `tests/fixtures/paste/SOURCES.md`); M9 replaces them
+  with real captures.
+- The checklist hit area needed no change: Qt's `blockWithMarkerAt` is
+  correct under the Fusion and Windows styles and at scale 2.
+- Qt 6.11 was not installed: a local Qt 6.12.0 build was already present
+  and is newer.

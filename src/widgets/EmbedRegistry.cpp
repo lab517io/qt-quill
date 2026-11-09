@@ -313,9 +313,20 @@ void EmbedRegistry::setImageCacheLimit(qint64 bytes)
 
 QUrl EmbedRegistry::resolveImageUrl(const QTextDocument* doc, const QString& source)
 {
+    const QUrl base = doc ? doc->baseUrl() : QUrl();
+    // Plain file paths, as flutter_quill stores picked images: C:\x.png or
+    // C:/x.png (QUrl would take "C:" for a scheme), UNC \\server\share,
+    // and absolute "/x.png" unless the document has a web base URL.
+    const bool drive = source.size() > 2 && source.at(0).isLetter() && source.at(1) == QLatin1Char(':')
+                       && (source.at(2) == QLatin1Char('/') || source.at(2) == QLatin1Char('\\'));
+    const bool unc = source.startsWith(QLatin1String("\\\\"));
+    const bool absolute =
+        source.startsWith(QLatin1Char('/')) && !source.startsWith(QLatin1String("//")) && !isRemote(base);
+    if (drive || unc || absolute)
+        return QUrl::fromLocalFile(QString(source).replace(QLatin1Char('\\'), QLatin1Char('/')));
     const QUrl url(source);
-    if (url.isRelative() && doc && doc->baseUrl().isValid())
-        return doc->baseUrl().resolved(url);
+    if (url.isRelative() && base.isValid())
+        return base.resolved(url);
     return url;
 }
 
@@ -325,6 +336,16 @@ QImage EmbedRegistry::image(QTextDocument* doc, const QString& source)
         return {};
     const QUrl name(source);
     const QUrl url = resolveImageUrl(doc, source);
+    if (url.isLocalFile() && !source.startsWith(QLatin1String("file:"))) {
+        // A plain path: QTextDocument cannot load it by name, so load it here.
+        const QVariant added = doc->resource(QTextDocument::ImageResource, name);
+        if (added.isValid())
+            return toImage(added);
+        const QImage image(url.toLocalFile());
+        if (!image.isNull())
+            doc->addResource(QTextDocument::ImageResource, name, image);
+        return image;
+    }
     if (!isRemote(url)) {
         const QVariant resource = doc->resource(QTextDocument::ImageResource, name);
         const QImage image = toImage(resource);

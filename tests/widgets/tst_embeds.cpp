@@ -7,6 +7,7 @@
 #include <QAbstractTextDocumentLayout>
 #include <QBuffer>
 #include <QDir>
+#include <QFileInfo>
 #include <QPainter>
 #include <QScrollBar>
 #include <QSignalSpy>
@@ -126,9 +127,12 @@ public:
         });
         server.listen(QHostAddress::LocalHost);
     }
-    QString url(const char* path) const
+    QString url(const char* path, const char* scheme = "http") const
     {
-        return QStringLiteral("http://127.0.0.1:%1%2").arg(server.serverPort()).arg(QString::fromLatin1(path));
+        return QStringLiteral("%1://127.0.0.1:%2%3")
+            .arg(QString::fromLatin1(scheme))
+            .arg(server.serverPort())
+            .arg(QString::fromLatin1(path));
     }
     void release()
     {
@@ -153,6 +157,8 @@ private:
             reply(s, "302 Found", {}, "Location: /ok.png\r\n");
         else if (path == "/slow.png")
             held << s;
+        else if (path == "/reset")
+            s->abort(); // connection reset without a response
         else
             reply(s, "404 Not Found", "nope");
     }
@@ -285,6 +291,47 @@ private Q_SLOTS:
         QCOMPARE(QString::fromUtf8(DeltaDocument::toDelta(&doc).toJson()).count(QStringLiteral("{\"image\"")), 6);
     }
 
+    void localImagePaths()
+    {
+        // flutter_quill stores picked images as plain paths; QUrl alone reads
+        // "C:" as a scheme. Sources are kept verbatim, only loading resolves.
+        const auto local = [](const char* source) {
+            return EmbedRegistry::resolveImageUrl(nullptr, QString::fromUtf8(source));
+        };
+        QCOMPARE(local("C:\\Users\\me\\pic.png"), QUrl::fromLocalFile(QStringLiteral("C:/Users/me/pic.png")));
+        // (toLocalFile() of it is "C:/..." on Windows and "/C:/..." elsewhere.)
+        QCOMPARE(local("C:/Users/me/pic.png").toString(), QStringLiteral("file:///C:/Users/me/pic.png"));
+        QCOMPARE(local("\\\\server\\share\\pic.png").host(), QStringLiteral("server"));
+        QCOMPARE(local("\\\\server\\share\\pic.png").path(), QStringLiteral("/share/pic.png"));
+        QCOMPARE(local("/tmp/pic.png"), QUrl::fromLocalFile(QStringLiteral("/tmp/pic.png")));
+        QCOMPARE(local("file:///C:/pic.png"), QUrl(QStringLiteral("file:///C:/pic.png")));
+        QCOMPARE(local("https://x/p.png"), QUrl(QStringLiteral("https://x/p.png")));
+        QVERIFY(local("assets/pic.png").isRelative());
+        // With a web base URL, "/p.png" is a path on that server.
+        QTextDocument web;
+        web.setBaseUrl(QUrl(QStringLiteral("https://example.com/docs/")));
+        QCOMPARE(EmbedRegistry::resolveImageUrl(&web, QStringLiteral("/p.png")),
+                 QUrl(QStringLiteral("https://example.com/p.png")));
+
+        // An absolute plain path loads and shows its natural size; export is unchanged.
+        const QString path = QStringLiteral(QUILLQT_TEST_OUTPUT_DIR "/local-image.png");
+        QDir().mkpath(QFileInfo(path).absolutePath());
+        QImage(24, 12, QImage::Format_ARGB32).save(path);
+        const Delta input = delta(
+            QStringLiteral(
+                "[{'insert':{'image':'%1'}},{'insert':'\\n'},{'insert':{'image':'C:\\\\no\\\\such.png'}},{'insert':'\\n'}]")
+                .arg(path));
+        QTextDocument doc;
+        doc.setTextWidth(600);
+        DeltaDocument::load(&doc, input);
+        QCOMPARE(embedSize(&doc, 0), QSizeF(24, 12));
+        QCOMPARE(EmbedRegistry::shared()->imageState(&doc, path), EmbedRegistry::ImageState::Loaded);
+        QCOMPARE(embedSize(&doc, 2), QSizeF(ImageEmbed::PlaceholderWidth, ImageEmbed::PlaceholderHeight));
+        QCOMPARE(EmbedRegistry::shared()->imageState(&doc, QStringLiteral("C:\\no\\such.png")),
+                 EmbedRegistry::ImageState::Failed);
+        QCOMPARE(DeltaDocument::toDelta(&doc).toJson(), input.toJson());
+    }
+
     void inlineEmbedsCentreOnText()
     {
         QTextDocument doc;
@@ -386,7 +433,7 @@ private Q_SLOTS:
         QCOMPARE(embedSize(doc, 0), QSizeF(ImageEmbed::PlaceholderWidth, ImageEmbed::PlaceholderHeight));
         QCOMPARE(e->embeds()->imageState(doc, ok), EmbedRegistry::ImageState::Loading);
         QSignalSpy relayout(doc->documentLayout(), &QAbstractTextDocumentLayout::documentSizeChanged);
-        QTRY_COMPARE(loaded.size(), 3);
+        QTRY_COMPARE_WITH_TIMEOUT(loaded.size(), 3, 20000); // slow under Wine
         QCOMPARE(e->embeds()->imageState(doc, ok), EmbedRegistry::ImageState::Loaded);
         QCOMPARE(e->embeds()->imageState(doc, http.url("/missing.png")), EmbedRegistry::ImageState::Failed);
         QCOMPARE(e->embeds()->imageState(doc, http.url("/redirect")), EmbedRegistry::ImageState::Loaded);
@@ -423,6 +470,37 @@ private Q_SLOTS:
         QCOMPARE(http.requests.size(), requests);
     }
 
+    void remoteImageFailuresDoNotBlock()
+    {
+        // A reset connection and TLS against a plain HTTP server (the TLS
+        // backend differs per platform; with none at all the request fails
+        // too): both end as broken images, the editor stays usable.
+        HttpStub http;
+        EmbedRegistry registry;
+        registry.setRemoteImagesEnabled(true);
+        QSignalSpy loaded(&registry, &EmbedRegistry::imageLoaded);
+        QTextDocument doc;
+        doc.setTextWidth(400);
+        LoadOptions options;
+        options.embeds = &registry;
+        const QString reset = http.url("/reset");
+        const QString tls = http.url("/ok.png", "https");
+        DeltaDocument::load(
+            &doc,
+            delta(QStringLiteral(
+                      "[{'insert':{'image':'%1'}},{'insert':'\\n'},{'insert':{'image':'%2'}},{'insert':'\\n'}]")
+                      .arg(reset, tls)),
+            options);
+        doc.size(); // lays out, starts both requests
+        QTRY_COMPARE_WITH_TIMEOUT(loaded.size(), 2, 10000);
+        for (const auto& args : loaded)
+            QCOMPARE(args.at(1).toBool(), false);
+        QCOMPARE(registry.imageState(&doc, reset), EmbedRegistry::ImageState::Failed);
+        QCOMPARE(registry.imageState(&doc, tls), EmbedRegistry::ImageState::Failed);
+        QCOMPARE(embedSize(&doc, 0), QSizeF(ImageEmbed::PlaceholderWidth, ImageEmbed::PlaceholderHeight));
+        QVERIFY(inkIn(render(&doc), charRect(&doc, 2).toAlignedRect()) > 10); // broken-image box drawn
+    }
+
     void remoteImageAfterDocumentIsGone()
     {
         HttpStub http;
@@ -438,10 +516,10 @@ private Q_SLOTS:
                 &doc, delta(QStringLiteral("[{'insert':{'image':'%1'}},{'insert':'\\n'}]").arg(http.url("/slow.png"))),
                 options);
             doc.size(); // lays out, starts the request
-            QTRY_COMPARE(http.held.size(), 1);
+            QTRY_COMPARE_WITH_TIMEOUT(http.held.size(), 1, 20000);
         }
         http.release();
-        QTRY_COMPARE(loaded.size(), 1);
+        QTRY_COMPARE_WITH_TIMEOUT(loaded.size(), 1, 20000);
         QCOMPARE(loaded.first().at(1).toBool(), true);
     }
 

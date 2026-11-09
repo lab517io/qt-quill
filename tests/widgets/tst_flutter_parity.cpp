@@ -252,15 +252,18 @@ private Q_SLOTS:
                 case 2:
                     e->deleteText(index, boundary(index + 1 + rnd.next(3)) - index, Source::User);
                     break;
-                case 3:
-                    e->formatText(index, boundary(index + 1 + rnd.next(6)) - index,
-                                  {{inlineKeys.at(rnd.next(int(inlineKeys.size()))),
-                                    rnd.next(4) ? QJsonValue(true) : QJsonValue()}},
-                                  Source::User);
-                    break;
-                case 4:
-                    e->formatLine(index, rnd.next(4), lineFormats.at(rnd.next(int(lineFormats.size()))), Source::User);
-                    break;
+                case 3: {
+                    // One rnd.next() per statement: argument evaluation order
+                    // is unspecified and differs between compilers.
+                    const int end = boundary(index + 1 + rnd.next(6));
+                    const QString name = inlineKeys.at(rnd.next(int(inlineKeys.size())));
+                    const QJsonValue value = rnd.next(4) ? QJsonValue(true) : QJsonValue();
+                    e->formatText(index, end - index, {{name, value}}, Source::User);
+                } break;
+                case 4: {
+                    const int length = rnd.next(4);
+                    e->formatLine(index, length, lineFormats.at(rnd.next(int(lineFormats.size()))), Source::User);
+                } break;
                 case 5:
                     if (rnd.next(3) == 0)
                         e->insertBlockEmbed(index, QStringLiteral("image"), QStringLiteral("https://example.com/i.png"),

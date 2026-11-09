@@ -1,0 +1,59 @@
+[
+    {
+        "insert": "Release notes"
+    },
+    {
+        "attributes": {
+            "header": 2
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "Fixed "
+    },
+    {
+        "attributes": {
+            "bold": true
+        },
+        "insert": "bold"
+    },
+    {
+        "insert": " and "
+    },
+    {
+        "attributes": {
+            "italic": true
+        },
+        "insert": "italic"
+    },
+    {
+        "insert": " handling, see "
+    },
+    {
+        "attributes": {
+            "link": "https://example.com/notes"
+        },
+        "insert": "notes"
+    },
+    {
+        "insert": ".\nFirst item"
+    },
+    {
+        "attributes": {
+            "list": "bullet"
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "Second item"
+    },
+    {
+        "attributes": {
+            "list": "bullet"
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "\n"
+    }
+]
