@@ -349,8 +349,9 @@ private slots:
         QCOMPARE(doc.indentWidth(), 24.0);
         const QTextBlockFormat lh = blockWithText(doc, "line height 1.5").blockFormat();
         QCOMPARE(lh.lineHeightType(), int(QTextBlockFormat::ProportionalHeight));
-        QCOMPARE(lh.lineHeight(), 150.0);
-        QCOMPARE(blockWithText(doc, "line height 1.15").blockFormat().lineHeight(), 115.0);
+        // flutter_quill's text heights 1.55 and 1.30 relative to its paragraph height 1.15.
+        QVERIFY(qAbs(lh.lineHeight() - 155.0 / 1.15) < 1e-6);
+        QVERIFY(qAbs(blockWithText(doc, "line height 1.15").blockFormat().lineHeight() - 130.0 / 1.15) < 1e-6);
     }
 
     void embeds()

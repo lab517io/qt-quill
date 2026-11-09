@@ -300,19 +300,11 @@ QTextBlockFormat blockFormat(const AttributeMap& line, const StyleOptions& style
     if (line.value(QLatin1String("direction")).toString() == QLatin1String("rtl"))
         f.setLayoutDirection(Qt::RightToLeft);
 
-    if (auto lh = doubleValue(line.value(QLatin1String("line-height"))); lh && *lh > 0)
-        f.setLineHeight(*lh * 100.0, QTextBlockFormat::ProportionalHeight);
+    if (auto percent = lineHeightPercent(line.value(QLatin1String("line-height"))))
+        f.setLineHeight(*percent, QTextBlockFormat::ProportionalHeight);
 
-    // flutter_quill's per-line vertical spacing (group spacing is added by
-    // DeltaDocument::updateBlockSpacing, as it depends on the line above).
-    if (kind == BlockKind::Header)
-        f.setTopMargin(style.scaledSpacing(style.headerSpacingTop[f.headingLevel() - 1]));
-    if (quote) {
-        f.setTopMargin(style.scaledSpacing(style.quoteLineSpacingTop));
-        f.setBottomMargin(style.scaledSpacing(style.quoteLineSpacingBottom));
-    } else if (list && !codeBlock) {
-        f.setBottomMargin(style.scaledSpacing(style.listLineSpacingBottom));
-    }
+    // Vertical margins depend on the neighbouring lines and are set by
+    // DeltaDocument::updateBlockSpacing (formats::lineSpacing).
     return f;
 }
 
@@ -324,6 +316,93 @@ QString listGroup(const AttributeMap& line)
     if (value == QLatin1String("checked") || value == QLatin1String("unchecked"))
         return str("check");
     return {};
+}
+
+namespace {
+// flutter_quill's LineHeightAttribute values and DefaultStyles text heights.
+constexpr std::pair<double, double> kLineHeights[] = {{1.0, 1.15}, {1.15, 1.30}, {1.5, 1.55}, {2.0, 2.0}};
+constexpr double kParagraphHeight = 1.15;
+} // namespace
+
+std::optional<double> lineHeightPercent(const QJsonValue& value)
+{
+    const auto v = doubleValue(value);
+    if (!v)
+        return std::nullopt;
+    for (const auto& [attr, height] : kLineHeights) {
+        if (std::abs(*v - attr) < 1e-9)
+            return height / kParagraphHeight * 100.0;
+    }
+    return std::nullopt;
+}
+
+double lineHeightValue(double percent)
+{
+    for (const auto& [attr, height] : kLineHeights) {
+        if (std::abs(percent - height / kParagraphHeight * 100.0) < 0.01)
+            return attr;
+    }
+    return percent / 100.0;
+}
+
+AttributeMap blockKey(const AttributeMap& line)
+{
+    static const QStringList keys{str("list"),        str("align"),  str("code-block"), str("blockquote"),
+                                  str("line-height"), str("indent"), str("direction")};
+    AttributeMap key;
+    for (const QString& k : keys) {
+        const auto it = line.constFind(k);
+        if (it != line.constEnd() && !it->isNull())
+            key.insert(k, *it);
+    }
+    return key;
+}
+
+LineSpacing lineSpacing(const AttributeMap& line, const AttributeMap* prev, const AttributeMap* next,
+                        const StyleOptions& style)
+{
+    LineSpacing s;
+    const auto header = headerLevel(line);
+    const AttributeMap key = blockKey(line);
+    if (key.isEmpty()) {
+        // flutter_quill's _getVerticalSpacingForLine: headers, else paragraph (0, 0).
+        if (header)
+            s.top = style.scaledSpacing(style.headerSpacingTop[*header - 1]);
+        return s;
+    }
+    const bool quote = key.contains(QLatin1String("blockquote"));
+    const bool code = key.contains(QLatin1String("code-block"));
+    const bool indent = key.contains(QLatin1String("indent"));
+    const bool list = key.contains(QLatin1String("list"));
+
+    // EditableTextBlock._getSpacingForLine: the header's spacing, else the
+    // block style's line spacing; none above the first, below the last line.
+    double top = 0, bottom = 0;
+    if (header) {
+        top = style.headerSpacingTop[*header - 1];
+    } else if (quote) {
+        top = style.quoteLineSpacingTop;
+        bottom = style.quoteLineSpacingBottom;
+    } else if (indent) {
+        bottom = style.indentLineSpacingBottom;
+    } else if (list) {
+        bottom = style.listLineSpacingBottom;
+    }
+    const bool first = !prev || blockKey(*prev) != key;
+    const bool last = !next || blockKey(*next) != key;
+    s.top = first ? 0 : style.scaledSpacing(top);
+    s.bottom = last ? 0 : style.scaledSpacing(bottom);
+
+    // The block's own spacing (_getVerticalSpacingForBlock: quote, code,
+    // indent and list blocks 6 above; align, direction, line-height none),
+    // outside its decoration, and the code block's content padding inside.
+    if (first) {
+        s.outerTop = (quote || code || indent || list) ? style.scaledSpacing(style.blockGroupSpacingTop) : 0;
+        s.top += s.outerTop + (code ? style.scaledSpacing(style.codeBlockPaddingVertical) : 0);
+    }
+    if (last)
+        s.bottom += code ? style.scaledSpacing(style.codeBlockPaddingVertical) : 0;
+    return s;
 }
 
 int indentLevel(const AttributeMap& line)

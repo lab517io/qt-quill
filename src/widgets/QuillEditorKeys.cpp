@@ -83,6 +83,36 @@ void QuillEditor::keyPressEvent(QKeyEvent* e)
     default:
         break;
     }
+    // Word and line deletion, which Qt does itself, can join lines: delete
+    // the same range as a Delta (flutter_quill's merge rules, spacing, one
+    // undo step), as Backspace and Delete do.
+    if (e->matches(QKeySequence::DeleteStartOfWord) || e->matches(QKeySequence::DeleteEndOfWord)
+        || e->matches(QKeySequence::DeleteEndOfLine) || e->matches(QKeySequence::DeleteCompleteLine)) {
+        QTextCursor c = textCursor();
+        if (!c.hasSelection()) {
+            // As QWidgetTextControl moves the cursor for these keys.
+            if (e->matches(QKeySequence::DeleteStartOfWord)) {
+                c.movePosition(QTextCursor::PreviousWord, QTextCursor::KeepAnchor);
+            } else if (e->matches(QKeySequence::DeleteEndOfWord)) {
+                c.movePosition(QTextCursor::NextWord, QTextCursor::KeepAnchor);
+            } else if (e->matches(QKeySequence::DeleteEndOfLine)) {
+                const QTextBlock b = c.block();
+                if (c.position() == b.position() + b.length() - 1)
+                    c.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor);
+                else
+                    c.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
+            } else {
+                c.movePosition(QTextCursor::StartOfBlock);
+                c.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
+            }
+        }
+        const int from = c.selectionStart();
+        const int length = std::min(c.selectionEnd(), getLength() - 1) - from;
+        if (length > 0)
+            d->deleteRange(from, length);
+        ensureCursorVisible();
+        return;
+    }
     if (e->matches(QKeySequence::Cut) && textCursor().hasSelection()) {
         copy();
         d->deleteRange(getSelection().index, getSelection().length);

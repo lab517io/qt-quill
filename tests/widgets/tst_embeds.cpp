@@ -8,16 +8,20 @@
 #include <QBuffer>
 #include <QDir>
 #include <QFileInfo>
+#include <QFontDatabase>
+#include <QFontMetricsF>
 #include <QPainter>
 #include <QScrollBar>
 #include <QSignalSpy>
 #include <QTcpServer>
 #include <QTcpSocket>
+
 #include <QTest>
 #include <QTextBlock>
 #include <QTextCursor>
 #include <QTextDocument>
 #include <QTextLayout>
+#include <cmath>
 
 using namespace quill;
 using testutil::delta;
@@ -202,9 +206,23 @@ public:
     void paint(QPainter* p, const QRectF& r, const EmbedContext&) const override { p->fillRect(r, Qt::yellow); }
 };
 
+/// Text descent below an image alone on its line (flutter_quill puts such an
+/// image on the text baseline; the object reserves the descent under it).
+qreal imageDescent(QTextDocument* doc, int pos)
+{
+    const QTextBlock b = doc->findBlock(pos);
+    QTextCursor c(doc);
+    c.setPosition(pos + 1);
+    const QTextCharFormat f = c.charFormat();
+    if (b.length() != 2 || !f.isImageFormat())
+        return 0;
+    return std::ceil(QFontMetricsF(f.font().resolve(doc->defaultFont())).descent());
+}
+
+/// Size the embed is drawn at (its object box without that descent).
 QSizeF embedSize(QTextDocument* doc, int pos)
 {
-    return charRect(doc, pos).size();
+    return charRect(doc, pos).size() - QSizeF(0, imageDescent(doc, pos));
 }
 
 } // namespace
@@ -276,7 +294,10 @@ private Q_SLOTS:
                             "{'insert':{'image':'%1'},'attributes':{'width':'20','height':'3000'}},{'insert':'\\n'}]")
                             .arg(dataPng)));
         const qreal avail = 600 - 2 * doc.documentMargin();
-        QCOMPARE(embedSize(&doc, 0).width(), 40.0);    // natural size
+        QCOMPARE(embedSize(&doc, 0).width(), 40.0); // natural size
+        if (!QFontDatabase::families().isEmpty())   // no fonts: no descent (offscreen on Windows)
+            QVERIFY(imageDescent(&doc, 0) > 1);     // the line keeps the text descent below
+        QCOMPARE(charRect(&doc, 0).height(), 20 + imageDescent(&doc, 0));
         QCOMPARE(embedSize(&doc, 2), QSizeF(100, 50)); // width keeps the aspect ratio
         QCOMPARE(embedSize(&doc, 4).width(), 20.0);    // height keeps the aspect ratio
         QCOMPARE(embedSize(&doc, 6).width(), avail);   // shrunk to the line, aspect kept

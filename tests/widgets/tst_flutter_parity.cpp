@@ -6,12 +6,17 @@
 
 #include <quill/EmbedRegistry.h>
 
+#include <QAbstractTextDocumentLayout>
 #include <QDir>
 #include <QFile>
+#include <QFontDatabase>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTest>
+#include <QTextBlock>
+#include <QTextDocument>
+#include <QTextLayout>
 
 using namespace quill;
 
@@ -87,6 +92,41 @@ void recordExport(const QString& name, const Delta& doc)
     QVERIFY(committed);
     QCOMPARE(compact(doc.toJsonArray()), compact(committed->toJsonArray()));
 }
+struct LineBox
+{
+    double top = 0, height = 0;
+};
+
+/// Content box of every line (Quill line = QTextBlock), as flutter_quill's
+/// geometry probe records it: from the first to the last text line of the
+/// block, without block margins.
+QList<LineBox> lineBoxes(QTextDocument* doc)
+{
+    doc->documentLayout()->documentSize(); // lay out
+    QList<LineBox> out;
+    for (QTextBlock b = doc->begin(); b.isValid(); b = b.next()) {
+        const QTextLayout* l = b.layout();
+        if (l->lineCount() == 0) {
+            out.append({l->position().y(), 0});
+            continue;
+        }
+        const QTextLine first = l->lineAt(0);
+        const QTextLine last = l->lineAt(l->lineCount() - 1);
+        const double top = l->position().y() + first.y();
+        out.append({top, l->position().y() + last.y() + last.height() - top});
+    }
+    return out;
+}
+
+/// The style the geometry is compared at: a 16 px base font, so that
+/// flutter_quill's logical pixels are quill-qt's pixels.
+StyleOptions geometryStyle()
+{
+    StyleOptions style;
+    style.baseFont = QFont(QStringLiteral("DejaVu Sans"));
+    style.baseFont.setPixelSize(16);
+    return style;
+}
 
 } // namespace
 
@@ -95,6 +135,99 @@ class TestFlutterParity : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
+    // Gaps between consecutive lines (spacing and padding only; line heights
+    // depend on fonts) must match flutter_quill's, recorded by
+    // tools/flutter-check/test/geometry_test.dart; after a line holding only
+    // a sized embed, the distance between the line tops must match.
+    void geometry_data()
+    {
+        QTest::addColumn<QString>("file");
+        const QDir dir(testutil::fixturePath(QStringLiteral("flutter_geometry")));
+        for (const QString& f : dir.entryList({QStringLiteral("*.json")}, QDir::Files, QDir::Name)) {
+            if (f != QLatin1String("known_differences.json"))
+                QTest::newRow(qPrintable(f)) << dir.filePath(f);
+        }
+    }
+
+    void geometry()
+    {
+        QFETCH(QString, file);
+        QFile f(file);
+        QVERIFY(f.open(QIODevice::ReadOnly));
+        const QJsonObject probe = QJsonDocument::fromJson(f.readAll()).object();
+        const QString source = probe.value(QStringLiteral("source")).toString();
+        const QJsonArray expected = probe.value(QStringLiteral("lines")).toArray();
+        const QJsonObject known = testutil::loadJson(QStringLiteral("flutter_geometry/known_differences.json"))
+                                      .object()
+                                      .value(source)
+                                      .toObject();
+
+        const std::optional<Delta> delta = Delta::fromJson(testutil::loadJson(source).toJson());
+        QVERIFY(delta);
+        QTextDocument doc;
+        LoadOptions options;
+        options.style = geometryStyle();
+        doc.setDefaultFont(options.style.baseFont);
+        const LoadResult r = DeltaDocument::load(&doc, *delta, options);
+        QVERIFY(r.ok);
+        doc.setDocumentMargin(0);
+        doc.setTextWidth(probe.value(QStringLiteral("width")).toDouble());
+        const QList<LineBox> lines = lineBoxes(&doc);
+        QCOMPARE(lines.size(), expected.size());
+
+        QStringList problems;
+        QSet<QString> seen;
+        const QStringList texts = [&] {
+            QStringList t;
+            for (QTextBlock b = doc.begin(); b.isValid(); b = b.next())
+                t << b.text().replace(QChar::ObjectReplacementCharacter, QStringLiteral("[E]")).left(28);
+            return t;
+        }();
+        QList<AttributeMap> lineAttrs;
+        for (QTextBlock b = doc.begin(); b.isValid(); b = b.next())
+            lineAttrs << b.blockFormat().property(prop::BlockAttributes).toJsonObject();
+        for (qsizetype i = 1; i < lines.size(); ++i) {
+            const QJsonObject e0 = expected[i - 1].toObject(), e1 = expected[i].toObject();
+            const QString embed = e0[QStringLiteral("embed")].toString();
+            if (embed == QLatin1String("unsized"))
+                continue; // its height is the image's natural size
+            // Without fonts (Qt's offscreen platform on Windows) there is no
+            // text descent below a lone image.
+            if (embed == QLatin1String("sized") && QFontDatabase::families().isEmpty())
+                continue;
+            // After a sized embed, compare the distance between line tops
+            // (the line is the embed's height plus the text descent).
+            // Likewise after a line with a line height: flutter_quill spreads
+            // the extra height around the text, Qt puts it below.
+            const bool pitch =
+                embed == QLatin1String("sized") || lineAttrs[i - 1].contains(QLatin1String("line-height"));
+            const double want = e1[QStringLiteral("top")].toDouble() - e0[QStringLiteral("top")].toDouble()
+                                - (pitch ? 0 : e0[QStringLiteral("height")].toDouble());
+            const double got = lines[i].top - lines[i - 1].top - (pitch ? 0 : lines[i - 1].height);
+            QString problem;
+            // A line height scales Qt's natural line height, which differs a
+            // little from the font size flutter_quill scales: allow 4 %.
+            const double tolerance = pitch ? std::max(1.0, 0.04 * want) : 1.0;
+            if (std::abs(got - want) > tolerance)
+                problem = QStringLiteral("%1 %2, flutter_quill %3")
+                              .arg(pitch ? QStringLiteral("distance from the line above") : QStringLiteral("gap"))
+                              .arg(got, 0, 'f', 1)
+                              .arg(want, 0, 'f', 1);
+            const QString key = QString::number(i);
+            if (known.contains(key)) {
+                seen.insert(key);
+                if (problem.isEmpty())
+                    problems << QStringLiteral("line %1 (%2) is listed in known_differences.json but matches")
+                                    .arg(i)
+                                    .arg(texts[i]);
+            } else if (!problem.isEmpty()) {
+                problems << QStringLiteral("line %1 (%2): %3").arg(i).arg(texts[i], problem.trimmed());
+            }
+        }
+        if (!problems.isEmpty())
+            QFAIL(qPrintable(source + QStringLiteral(":\n  ") + problems.join(QStringLiteral("\n  "))));
+    }
+
     void scripts_data()
     {
         QTest::addColumn<QJsonObject>("script");

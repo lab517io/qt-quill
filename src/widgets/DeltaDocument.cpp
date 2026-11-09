@@ -16,6 +16,7 @@
 #include <QTextImageFormat>
 #include <QTextList>
 #include <QUrl>
+#include <optional>
 
 #include <vector>
 
@@ -230,45 +231,123 @@ void DeltaDocument::regroupLists(const QTextBlock& firstIn, const QTextBlock& la
 
 namespace {
 /// Group of a line for flutter_quill's block spacing: 1 list, 2 quote, 3 code, 0 none.
-int spacingGroup(const QTextBlock& b)
+} // namespace
+
+namespace {
+
+std::optional<AttributeMap> attributesOf(const QTextBlock& b)
 {
-    switch (BlockKind(b.blockFormat().intProperty(prop::BlockKind))) {
-    case BlockKind::ListItem:
-        return 1;
-    case BlockKind::Blockquote:
-        return 2;
-    case BlockKind::CodeBlock:
-        return 3;
-    default:
-        return formats::listGroup(lineAttributesOf(b)).isEmpty() ? 0 : 1; // list headers
-    }
+    if (!b.isValid())
+        return std::nullopt;
+    return lineAttributesOf(b);
 }
+
+formats::LineSpacing spacingOf(const QTextBlock& b, const StyleOptions& style)
+{
+    const auto prev = attributesOf(b.previous());
+    const auto next = attributesOf(b.next());
+    return formats::lineSpacing(lineAttributesOf(b), prev ? &*prev : nullptr, next ? &*next : nullptr, style);
+}
+
+} // namespace
+
+namespace {
+
+struct Margins
+{
+    double top = 0, bottom = 0, decoTop = 0, decoBottom = 0;
+};
+
+/// The margins updateBlockSpacing gives `b`; `prev` is the spacing of the
+/// line above (its bottom spacing goes into this line's top margin).
+Margins marginsFor(const QTextBlock& b, const formats::LineSpacing& s, const std::optional<formats::LineSpacing>& prev)
+{
+    Margins m;
+    m.top = s.top + (prev ? prev->bottom : 0);
+    m.bottom = b.next().isValid() ? 0 : s.bottom;
+    m.decoTop = s.top - s.outerTop;
+    m.decoBottom = s.bottom - s.outerBottom;
+    return m;
+}
+
+bool same(double a, double b)
+{
+    return qFuzzyCompare(1.0 + a, 1.0 + b);
+}
+
+bool hasMargins(const QTextBlockFormat& f, const Margins& m)
+{
+    return same(f.topMargin(), m.top) && same(f.bottomMargin(), m.bottom)
+           && same(f.doubleProperty(prop::DecorationTop), m.decoTop)
+           && same(f.doubleProperty(prop::DecorationBottom), m.decoBottom);
+}
+
 } // namespace
 
 void DeltaDocument::updateBlockSpacing(const QTextBlock& firstIn, const QTextBlock& lastIn, const StyleOptions& style)
 {
     if (!firstIn.isValid() || !lastIn.isValid())
         return;
+    // A line's spacing depends on its neighbours, and its top margin holds
+    // the previous line's bottom spacing: include one line on each side.
     const QTextBlock first = firstIn.previous().isValid() ? firstIn.previous() : firstIn;
     const QTextBlock last = lastIn.next().isValid() ? lastIn.next() : lastIn;
-    const double extra = style.scaledSpacing(style.blockGroupSpacingTop);
+    std::optional<formats::LineSpacing> prev;
+    if (first.previous().isValid())
+        prev = spacingOf(first.previous(), style);
     for (QTextBlock b = first; b.isValid(); b = b.next()) {
-        const int group = spacingGroup(b);
-        const bool starts = group != 0 && !(b.previous().isValid() && spacingGroup(b.previous()) == group);
-        const double wanted = starts ? extra : 0;
+        const formats::LineSpacing s = spacingOf(b, style);
+        const Margins m = marginsFor(b, s, prev);
         QTextBlockFormat f = b.blockFormat();
-        const double current = f.doubleProperty(prop::GroupSpacing);
-        if (!qFuzzyCompare(1.0 + current, 1.0 + wanted)) {
-            f.setTopMargin(f.topMargin() - current + wanted);
-            if (wanted > 0)
-                f.setProperty(prop::GroupSpacing, wanted);
-            else
-                f.clearProperty(prop::GroupSpacing);
+        if (!hasMargins(f, m)) {
+            f.setTopMargin(m.top);
+            f.setBottomMargin(m.bottom);
+            const auto setOrClear = [&f](int property, double v) {
+                if (v > 0)
+                    f.setProperty(property, v);
+                else
+                    f.clearProperty(property);
+            };
+            setOrClear(prop::DecorationTop, m.decoTop);
+            setOrClear(prop::DecorationBottom, m.decoBottom);
             QTextCursor(b).setBlockFormat(f);
         }
         if (b == last)
             break;
+        prev = s;
     }
+}
+
+bool detail::blockSpacingStale(const QTextBlock& firstIn, const QTextBlock& lastIn, const StyleOptions& style)
+{
+    if (!firstIn.isValid() || !lastIn.isValid())
+        return false;
+    const QTextBlock first = firstIn.previous().isValid() ? firstIn.previous() : firstIn;
+    const QTextBlock last = lastIn.next().isValid() ? lastIn.next() : lastIn;
+    std::optional<formats::LineSpacing> prev;
+    if (first.previous().isValid())
+        prev = spacingOf(first.previous(), style);
+    for (QTextBlock b = first; b.isValid(); b = b.next()) {
+        const formats::LineSpacing s = spacingOf(b, style);
+        if (!hasMargins(b.blockFormat(), marginsFor(b, s, prev)))
+            return true;
+        if (b == last)
+            break;
+        prev = s;
+    }
+    return false;
+}
+
+int detail::staleBlockSpacing(const QTextDocument* doc, const StyleOptions& style)
+{
+    std::optional<formats::LineSpacing> prev;
+    for (QTextBlock b = doc->begin(); b.isValid(); b = b.next()) {
+        const formats::LineSpacing s = spacingOf(b, style);
+        if (!hasMargins(b.blockFormat(), marginsFor(b, s, prev)))
+            return b.blockNumber();
+        prev = s;
+    }
+    return -1;
 }
 
 } // namespace quill

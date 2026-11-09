@@ -1,0 +1,22 @@
+{
+ "source": "documents/basic_inline.json",
+ "width": 800.0,
+ "lines": [
+  {
+   "top": 0.0,
+   "height": 18.0
+  },
+  {
+   "top": 18.0,
+   "height": 18.0
+  },
+  {
+   "top": 36.0,
+   "height": 25.0
+  },
+  {
+   "top": 61.0,
+   "height": 18.0
+  }
+ ]
+}

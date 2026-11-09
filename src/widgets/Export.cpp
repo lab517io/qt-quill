@@ -118,7 +118,7 @@ std::optional<double> lineHeightValue(const QTextBlockFormat& f)
     if (!f.hasProperty(QTextFormat::LineHeight) || f.lineHeightType() != QTextBlockFormat::ProportionalHeight
         || nearlyEqual(f.lineHeight(), 100.0))
         return std::nullopt;
-    return f.lineHeight() / 100.0;
+    return formats::lineHeightValue(f.lineHeight());
 }
 
 QString listValue(const QTextBlock& block)

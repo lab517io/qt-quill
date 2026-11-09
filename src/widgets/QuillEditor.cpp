@@ -249,6 +249,7 @@ void QuillEditorPrivate::apply(const Delta& change)
                      change.toJson().constData(), target.toJson().constData(), actual.toJson().constData());
             target = actual;
         }
+        verifySpacing("apply");
     }
     if (target == old)
         return;
@@ -322,6 +323,22 @@ void QuillEditorPrivate::onContentsChange(int pos, int removed, int added)
     const Delta old = contents;
     if (!change.isEmpty())
         contents = contents.compose(change);
+    // The editor routes edits that join or split lines through apply(),
+    // which updates the spacing. Should another of Qt's own edits (an input
+    // method replacing a selection, ...) leave it stale, update it here,
+    // joined to the edit's undo step where Qt allows that.
+    if (!change.isEmpty()) {
+        const QTextBlock first = doc->findBlock(start);
+        const QTextBlock last = doc->findBlock(int(std::max<qsizetype>(newEnd - 1, start)));
+        if (detail::blockSpacingStale(first, last, docStyle())) {
+            QTextCursor c(doc);
+            c.joinPreviousEditBlock();
+            suppress = true;
+            DeltaDocument::updateBlockSpacing(first, last, docStyle());
+            suppress = false;
+            c.endEditBlock();
+        }
+    }
     if (verify) {
         const Delta full = DeltaDocument::toDelta(doc);
         if (full != contents) {
@@ -333,6 +350,7 @@ void QuillEditorPrivate::onContentsChange(int pos, int removed, int added)
             change = old.diff(full);
             contents = full;
         }
+        verifySpacing("contentsChange");
     }
     if (change.isEmpty())
         return;
@@ -341,6 +359,16 @@ void QuillEditorPrivate::onContentsChange(int pos, int removed, int added)
     } else {
         Q_EMIT q->textChange(change, old, Source::User);
         Q_EMIT q->editorChange();
+    }
+}
+
+void QuillEditorPrivate::verifySpacing(const char* where)
+{
+    const int stale = detail::staleBlockSpacing(q->document(), docStyle());
+    if (stale >= 0) {
+        ++failures;
+        qWarning("quill: line %d has stale vertical spacing after %s", stale, where);
+        DeltaDocument::updateBlockSpacing(q->document()->firstBlock(), q->document()->lastBlock(), docStyle());
     }
 }
 
@@ -944,13 +972,18 @@ void QuillEditor::paintEvent(QPaintEvent* e)
             if (!b.isVisible())
                 continue;
             // blockBoundingRect() excludes the block's margins. Decorations
-            // cover a line's own spacing, not the spacing above its group.
+            // cover a line's own spacing, not the spacing around its block.
             const QTextBlockFormat bf = b.blockFormat();
-            const qreal lineTop = bf.topMargin() - bf.doubleProperty(prop::GroupSpacing);
-            const QRectF r =
-                layout->blockBoundingRect(b).translated(offset).adjusted(0, -lineTop, 0, bf.bottomMargin());
+            const qreal lineTop = bf.doubleProperty(prop::DecorationTop);
+            const qreal lineBottom = bf.doubleProperty(prop::DecorationBottom);
+            const QRectF r = layout->blockBoundingRect(b).translated(offset).adjusted(0, -lineTop, 0, lineBottom);
             const qreal indent = b.blockFormat().indent() * doc->indentWidth();
             if (kind(b) == BlockKind::CodeBlock) {
+                // One panel per flutter_quill block: code lines with a different
+                // "code-block" value (a language) start a new one.
+                if (!run.isNull() && b.previous().isValid()
+                    && formats::blockKey(d->styledFor(b.previous())) != formats::blockKey(d->styledFor(b)))
+                    flush();
                 const QRectF panel(left + indent, r.top(), width - indent, r.height());
                 run = run.isNull() ? panel : run.united(panel);
                 continue;

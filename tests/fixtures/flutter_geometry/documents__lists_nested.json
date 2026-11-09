@@ -1,0 +1,66 @@
+{
+ "source": "documents/lists_nested.json",
+ "width": 800.0,
+ "lines": [
+  {
+   "top": 0.0,
+   "height": 18.0
+  },
+  {
+   "top": 24.0,
+   "height": 18.0
+  },
+  {
+   "top": 48.0,
+   "height": 18.0
+  },
+  {
+   "top": 72.0,
+   "height": 18.0
+  },
+  {
+   "top": 96.0,
+   "height": 18.0
+  },
+  {
+   "top": 120.0,
+   "height": 18.0
+  },
+  {
+   "top": 144.0,
+   "height": 18.0
+  },
+  {
+   "top": 168.0,
+   "height": 18.0
+  },
+  {
+   "top": 192.0,
+   "height": 18.0
+  },
+  {
+   "top": 216.0,
+   "height": 18.0
+  },
+  {
+   "top": 240.0,
+   "height": 18.0
+  },
+  {
+   "top": 264.0,
+   "height": 18.0
+  },
+  {
+   "top": 282.0,
+   "height": 18.0
+  },
+  {
+   "top": 306.0,
+   "height": 18.0
+  },
+  {
+   "top": 330.0,
+   "height": 18.0
+  }
+ ]
+}

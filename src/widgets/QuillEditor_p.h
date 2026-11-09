@@ -38,6 +38,8 @@ public:
     /// Diffs the whole document against `contents` (changes whose range Qt
     /// does not report reliably).
     void resync(Source source);
+    /// Verify mode: the vertical spacing of every line is current.
+    void verifySpacing(const char* where);
     void syncSelection();
     void sanitizeTypingFormat();
     void reload();

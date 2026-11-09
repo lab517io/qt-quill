@@ -1,0 +1,50 @@
+{
+ "source": "documents/align_rtl_indent.json",
+ "width": 800.0,
+ "lines": [
+  {
+   "top": 0.0,
+   "height": 18.0
+  },
+  {
+   "top": 18.0,
+   "height": 18.0
+  },
+  {
+   "top": 36.0,
+   "height": 18.0
+  },
+  {
+   "top": 54.0,
+   "height": 36.0
+  },
+  {
+   "top": 90.0,
+   "height": 18.0
+  },
+  {
+   "top": 108.0,
+   "height": 18.0
+  },
+  {
+   "top": 132.0,
+   "height": 18.0
+  },
+  {
+   "top": 156.0,
+   "height": 18.0
+  },
+  {
+   "top": 174.0,
+   "height": 25.0
+  },
+  {
+   "top": 199.0,
+   "height": 32.0
+  },
+  {
+   "top": 231.0,
+   "height": 21.0
+  }
+ ]
+}

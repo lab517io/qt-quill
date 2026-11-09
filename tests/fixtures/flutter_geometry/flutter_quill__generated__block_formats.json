@@ -1,0 +1,94 @@
+{
+ "source": "flutter_quill/generated/block_formats.json",
+ "width": 800.0,
+ "lines": [
+  {
+   "top": 0.0,
+   "height": 37.0
+  },
+  {
+   "top": 45.0,
+   "height": 32.0
+  },
+  {
+   "top": 85.0,
+   "height": 26.0
+  },
+  {
+   "top": 117.0,
+   "height": 22.0
+  },
+  {
+   "top": 145.0,
+   "height": 20.0
+  },
+  {
+   "top": 169.0,
+   "height": 18.0
+  },
+  {
+   "top": 193.0,
+   "height": 18.0
+  },
+  {
+   "top": 217.0,
+   "height": 18.0
+  },
+  {
+   "top": 241.0,
+   "height": 18.0
+  },
+  {
+   "top": 265.0,
+   "height": 18.0
+  },
+  {
+   "top": 289.0,
+   "height": 18.0
+  },
+  {
+   "top": 313.0,
+   "height": 18.0
+  },
+  {
+   "top": 337.0,
+   "height": 18.0
+  },
+  {
+   "top": 377.0,
+   "height": 15.0
+  },
+  {
+   "top": 408.0,
+   "height": 18.0
+  },
+  {
+   "top": 426.0,
+   "height": 18.0
+  },
+  {
+   "top": 444.0,
+   "height": 18.0
+  },
+  {
+   "top": 462.0,
+   "height": 18.0
+  },
+  {
+   "top": 480.0,
+   "height": 18.0
+  },
+  {
+   "top": 504.0,
+   "height": 18.0
+  },
+  {
+   "top": 522.0,
+   "height": 25.0
+  },
+  {
+   "top": 547.0,
+   "height": 21.0
+  }
+ ]
+}

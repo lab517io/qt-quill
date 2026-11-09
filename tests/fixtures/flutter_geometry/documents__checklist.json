@@ -1,0 +1,26 @@
+{
+ "source": "documents/checklist.json",
+ "width": 800.0,
+ "lines": [
+  {
+   "top": 0.0,
+   "height": 18.0
+  },
+  {
+   "top": 24.0,
+   "height": 18.0
+  },
+  {
+   "top": 48.0,
+   "height": 18.0
+  },
+  {
+   "top": 72.0,
+   "height": 18.0
+  },
+  {
+   "top": 96.0,
+   "height": 18.0
+  }
+ ]
+}

@@ -325,7 +325,52 @@ private slots:
         const qreal x = e->viewport()->width() - margin - 6;
         QCOMPARE(pixel(x, r1.center().y()), style.codeBlockBackground);
         QCOMPARE(pixel(x, r2.top()), style.codeBlockBackground);
-        QCOMPARE(pixel(x, r2.bottom() + 4), e->viewport()->palette().color(QPalette::Base));
+        // flutter_quill's vertical content padding is inside the panel, the
+        // spacing above the code block is not.
+        // (scaled to the editor's font, so read the padding from the lines).
+        const qreal padTop = code1.blockFormat().doubleProperty(prop::DecorationTop);
+        const qreal padBottom = code1.next().blockFormat().doubleProperty(prop::DecorationBottom);
+        QVERIFY(padTop > 4);
+        QCOMPARE(padBottom, padTop);
+        QCOMPARE(pixel(x, r1.top() - padTop + 2), style.codeBlockBackground);
+        QCOMPARE(pixel(x, r1.top() - padTop - 2), e->viewport()->palette().color(QPalette::Base));
+        QCOMPARE(pixel(x, r2.bottom() + padBottom - 2), style.codeBlockBackground);
+        QCOMPARE(pixel(x, r2.bottom() + padBottom + 2), e->viewport()->palette().color(QPalette::Base));
+    }
+
+    // flutter_quill's spacing depends on the neighbouring lines; it must follow
+    // every kind of edit, and Qt's own edits must stay one undo step.
+    void spacingFollowsEdits()
+    {
+        start("[{'insert':'para\nb1'},{'insert':'\n','attributes':{'list':'bullet'}},"
+              "{'insert':'b2'},{'insert':'\n','attributes':{'list':'bullet'}},{'insert':'after\n'}]");
+        QTextDocument* doc = e->document();
+        const auto top = [&](int line) { return doc->findBlockByNumber(line).blockFormat().topMargin(); };
+        // Space above the list, between its items, none below it.
+        QVERIFY(top(1) > 0);
+        QVERIFY(top(2) > 0);
+        QCOMPARE(top(3), 0.0);
+        QCOMPARE(doc->findBlockByNumber(2).blockFormat().bottomMargin(), 0.0);
+
+        // Qt's own word deletion at the start of "b2" joins it to "b1".
+        e->setSelection(8, 0);
+        QTest::keyClick(e.get(), Qt::Key_Backspace, Qt::ControlModifier);
+        QCOMPARE(e->getText(), QStringLiteral("para\nb1b2\nafter\n"));
+        QCOMPARE(e->verificationFailures(), 0);
+        QCOMPARE(top(2), 0.0);                                    // "after" follows the list directly
+        QTest::keyClick(e.get(), Qt::Key_Z, Qt::ControlModifier); // one step undoes it
+        QCOMPARE(e->getText(), QStringLiteral("para\nb1\nb2\nafter\n"));
+        QVERIFY(top(2) > 0);
+        QCOMPARE(top(3), 0.0);
+        QCOMPARE(e->verificationFailures(), 0);
+
+        // API edits: a code-block line gets its padding, inside the panel.
+        e->formatLine(e->getLength() - 2, 1, {{QStringLiteral("code-block"), true}});
+        const QTextBlockFormat code = doc->lastBlock().blockFormat();
+        QVERIFY(code.doubleProperty(prop::DecorationTop) > 0);
+        QVERIFY(code.topMargin() > code.doubleProperty(prop::DecorationTop));       // plus the space above the block
+        QCOMPARE(code.bottomMargin(), code.doubleProperty(prop::DecorationBottom)); // last line: padding below
+        QCOMPARE(e->verificationFailures(), 0);
     }
 
     void renderFlutterQuillSample()

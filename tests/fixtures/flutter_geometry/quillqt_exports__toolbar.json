@@ -1,0 +1,109 @@
+{
+ "source": "quillqt_exports/toolbar.json",
+ "width": 800.0,
+ "lines": [
+  {
+   "top": 0.0,
+   "height": 18.0
+  },
+  {
+   "top": 18.0,
+   "height": 18.0
+  },
+  {
+   "top": 36.0,
+   "height": 18.0
+  },
+  {
+   "top": 54.0,
+   "height": 21.0
+  },
+  {
+   "top": 75.0,
+   "height": 21.0
+  },
+  {
+   "top": 96.0,
+   "height": 21.0
+  },
+  {
+   "top": 117.0,
+   "height": 22.0
+  },
+  {
+   "top": 139.0,
+   "height": 24.0
+  },
+  {
+   "top": 163.0,
+   "height": 24.0
+  },
+  {
+   "top": 203.0,
+   "height": 40.0
+  },
+  {
+   "top": 251.0,
+   "height": 34.0
+  },
+  {
+   "top": 293.0,
+   "height": 28.0
+  },
+  {
+   "top": 327.0,
+   "height": 24.0
+  },
+  {
+   "top": 357.0,
+   "height": 24.0
+  },
+  {
+   "top": 387.0,
+   "height": 24.0
+  },
+  {
+   "top": 417.0,
+   "height": 24.0
+  },
+  {
+   "top": 447.0,
+   "height": 24.0
+  },
+  {
+   "top": 477.0,
+   "height": 24.0
+  },
+  {
+   "top": 523.0,
+   "height": 23.0
+  },
+  {
+   "top": 562.0,
+   "height": 24.0
+  },
+  {
+   "top": 586.0,
+   "height": 18.0
+  },
+  {
+   "top": 604.0,
+   "height": 154.0,
+   "embed": "sized"
+  },
+  {
+   "top": 758.0,
+   "height": 64.0,
+   "embed": "unsized"
+  },
+  {
+   "top": 822.0,
+   "height": 61.0
+  },
+  {
+   "top": 883.0,
+   "height": 64.0,
+   "embed": "unsized"
+  }
+ ]
+}

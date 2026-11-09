@@ -57,4 +57,10 @@ Delta flutterDeleteChange(const Delta& contents, int index, int length);
 /// Attributes of the last op of `delta` (for a line Delta: the line attributes).
 AttributeMap lastAttributes(const Delta& delta);
 
+/// Whether updateBlockSpacing(first, last) would change anything.
+bool blockSpacingStale(const QTextBlock& first, const QTextBlock& last, const StyleOptions& style);
+/// Number of the first line whose vertical margins are not what
+/// DeltaDocument::updateBlockSpacing would set, or -1 (verify mode).
+int staleBlockSpacing(const QTextDocument* doc, const StyleOptions& style);
+
 } // namespace quill::detail

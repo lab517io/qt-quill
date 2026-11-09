@@ -18,10 +18,12 @@
 #include <QSet>
 #include <QString>
 #include <QStringList>
+
 #include <QTextBlockFormat>
 #include <QTextCharFormat>
 #include <QTextFormat>
 #include <QTextListFormat>
+#include <optional>
 
 namespace quill {
 
@@ -39,9 +41,15 @@ constexpr int EmbedType = QTextFormat::UserProperty + 0x13;
 /// QTextCharFormat of an embed: the whole embed object as in the Delta,
 /// e.g. {"image": "https://..."} (QJsonObject).
 constexpr int Embed = QTextFormat::UserProperty + 0x14;
-/// QTextBlockFormat: extra top margin (px) of the first line of a list,
-/// quote or code group, set by DeltaDocument::updateBlockSpacing().
-constexpr int GroupSpacing = QTextFormat::UserProperty + 0x15;
+/// QTextBlockFormat: how far (px) the line's decoration (quote bar, code
+/// background) reaches above the line, into its top margin. Set by
+/// DeltaDocument::updateBlockSpacing(), which puts the whole gap between two
+/// lines into the lower line's top margin (Qt collapses adjacent margins,
+/// flutter_quill adds them).
+constexpr int DecorationTop = QTextFormat::UserProperty + 0x15;
+/// QTextBlockFormat: how far (px) the decoration reaches below the line,
+/// into the next line's top margin.
+constexpr int DecorationBottom = QTextFormat::UserProperty + 0x16;
 /// Object type of non-image embeds; M7 registers a QTextObjectInterface for it.
 constexpr int EmbedObjectType = QTextFormat::UserObject + 1;
 } // namespace prop
@@ -75,8 +83,12 @@ struct StyleOptions
     double indentWidth = 24;
     /// Extra left margin of blockquote lines (flutter_quill: one font size).
     double blockquoteMargin = 16;
-    /// Left and right margin of code-block lines, inside the code background.
-    double codeBlockPadding = 8;
+    /// Left and right margin of code-block lines, inside the code background
+    /// (flutter_quill's code block content padding: 4 horizontal).
+    double codeBlockPadding = 4;
+    /// Space inside the code background above the first and below the last
+    /// line of a code block (flutter_quill: 16 vertical).
+    double codeBlockPaddingVertical = 16;
     /// Set the code-block background on each block format, which is what a
     /// plain QTextDocument can render. QuillEditor turns this off and paints
     /// one rounded panel behind each run of code lines instead.
@@ -97,11 +109,16 @@ struct StyleOptions
     double blockquoteBarWidth = 4;
 
     /// Vertical spacing, in px at referenceSize (scaled like the fonts),
-    /// from flutter_quill's DefaultStyles: space above headings 1-6, below
-    /// list lines, above / below quote lines, and above a whole list, quote
-    /// or code group.
+    /// from flutter_quill's DefaultStyles, applied the way flutter_quill
+    /// applies it (see DeltaDocument::updateBlockSpacing): consecutive lines
+    /// with the same block attributes (list, indent, quote, code-block,
+    /// align, direction, line-height) form a block; the line spacing below
+    /// is left out above a block's first and below its last line, and
+    /// blockGroupSpacingTop goes above a list, indent, quote or code block.
+    /// Space above headings 1-6 (inside a block, used as the line spacing).
     double headerSpacingTop[6] = {16, 8, 8, 6, 6, 4};
     double listLineSpacingBottom = 6;
+    double indentLineSpacingBottom = 6;
     double quoteLineSpacingTop = 6, quoteLineSpacingBottom = 2;
     double blockGroupSpacingTop = 6;
 
@@ -141,6 +158,35 @@ QTextListFormat listFormat(const AttributeMap& lineAttrs, const StyleOptions& st
 QString listGroup(const AttributeMap& lineAttrs);
 /// Indent level of a line (attribute "indent", 0 when absent or invalid).
 int indentLevel(const AttributeMap& lineAttrs);
+
+/// Qt line height (percent of the natural line height, ProportionalHeight)
+/// for a "line-height" value. flutter_quill knows the values its toolbar
+/// offers, 1 / 1.15 / 1.5 / 2, and draws them as text heights 1.15 / 1.30 /
+/// 1.55 / 2.0 times the font size; other values have no effect there.
+/// Qt's natural line height corresponds to flutter_quill's paragraph height
+/// 1.15, hence the percentages 100 / 113 / 135 / 174. nullopt: no effect.
+std::optional<double> lineHeightPercent(const QJsonValue& value);
+/// The "line-height" value for a Qt line height, the inverse of
+/// lineHeightPercent(); a percentage it does not produce (a format set
+/// through Qt's own API) maps to percent / 100.
+double lineHeightValue(double percent);
+
+/// flutter_quill's block of a line: its block attributes other than
+/// "header" (list, align, code-block, blockquote, line-height, indent,
+/// direction). Consecutive lines with equal keys form one block; an empty
+/// key means the line is not in a block.
+AttributeMap blockKey(const AttributeMap& lineAttrs);
+
+/// Vertical margins of a line, as flutter_quill spaces it; `prev` and `next`
+/// are the attributes of the neighbouring lines (nullptr at the document
+/// edges). `outerTop` / `outerBottom` receive the part outside the block's
+/// decoration (quote bar, code background).
+struct LineSpacing
+{
+    double top = 0, bottom = 0, outerTop = 0, outerBottom = 0;
+};
+LineSpacing lineSpacing(const AttributeMap& line, const AttributeMap* prev, const AttributeMap* next,
+                        const StyleOptions& style);
 
 /// Validates attribute values and reports problems ("header: 7 is not 1..6").
 /// Unknown keys are not problems; they are reported separately by the loader.

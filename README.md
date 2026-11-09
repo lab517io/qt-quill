@@ -5,7 +5,7 @@ the [Quill Delta](https://quilljs.com/docs/delta) format, compatible with
 [flutter_quill](https://pub.dev/packages/flutter_quill) and
 [Quill](https://github.com/slab/quill).
 
-**Status:** milestones M1 (skeleton), M2 (Delta core), M3 (Delta → QTextDocument), M4 (QTextDocument → Delta), M5 (editor widget), M6 (toolbar, demo), M7 (embeds), M8 (fidelity harness, CI) and M9a (portability groundwork on Linux) done; M9 (native Windows and macOS) waits for those machines. See
+**Status:** milestones M1 (skeleton), M2 (Delta core), M3 (Delta → QTextDocument), M4 (QTextDocument → Delta), M5 (editor widget), M6 (toolbar, demo), M7 (embeds), M8 (fidelity harness, CI), M9a (portability groundwork on Linux) and M10 (rendering fidelity) done; M9 (native Windows and macOS) waits for those machines. See
 [PLAN.md](PLAN.md) for the design and [plans/](plans/README.md) for the
 milestone plans.
 
@@ -85,7 +85,14 @@ headings, lists, alignment, images).
 
 Styling follows flutter_quill's defaults, scaled to the document's font;
 see `quill::StyleOptions` to change sizes, colours, indent width or the
-colour dialect (flutter_quill or CSS).
+colour dialect (flutter_quill or CSS). Vertical spacing is laid out the way
+flutter_quill does it: consecutive lines with the same block attributes form
+a block (list, indent, quote, code, alignment), with space above the block,
+between its lines and padding inside code blocks. The gaps between lines are
+measured in flutter_quill and compared in the test-suite
+(`tst_flutter_parity::geometry`). Margins are layout only and never change
+the exported Delta; `DeltaDocument::updateBlockSpacing()` recomputes them
+when a plain `QTextDocument` is edited with Qt's API.
 
 ## The editor widget
 
@@ -113,7 +120,8 @@ Every edit, whether typed, pasted, undone or made through the API, emits one
 `Silent`). Keyboard behaviour follows flutter_quill (checked against it, see
 below): lists continue on Enter and end on an empty item, quotes and code
 blocks end on an empty last line, Tab at the start of a list item indents,
-Backspace at a line start merges the lines keeping the upper line's format,
+Backspace at a line start merges the lines keeping the upper line's format
+(also for word and line deletion, Ctrl+Backspace / Ctrl+Delete),
 `1. ` / `- ` / `[] ` start lists, Ctrl+B/I/U/Shift+X toggle formats.
 `setEditingRules(QuillEditor::EditingRules::QuillJs)` selects Quill.js's
 Backspace (outdent, then remove the block format) and checklist rules. `DeltaDocument::apply()` applies a

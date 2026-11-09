@@ -233,10 +233,13 @@ void restyleBlock(const QTextBlock& block, const Delta& line, const StyleOptions
     QTextBlockFormat bf = formats::blockFormat(lineAttrs, style);
     const QTextBlockFormat old = block.blockFormat();
     if (old.hasProperty(QTextFormat::ObjectIndex))
-        bf.setObjectIndex(old.objectIndex());  // list membership: regroupLists decides
-    if (old.hasProperty(prop::GroupSpacing)) { // updateBlockSpacing decides
-        bf.setTopMargin(bf.topMargin() + old.doubleProperty(prop::GroupSpacing));
-        bf.setProperty(prop::GroupSpacing, old.doubleProperty(prop::GroupSpacing));
+        bf.setObjectIndex(old.objectIndex()); // list membership: regroupLists decides
+    // Vertical spacing depends on the neighbouring lines: updateBlockSpacing decides.
+    bf.setTopMargin(old.topMargin());
+    bf.setBottomMargin(old.bottomMargin());
+    for (const int property : {prop::DecorationTop, prop::DecorationBottom}) {
+        if (old.hasProperty(property))
+            bf.setProperty(property, old.property(property));
     }
     if (!(bf == old))
         c.setBlockFormat(bf);

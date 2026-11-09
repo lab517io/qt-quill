@@ -5,6 +5,7 @@
 #include "quill/Formats.h"
 
 #include <QAbstractTextDocumentLayout>
+#include <QFontMetricsF>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QNetworkAccessManager>
@@ -17,6 +18,8 @@
 #include <QTextImageFormat>
 #include <QTextList>
 #include <QTextObjectInterface>
+
+#include <cmath>
 
 namespace quill {
 
@@ -109,7 +112,7 @@ public:
         QSizeF s = m_registry->rendererFor(c.key, c.data)->size(c);
         if (c.availableWidth > 0 && s.width() > c.availableWidth)
             s = QSizeF(c.availableWidth, s.height() * c.availableWidth / s.width());
-        return s.expandedTo(QSizeF(1, 1));
+        return s.expandedTo(QSizeF(1, 1)) + QSizeF(0, descentBelow(c));
     }
 
     void drawObject(QPainter* painter, const QRectF& rect, QTextDocument* doc, int pos,
@@ -117,8 +120,21 @@ public:
     {
         const EmbedContext c = m_registry->context(doc, pos, format);
         painter->save();
-        m_registry->rendererFor(c.key, c.data)->paint(painter, rect, c);
+        m_registry->rendererFor(c.key, c.data)->paint(painter, rect.adjusted(0, 0, 0, -descentBelow(c)), c);
         painter->restore();
+    }
+
+    /// flutter_quill lays an image alone on its line out on the text
+    /// baseline, so the line is the image plus the font's descent; Qt makes
+    /// an object-only line exactly as tall as the object. The object is
+    /// made taller by the descent and the image drawn in its upper part.
+    /// (Inline images share their line with text, which has the descent.)
+    static qreal descentBelow(const EmbedContext& c)
+    {
+        if (!c.aloneOnLine || !c.format.isImageFormat() || c.format.verticalAlignment() != QTextCharFormat::AlignNormal)
+            return 0;
+        // Whole pixels: Qt rounds line heights.
+        return std::ceil(QFontMetricsF(c.format.font().resolve(c.document->defaultFont())).descent());
     }
 
 private:
