@@ -1,5 +1,8 @@
 # M9 — Windows and macOS
 
+**Deferred (2026-11-09):** no Windows or macOS machines yet. The parts that
+can be done on Linux are in [M9a](M9a-portability-on-linux.md).
+
 Estimate: 1 day per platform plus fixes. Depends on: M6 (demo to exercise),
 M8 (CI to host the jobs).
 
