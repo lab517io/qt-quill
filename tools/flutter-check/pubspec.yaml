@@ -1,0 +1,15 @@
+name: quillqt_flutter_check
+description: Loads quill-qt fixtures and exports in flutter_quill, and records flutter_quill exports.
+publish_to: none
+environment:
+  sdk: ^3.12.0
+  flutter: ">=3.44.0"
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_quill: 11.6.0
+  flutter_localizations:
+    sdk: flutter
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

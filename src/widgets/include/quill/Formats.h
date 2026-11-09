@@ -13,8 +13,8 @@
 #include "quill/Colors.h"
 
 #include <QColor>
-#include <QMetaType>
 #include <QFont>
+#include <QMetaType>
 #include <QSet>
 #include <QString>
 #include <QStringList>
@@ -39,6 +39,9 @@ constexpr int EmbedType = QTextFormat::UserProperty + 0x13;
 /// QTextCharFormat of an embed: the whole embed object as in the Delta,
 /// e.g. {"image": "https://..."} (QJsonObject).
 constexpr int Embed = QTextFormat::UserProperty + 0x14;
+/// QTextBlockFormat: extra top margin (px) of the first line of a list,
+/// quote or code group, set by DeltaDocument::updateBlockSpacing().
+constexpr int GroupSpacing = QTextFormat::UserProperty + 0x15;
 /// Object type of non-image embeds; M7 registers a QTextObjectInterface for it.
 constexpr int EmbedObjectType = QTextFormat::UserObject + 1;
 } // namespace prop
@@ -83,19 +86,30 @@ struct StyleOptions
                                   QStringLiteral("DejaVu Sans Mono"), QStringLiteral("Consolas"),
                                   QStringLiteral("monospace")};
     QColor linkColor = QColor(0x15, 0x65, 0xC0);
-    QColor inlineCodeBackground = QColor(0xF5, 0xF5, 0xF5);   // Colors.grey.shade100
-    QColor codeBlockBackground = QColor(0xFA, 0xFA, 0xFA);    // Colors.grey.shade50
+    QColor inlineCodeBackground = QColor(0xF5, 0xF5, 0xF5);     // Colors.grey.shade100
+    QColor codeBlockBackground = QColor(0xFA, 0xFA, 0xFA);      // Colors.grey.shade50
     QColor codeBlockForeground = QColor(0x0D, 0x47, 0xA1, 230); // blue.shade900, 90%
-    QColor blockquoteForeground = QColor(0, 0, 0, 153);       // text at 60%
+    QColor blockquoteForeground = QColor(0, 0, 0, 153);         // text at 60%
     /// Bar left of blockquote lines, painted by QuillEditor (grey.shade300).
     QColor blockquoteBarColor = QColor(0xE0, 0xE0, 0xE0);
     double blockquoteBarWidth = 4;
+
+    /// Vertical spacing, in px at referenceSize (scaled like the fonts),
+    /// from flutter_quill's DefaultStyles: space above headings 1-6, below
+    /// list lines, above / below quote lines, and above a whole list, quote
+    /// or code group.
+    double headerSpacingTop[6] = {16, 8, 8, 6, 6, 4};
+    double listLineSpacingBottom = 6;
+    double quoteLineSpacingTop = 6, quoteLineSpacingBottom = 2;
+    double blockGroupSpacingTop = 6;
 
     /// Colours for a dark palette (text colour itself comes from the palette).
     static StyleOptions dark();
 
     /// Point size for a size expressed in Delta units (relative to referenceSize).
     double pointSizeFor(double deltaSize) const;
+    /// Pixels for a length given in px at referenceSize.
+    double scaledSpacing(double px) const;
     double basePointSize() const;
 };
 
@@ -110,8 +124,7 @@ const QSet<QString>& lineKeys();
 const QSet<QString>& passiveKeys();
 
 /// Char format for text with `inlineAttrs` on a line with `lineAttrs`.
-QTextCharFormat charFormat(const AttributeMap& inlineAttrs, const AttributeMap& lineAttrs,
-                           const StyleOptions& style);
+QTextCharFormat charFormat(const AttributeMap& inlineAttrs, const AttributeMap& lineAttrs, const StyleOptions& style);
 
 /// Block format for a line. List membership is not set here; see
 /// DeltaDocument::regroupLists().

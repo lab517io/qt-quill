@@ -28,8 +28,7 @@ std::optional<QColor> parse(const QString& value, ColorDialect dialect = ColorDi
 /// still parses to the same colour, so untouched values round-trip exactly.
 /// Otherwise flutter_quill style "#AARRGGBB" (uppercase) or CSS "#rrggbb" /
 /// "rgba(r, g, b, a)".
-QString format(const QColor& color, const QString& original = QString(),
-               ColorDialect dialect = ColorDialect::Flutter);
+QString format(const QColor& color, const QString& original = QString(), ColorDialect dialect = ColorDialect::Flutter);
 
 } // namespace colors
 } // namespace quill

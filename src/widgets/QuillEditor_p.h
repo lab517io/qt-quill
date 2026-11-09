@@ -56,6 +56,14 @@ public:
     // Keyboard (QuillEditorKeys.cpp)
     void handleEnter(bool plain);
     bool handleBackspace();
+    bool handleDelete();
+    /// Deletes [index, index + length) as a key press would (flutter_quill's
+    /// delete rules: the last "\n" stays, a line merged by deleting its
+    /// upper newline keeps the upper line's format).
+    void deleteRange(int index, int length);
+    /// Deletes a selection spanning lines as a Delta (QTextCursor would keep
+    /// the first block's format); true when there was such a selection.
+    bool deleteMultiLineSelection();
     bool handleTab(bool back);
     bool handleSpace();
     void toggle(const QString& name);
@@ -76,6 +84,7 @@ public:
     Delta contents = Delta().insert(QStringLiteral("\n"));
     StyleOptions style;
     QStringList pasteIgnored;
+    QuillEditor::EditingRules rules = QuillEditor::EditingRules::FlutterQuill;
 
     int depth = 0;
     Source source = Source::User;

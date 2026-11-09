@@ -139,8 +139,10 @@ private slots:
         c.endEditBlock();
         QCOMPARE(rec->records.size(), 2);
         // Qt's typing format: "x" continues the bold text before it.
-        check(e->getContents(), delta("[{'insert':'a'},{'insert':'bc','attributes':{'bold':true}},{'insert':'\\n'},"
-                                      "{'insert':'x','attributes':{'bold':true}},{'insert':'\\n'}]"), __LINE__);
+        check(e->getContents(),
+              delta("[{'insert':'a'},{'insert':'bc','attributes':{'bold':true}},{'insert':'\\n'},"
+                    "{'insert':'x','attributes':{'bold':true}},{'insert':'\\n'}]"),
+              __LINE__);
         QCOMPARE(rec->last().source, Source::User);
     }
 
@@ -153,9 +155,11 @@ private slots:
         md.setText(QStringLiteral("ignored"));
         e->insertFromMimeData(&md);
         // Colours and sizes are dropped by default; lists and links survive.
-        check(e->getContents(), delta("[{'insert':'['},{'insert':'bold','attributes':{'bold':true}},{'insert':' red '},"
-                                      "{'insert':'link','attributes':{'link':'https://x.y'}},{'insert':'\\nitem'},"
-                                      "{'insert':'\\n','attributes':{'list':'bullet'}},{'insert':']\\n'}]"), __LINE__);
+        check(e->getContents(),
+              delta("[{'insert':'['},{'insert':'bold','attributes':{'bold':true}},{'insert':' red '},"
+                    "{'insert':'link','attributes':{'link':'https://x.y'}},{'insert':'\\nitem'},"
+                    "{'insert':'\\n','attributes':{'list':'bullet'}},{'insert':']\\n'}]"),
+              __LINE__);
         QCOMPARE(rec->records.size(), 1);
         QCOMPARE(rec->last().source, Source::User);
         QCOMPARE(e->getSelection(), (Range{20, 0}));
@@ -165,7 +169,8 @@ private slots:
         QMimeData colored;
         colored.setHtml(QStringLiteral("<span style=\"color:#ff0000\">red</span>"));
         e->insertFromMimeData(&colored);
-        check(e->getContents(), delta("[{'insert':'red','attributes':{'color':'#FFFF0000'}},{'insert':'\\n'}]"), __LINE__);
+        check(e->getContents(), delta("[{'insert':'red','attributes':{'color':'#FFFF0000'}},{'insert':'\\n'}]"),
+              __LINE__);
     }
 
     void pastePlainText()
@@ -176,8 +181,10 @@ private slots:
         QMimeData md;
         md.setText(QStringLiteral("x\r\ny"));
         e->insertFromMimeData(&md);
-        check(e->getContents(), delta("[{'insert':'abx','attributes':{'italic':true}},{'insert':'\\n','attributes':{'header':2}},"
-                                      "{'insert':'y','attributes':{'italic':true}},{'insert':'\\n','attributes':{'header':2}}]"), __LINE__);
+        check(e->getContents(),
+              delta("[{'insert':'abx','attributes':{'italic':true}},{'insert':'\\n','attributes':{'header':2}},"
+                    "{'insert':'y','attributes':{'italic':true}},{'insert':'\\n','attributes':{'header':2}}]"),
+              __LINE__);
         QCOMPARE(e->getSelection(), (Range{5, 0}));
         // In a code block, HTML is pasted as plain text.
         start("[{'insert':'c'},{'insert':'\\n','attributes':{'code-block':true}}]", 1);
@@ -185,21 +192,34 @@ private slots:
         html.setHtml(QStringLiteral("<b>b</b>"));
         html.setText(QStringLiteral("p\nq"));
         e->insertFromMimeData(&html);
-        check(e->getContents(), delta("[{'insert':'cp'},{'insert':'\\n','attributes':{'code-block':true}},{'insert':'q'},{'insert':'\\n','attributes':{'code-block':true}}]"), __LINE__);
+        check(
+            e->getContents(),
+            delta(
+                "[{'insert':'cp'},{'insert':'\\n','attributes':{'code-block':true}},{'insert':'q'},{'insert':'\\n','attributes':{'code-block':true}}]"),
+            __LINE__);
     }
 
     void copyAndPasteDelta()
     {
-        start("[{'insert':'ab','attributes':{'bold':true}},{'insert':{'formula':'x^2'}},{'insert':'\\n','attributes':{'list':'ordered'}},{'insert':'z\\n'}]", 1, 3);
+        start(
+            "[{'insert':'ab','attributes':{'bold':true}},{'insert':{'formula':'x^2'}},{'insert':'\\n','attributes':{'list':'ordered'}},{'insert':'z\\n'}]",
+            1, 3);
         std::unique_ptr<QMimeData> md(e->createMimeDataFromSelection());
         QVERIFY(md->hasFormat(QStringLiteral("application/x-quill-delta+json")));
-        check(*Delta::fromJson(md->data(QStringLiteral("application/x-quill-delta+json"))),
-              delta("[{'insert':'b','attributes':{'bold':true}},{'insert':{'formula':'x^2'}},{'insert':'\\n','attributes':{'list':'ordered'}}]"), __LINE__);
+        check(
+            *Delta::fromJson(md->data(QStringLiteral("application/x-quill-delta+json"))),
+            delta(
+                "[{'insert':'b','attributes':{'bold':true}},{'insert':{'formula':'x^2'}},{'insert':'\\n','attributes':{'list':'ordered'}}]"),
+            __LINE__);
         QVERIFY(md->hasHtml());
         e->setSelection(5, 0);
         e->insertFromMimeData(md.get());
-        check(e->getContents(), delta("[{'insert':'ab','attributes':{'bold':true}},{'insert':{'formula':'x^2'}},{'insert':'\\n','attributes':{'list':'ordered'}},"
-                                      "{'insert':'z'},{'insert':'b','attributes':{'bold':true}},{'insert':{'formula':'x^2'}},{'insert':'\\n','attributes':{'list':'ordered'}},{'insert':'\\n'}]"), __LINE__);
+        check(
+            e->getContents(),
+            delta(
+                "[{'insert':'ab','attributes':{'bold':true}},{'insert':{'formula':'x^2'}},{'insert':'\\n','attributes':{'list':'ordered'}},"
+                "{'insert':'z'},{'insert':'b','attributes':{'bold':true}},{'insert':{'formula':'x^2'}},{'insert':'\\n','attributes':{'list':'ordered'}},{'insert':'\\n'}]"),
+            __LINE__);
     }
 
     void pasteImageAndImageFiles()
@@ -209,7 +229,8 @@ private slots:
         md.setImageData(QImage(8, 4, QImage::Format_RGB32));
         e->insertFromMimeData(&md);
         QCOMPARE(e->uploaded, QSize(8, 4));
-        check(e->getContents(), delta("[{'insert':'a'},{'insert':{'image':'https://cdn/img.png'}},{'insert':'b\\n'}]"), __LINE__);
+        check(e->getContents(), delta("[{'insert':'a'},{'insert':{'image':'https://cdn/img.png'}},{'insert':'b\\n'}]"),
+              __LINE__);
 
         QTemporaryDir dir;
         const QString path = dir.filePath(QStringLiteral("pic.png"));
@@ -218,7 +239,8 @@ private slots:
         files.setUrls({QUrl::fromLocalFile(path)});
         e->setSelection(0, 0);
         e->insertFromMimeData(&files);
-        QCOMPARE(e->getContents().ops().first().embed().value(QStringLiteral("image")).toString(), QUrl::fromLocalFile(path).toString());
+        QCOMPARE(e->getContents().ops().first().embed().value(QStringLiteral("image")).toString(),
+                 QUrl::fromLocalFile(path).toString());
     }
 
     void dropText()
@@ -246,13 +268,17 @@ private slots:
         QVERIFY(markerX >= 0);
         const QPoint p(markerX + 2, int(r.center().y()));
         QTest::mouseClick(e->viewport(), Qt::LeftButton, {}, p);
-        check(e->getContents(), delta("[{'insert':'todo'},{'insert':'\\n','attributes':{'list':'checked'}},{'insert':'x\\n'}]"), __LINE__);
+        check(e->getContents(),
+              delta("[{'insert':'todo'},{'insert':'\\n','attributes':{'list':'checked'}},{'insert':'x\\n'}]"),
+              __LINE__);
         QCOMPARE(rec->records.size(), 1);
         QCOMPARE(rec->last().source, Source::User);
         check(rec->last().change, delta("[{'retain':4},{'retain':1,'attributes':{'list':'checked'}}]"), __LINE__);
         QCOMPARE(e->getSelection(), (Range{6, 0})); // the click does not move the cursor
         QTest::mouseClick(e->viewport(), Qt::LeftButton, {}, p);
-        check(e->getContents(), delta("[{'insert':'todo'},{'insert':'\\n','attributes':{'list':'unchecked'}},{'insert':'x\\n'}]"), __LINE__);
+        check(e->getContents(),
+              delta("[{'insert':'todo'},{'insert':'\\n','attributes':{'list':'unchecked'}},{'insert':'x\\n'}]"),
+              __LINE__);
         // Read-only: no toggle.
         e->setReadOnly(true);
         QTest::mouseClick(e->viewport(), Qt::LeftButton, {}, p);
@@ -276,9 +302,10 @@ private slots:
 
     void decorationsArePainted()
     {
-        start("[{'insert':'quote'},{'insert':'\\n','attributes':{'blockquote':true}},{'insert':'\\n'},"
-              "{'insert':'code 1'},{'insert':'\\n','attributes':{'code-block':true}},{'insert':'code 2'},{'insert':'\\n','attributes':{'code-block':true}},"
-              "{'insert':'after\\n'}]");
+        start(
+            "[{'insert':'quote'},{'insert':'\\n','attributes':{'blockquote':true}},{'insert':'\\n'},"
+            "{'insert':'code 1'},{'insert':'\\n','attributes':{'code-block':true}},{'insert':'code 2'},{'insert':'\\n','attributes':{'code-block':true}},"
+            "{'insert':'after\\n'}]");
         const StyleOptions style = e->styleOptions();
         QVERIFY(!style.codeBlockBackgroundOnBlocks);
         QCoreApplication::processEvents();

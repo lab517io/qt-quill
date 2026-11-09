@@ -1,0 +1,1426 @@
+[
+ {
+  "name": "readme: compose",
+  "op": "compose",
+  "a": [
+   {
+    "insert": "abc"
+   }
+  ],
+  "b": [
+   {
+    "retain": 1
+   },
+   {
+    "delete": 1
+   }
+  ]
+ },
+ {
+  "name": "readme: compose attributes",
+  "op": "compose",
+  "a": [
+   {
+    "insert": "Gandalf",
+    "attributes": {
+     "bold": true
+    }
+   },
+   {
+    "insert": " the "
+   },
+   {
+    "insert": "Grey",
+    "attributes": {
+     "color": "#ccc"
+    }
+   }
+  ],
+  "b": [
+   {
+    "retain": 12
+   },
+   {
+    "delete": 4
+   },
+   {
+    "insert": "White",
+    "attributes": {
+     "color": "#fff"
+    }
+   }
+  ]
+ },
+ {
+  "name": "readme: transform priority",
+  "op": "transform",
+  "a": [
+   {
+    "insert": "a"
+   }
+  ],
+  "b": [
+   {
+    "insert": "b"
+   },
+   {
+    "retain": 5
+   },
+   {
+    "insert": "c"
+   }
+  ],
+  "priority": true
+ },
+ {
+  "name": "readme: transform no priority",
+  "op": "transform",
+  "a": [
+   {
+    "insert": "a"
+   }
+  ],
+  "b": [
+   {
+    "insert": "b"
+   },
+   {
+    "retain": 5
+   },
+   {
+    "insert": "c"
+   }
+  ],
+  "priority": false
+ },
+ {
+  "name": "readme: transformPosition before",
+  "op": "transformPosition",
+  "a": [
+   {
+    "retain": 5
+   },
+   {
+    "insert": "a"
+   }
+  ],
+  "index": 4
+ },
+ {
+  "name": "readme: transformPosition after",
+  "op": "transformPosition",
+  "a": [
+   {
+    "retain": 5
+   },
+   {
+    "insert": "a"
+   }
+  ],
+  "index": 6
+ },
+ {
+  "name": "readme: transformPosition at insert, priority",
+  "op": "transformPosition",
+  "a": [
+   {
+    "retain": 5
+   },
+   {
+    "insert": "a"
+   }
+  ],
+  "index": 5,
+  "priority": true
+ },
+ {
+  "name": "readme: transformPosition at insert",
+  "op": "transformPosition",
+  "a": [
+   {
+    "retain": 5
+   },
+   {
+    "insert": "a"
+   }
+  ],
+  "index": 5,
+  "priority": false
+ },
+ {
+  "name": "readme: diff",
+  "op": "diff",
+  "a": [
+   {
+    "insert": "Hello\n"
+   }
+  ],
+  "b": [
+   {
+    "insert": "Hello!\n"
+   }
+  ]
+ },
+ {
+  "name": "readme: invert",
+  "op": "invert",
+  "a": [
+   {
+    "retain": 2
+   },
+   {
+    "delete": 3
+   }
+  ],
+  "b": [
+   {
+    "insert": "Hello"
+   }
+  ]
+ },
+ {
+  "name": "readme: invert attributes",
+  "op": "invert",
+  "a": [
+   {
+    "retain": 1,
+    "attributes": {
+     "bold": true
+    }
+   },
+   {
+    "retain": 2,
+    "attributes": {
+     "color": null
+    }
+   }
+  ],
+  "b": [
+   {
+    "insert": "Hel",
+    "attributes": {
+     "color": "red"
+    }
+   },
+   {
+    "insert": "lo"
+   }
+  ]
+ },
+ {
+  "name": "readme: slice",
+  "op": "slice",
+  "a": [
+   {
+    "insert": "Hello",
+    "attributes": {
+     "bold": true
+    }
+   },
+   {
+    "insert": " World"
+   }
+  ],
+  "start": 2,
+  "end": 7
+ },
+ {
+  "name": "readme: slice open end",
+  "op": "slice",
+  "a": [
+   {
+    "insert": "Hello",
+    "attributes": {
+     "bold": true
+    }
+   },
+   {
+    "insert": " World"
+   }
+  ],
+  "start": 3
+ },
+ {
+  "name": "readme: concat",
+  "op": "concat",
+  "a": [
+   {
+    "insert": "Hello"
+   }
+  ],
+  "b": [
+   {
+    "insert": "!",
+    "attributes": {
+     "bold": true
+    }
+   }
+  ]
+ },
+ {
+  "name": "readme: concat merges",
+  "op": "concat",
+  "a": [
+   {
+    "insert": "Hello",
+    "attributes": {
+     "bold": true
+    }
+   }
+  ],
+  "b": [
+   {
+    "insert": "!",
+    "attributes": {
+     "bold": true
+    }
+   },
+   {
+    "insert": "\n"
+   }
+  ]
+ },
+ {
+  "name": "readme: eachLine",
+  "op": "eachLine",
+  "a": [
+   {
+    "insert": "Hello\n\n"
+   },
+   {
+    "insert": "World",
+    "attributes": {
+     "bold": true
+    }
+   },
+   {
+    "insert": {
+     "image": "https://quilljs.com/assets/images/icon.png"
+    }
+   },
+   {
+    "insert": "\n",
+    "attributes": {
+     "align": "right"
+    }
+   },
+   {
+    "insert": "!"
+   }
+  ]
+ },
+ {
+  "name": "readme: length",
+  "op": "length",
+  "a": [
+   {
+    "insert": "Hello"
+   },
+   {
+    "retain": 3
+   },
+   {
+    "delete": 2
+   },
+   {
+    "insert": {
+     "image": "https://quilljs.com/assets/images/icon.png"
+    }
+   }
+  ]
+ },
+ {
+  "name": "readme: changeLength",
+  "op": "changeLength",
+  "a": [
+   {
+    "insert": "Hello"
+   },
+   {
+    "retain": 3
+   },
+   {
+    "delete": 2
+   },
+   {
+    "insert": {
+     "image": "https://quilljs.com/assets/images/icon.png"
+    }
+   }
+  ]
+ },
+ {
+  "name": "guide: formatting removed by null",
+  "op": "compose",
+  "a": [
+   {
+    "insert": "Gandalf",
+    "attributes": {
+     "bold": true
+    }
+   },
+   {
+    "insert": " the Grey\n"
+   }
+  ],
+  "b": [
+   {
+    "retain": 7,
+    "attributes": {
+     "bold": null
+    }
+   }
+  ]
+ },
+ {
+  "name": "guide: line format",
+  "op": "compose",
+  "a": [
+   {
+    "insert": "Gandalf the Grey\n"
+   }
+  ],
+  "b": [
+   {
+    "retain": 16
+   },
+   {
+    "retain": 1,
+    "attributes": {
+     "header": 1
+    }
+   }
+  ]
+ },
+ {
+  "name": "guide: embed",
+  "op": "compose",
+  "a": [
+   {
+    "insert": "\n"
+   }
+  ],
+  "b": [
+   {
+    "insert": {
+     "image": "https://quilljs.com/assets/images/icon.png"
+    },
+    "attributes": {
+     "width": "100"
+    }
+   }
+  ]
+ },
+ {
+  "name": "guide: retain embed with attributes",
+  "op": "compose",
+  "a": [
+   {
+    "insert": {
+     "image": "https://quilljs.com/assets/images/icon.png"
+    }
+   },
+   {
+    "insert": "\n"
+   }
+  ],
+  "b": [
+   {
+    "retain": 1,
+    "attributes": {
+     "alt": "Logo"
+    }
+   }
+  ]
+ },
+ {
+  "name": "guide: delete embed",
+  "op": "compose",
+  "a": [
+   {
+    "insert": "a"
+   },
+   {
+    "insert": {
+     "image": "https://quilljs.com/assets/images/icon.png"
+    }
+   },
+   {
+    "insert": "b\n"
+   }
+  ],
+  "b": [
+   {
+    "retain": 1
+   },
+   {
+    "delete": 1
+   }
+  ]
+ },
+ {
+  "name": "keepNull: retain null over retain",
+  "op": "compose",
+  "a": [
+   {
+    "retain": 1,
+    "attributes": {
+     "bold": true
+    }
+   }
+  ],
+  "b": [
+   {
+    "retain": 1,
+    "attributes": {
+     "bold": null
+    }
+   }
+  ]
+ },
+ {
+  "name": "keepNull: insert drops null",
+  "op": "compose",
+  "a": [
+   {
+    "insert": "a",
+    "attributes": {
+     "bold": true
+    }
+   }
+  ],
+  "b": [
+   {
+    "retain": 1,
+    "attributes": {
+     "bold": null
+    }
+   }
+  ]
+ },
+ {
+  "name": "keepNull: retain null over retain without attr",
+  "op": "compose",
+  "a": [
+   {
+    "retain": 1
+   }
+  ],
+  "b": [
+   {
+    "retain": 1,
+    "attributes": {
+     "bold": null
+    }
+   }
+  ]
+ },
+ {
+  "name": "compose: delete then insert order",
+  "op": "compose",
+  "a": [
+   {
+    "insert": "ab\n"
+   }
+  ],
+  "b": [
+   {
+    "delete": 1
+   },
+   {
+    "insert": "x"
+   }
+  ]
+ },
+ {
+  "name": "compose: insert then delete",
+  "op": "compose",
+  "a": [
+   {
+    "insert": "ab\n"
+   }
+  ],
+  "b": [
+   {
+    "insert": "x"
+   },
+   {
+    "delete": 1
+   }
+  ]
+ },
+ {
+  "name": "compose: insert into delete",
+  "op": "compose",
+  "a": [
+   {
+    "delete": 1
+   }
+  ],
+  "b": [
+   {
+    "insert": "x"
+   }
+  ]
+ },
+ {
+  "name": "compose: delete after insert cancels",
+  "op": "compose",
+  "a": [
+   {
+    "insert": "abc"
+   }
+  ],
+  "b": [
+   {
+    "delete": 3
+   }
+  ]
+ },
+ {
+  "name": "compose: retain past end",
+  "op": "compose",
+  "a": [
+   {
+    "insert": "ab"
+   }
+  ],
+  "b": [
+   {
+    "retain": 5,
+    "attributes": {
+     "bold": true
+    }
+   }
+  ]
+ },
+ {
+  "name": "compose: change with change",
+  "op": "compose",
+  "a": [
+   {
+    "retain": 2
+   },
+   {
+    "insert": "x"
+   },
+   {
+    "delete": 1
+   }
+  ],
+  "b": [
+   {
+    "retain": 1
+   },
+   {
+    "delete": 2
+   },
+   {
+    "insert": "y",
+    "attributes": {
+     "italic": true
+    }
+   }
+  ]
+ },
+ {
+  "name": "compose: attribute merge",
+  "op": "compose",
+  "a": [
+   {
+    "retain": 3,
+    "attributes": {
+     "bold": true,
+     "color": "red"
+    }
+   }
+  ],
+  "b": [
+   {
+    "retain": 2,
+    "attributes": {
+     "color": "blue",
+     "italic": true
+    }
+   }
+  ]
+ },
+ {
+  "name": "compose: embed retain number replaced",
+  "op": "compose",
+  "a": [
+   {
+    "insert": {
+     "image": "https://quilljs.com/assets/images/icon.png"
+    },
+    "attributes": {
+     "width": "10"
+    }
+   }
+  ],
+  "b": [
+   {
+    "retain": 1,
+    "attributes": {
+     "width": "20",
+     "height": null
+    }
+   }
+  ]
+ },
+ {
+  "name": "compose: emoji delete",
+  "op": "compose",
+  "a": [
+   {
+    "insert": "a😀b\n"
+   }
+  ],
+  "b": [
+   {
+    "retain": 1
+   },
+   {
+    "delete": 2
+   }
+  ]
+ },
+ {
+  "name": "transform: insert vs insert priority",
+  "op": "transform",
+  "a": [
+   {
+    "insert": "A"
+   }
+  ],
+  "b": [
+   {
+    "insert": "B"
+   }
+  ],
+  "priority": true
+ },
+ {
+  "name": "transform: insert vs insert",
+  "op": "transform",
+  "a": [
+   {
+    "insert": "A"
+   }
+  ],
+  "b": [
+   {
+    "insert": "B"
+   }
+  ],
+  "priority": false
+ },
+ {
+  "name": "transform: insert vs delete",
+  "op": "transform",
+  "a": [
+   {
+    "insert": "A"
+   }
+  ],
+  "b": [
+   {
+    "delete": 1
+   }
+  ],
+  "priority": true
+ },
+ {
+  "name": "transform: delete vs insert",
+  "op": "transform",
+  "a": [
+   {
+    "delete": 1
+   }
+  ],
+  "b": [
+   {
+    "insert": "B"
+   }
+  ],
+  "priority": true
+ },
+ {
+  "name": "transform: delete vs delete",
+  "op": "transform",
+  "a": [
+   {
+    "delete": 2
+   }
+  ],
+  "b": [
+   {
+    "retain": 1
+   },
+   {
+    "delete": 2
+   }
+  ],
+  "priority": true
+ },
+ {
+  "name": "transform: delete vs retain",
+  "op": "transform",
+  "a": [
+   {
+    "delete": 1
+   }
+  ],
+  "b": [
+   {
+    "retain": 1,
+    "attributes": {
+     "bold": true
+    }
+   },
+   {
+    "retain": 1,
+    "attributes": {
+     "color": "red"
+    }
+   }
+  ],
+  "priority": true
+ },
+ {
+  "name": "transform: retain vs delete",
+  "op": "transform",
+  "a": [
+   {
+    "retain": 1,
+    "attributes": {
+     "color": "blue"
+    }
+   }
+  ],
+  "b": [
+   {
+    "delete": 1
+   }
+  ],
+  "priority": true
+ },
+ {
+  "name": "transform: attributes priority",
+  "op": "transform",
+  "a": [
+   {
+    "retain": 1,
+    "attributes": {
+     "bold": true,
+     "color": "red"
+    }
+   }
+  ],
+  "b": [
+   {
+    "retain": 1,
+    "attributes": {
+     "bold": null,
+     "color": "blue",
+     "font": "serif"
+    }
+   }
+  ],
+  "priority": true
+ },
+ {
+  "name": "transform: attributes no priority",
+  "op": "transform",
+  "a": [
+   {
+    "retain": 1,
+    "attributes": {
+     "bold": true,
+     "color": "red"
+    }
+   }
+  ],
+  "b": [
+   {
+    "retain": 1,
+    "attributes": {
+     "bold": null,
+     "color": "blue",
+     "font": "serif"
+    }
+   }
+  ],
+  "priority": false
+ },
+ {
+  "name": "transform: immutability",
+  "op": "transform",
+  "a": [
+   {
+    "insert": "A",
+    "attributes": {
+     "bold": true
+    }
+   },
+   {
+    "retain": 1
+   }
+  ],
+  "b": [
+   {
+    "retain": 1
+   },
+   {
+    "insert": "B"
+   }
+  ],
+  "priority": true
+ },
+ {
+  "name": "transform: embed retains",
+  "op": "transform",
+  "a": [
+   {
+    "retain": 1,
+    "attributes": {
+     "width": "5"
+    }
+   },
+   {
+    "insert": {
+     "image": "https://quilljs.com/assets/images/icon.png"
+    }
+   }
+  ],
+  "b": [
+   {
+    "insert": {
+     "image": "https://quilljs.com/assets/images/icon.png"
+    }
+   },
+   {
+    "retain": 1,
+    "attributes": {
+     "width": "6"
+    }
+   }
+  ],
+  "priority": false
+ },
+ {
+  "name": "transformPosition: delete before",
+  "op": "transformPosition",
+  "a": [
+   {
+    "delete": 2
+   }
+  ],
+  "index": 4
+ },
+ {
+  "name": "transformPosition: delete across",
+  "op": "transformPosition",
+  "a": [
+   {
+    "retain": 2
+   },
+   {
+    "delete": 4
+   }
+  ],
+  "index": 4
+ },
+ {
+  "name": "transformPosition: insert and delete",
+  "op": "transformPosition",
+  "a": [
+   {
+    "retain": 1
+   },
+   {
+    "insert": "xyz"
+   },
+   {
+    "delete": 1
+   }
+  ],
+  "index": 3
+ },
+ {
+  "name": "diff: same",
+  "op": "diff",
+  "a": [
+   {
+    "insert": "A",
+    "attributes": {
+     "bold": true
+    }
+   },
+   {
+    "insert": "\n"
+   }
+  ],
+  "b": [
+   {
+    "insert": "A",
+    "attributes": {
+     "bold": true
+    }
+   },
+   {
+    "insert": "\n"
+   }
+  ]
+ },
+ {
+  "name": "diff: attribute change",
+  "op": "diff",
+  "a": [
+   {
+    "insert": "Hello\n"
+   }
+  ],
+  "b": [
+   {
+    "insert": "Hel",
+    "attributes": {
+     "bold": true
+    }
+   },
+   {
+    "insert": "lo\n"
+   }
+  ]
+ },
+ {
+  "name": "diff: embed change",
+  "op": "diff",
+  "a": [
+   {
+    "insert": {
+     "image": "https://quilljs.com/assets/images/icon.png"
+    }
+   },
+   {
+    "insert": "\n"
+   }
+  ],
+  "b": [
+   {
+    "insert": {
+     "image": "other.png"
+    }
+   },
+   {
+    "insert": "\n"
+   }
+  ]
+ },
+ {
+  "name": "diff: embed attributes",
+  "op": "diff",
+  "a": [
+   {
+    "insert": {
+     "image": "https://quilljs.com/assets/images/icon.png"
+    },
+    "attributes": {
+     "width": "10"
+    }
+   },
+   {
+    "insert": "\n"
+   }
+  ],
+  "b": [
+   {
+    "insert": {
+     "image": "https://quilljs.com/assets/images/icon.png"
+    },
+    "attributes": {
+     "width": "20"
+    }
+   },
+   {
+    "insert": "\n"
+   }
+  ]
+ },
+ {
+  "name": "diff: text vs embed",
+  "op": "diff",
+  "a": [
+   {
+    "insert": "a\n"
+   }
+  ],
+  "b": [
+   {
+    "insert": {
+     "image": "https://quilljs.com/assets/images/icon.png"
+    }
+   },
+   {
+    "insert": "\n"
+   }
+  ]
+ },
+ {
+  "name": "diff: emoji replaced",
+  "op": "diff",
+  "a": [
+   {
+    "insert": "a😀b\n"
+   }
+  ],
+  "b": [
+   {
+    "insert": "a😃b\n"
+   }
+  ]
+ },
+ {
+  "name": "diff: emoji inserted",
+  "op": "diff",
+  "a": [
+   {
+    "insert": "ab\n"
+   }
+  ],
+  "b": [
+   {
+    "insert": "a🎉b\n"
+   }
+  ]
+ },
+ {
+  "name": "diff: cursor hint",
+  "op": "diff",
+  "a": [
+   {
+    "insert": "aaa\n"
+   }
+  ],
+  "b": [
+   {
+    "insert": "aaaa\n"
+   }
+  ],
+  "cursor": 2
+ },
+ {
+  "name": "diff: cursor range",
+  "op": "diff",
+  "a": [
+   {
+    "insert": "abcabc\n"
+   }
+  ],
+  "b": [
+   {
+    "insert": "abc\n"
+   }
+  ],
+  "cursor": {
+   "oldRange": {
+    "index": 3,
+    "length": 3
+   },
+   "newRange": {
+    "index": 3,
+    "length": 0
+   }
+  }
+ },
+ {
+  "name": "diff: line attributes",
+  "op": "diff",
+  "a": [
+   {
+    "insert": "a\nb\n"
+   }
+  ],
+  "b": [
+   {
+    "insert": "a"
+   },
+   {
+    "insert": "\n",
+    "attributes": {
+     "list": "bullet"
+    }
+   },
+   {
+    "insert": "b\n"
+   }
+  ]
+ },
+ {
+  "name": "diff: non-document",
+  "op": "diff",
+  "a": [
+   {
+    "retain": 1
+   }
+  ],
+  "b": [
+   {
+    "insert": "a"
+   }
+  ]
+ },
+ {
+  "name": "diff: unicode",
+  "op": "diff",
+  "a": [
+   {
+    "insert": "Привет мир\n"
+   }
+  ],
+  "b": [
+   {
+    "insert": "Привет, мир! 日本\n"
+   }
+  ]
+ },
+ {
+  "name": "invert: insert",
+  "op": "invert",
+  "a": [
+   {
+    "retain": 2
+   },
+   {
+    "insert": "A"
+   }
+  ],
+  "b": [
+   {
+    "insert": "123456"
+   }
+  ]
+ },
+ {
+  "name": "invert: delete with attributes",
+  "op": "invert",
+  "a": [
+   {
+    "retain": 2
+   },
+   {
+    "delete": 3
+   }
+  ],
+  "b": [
+   {
+    "insert": "12",
+    "attributes": {
+     "bold": true
+    }
+   },
+   {
+    "insert": "3456",
+    "attributes": {
+     "italic": true
+    }
+   }
+  ]
+ },
+ {
+  "name": "invert: retain on embed",
+  "op": "invert",
+  "a": [
+   {
+    "retain": 1,
+    "attributes": {
+     "width": "20"
+    }
+   }
+  ],
+  "b": [
+   {
+    "insert": {
+     "image": "https://quilljs.com/assets/images/icon.png"
+    },
+    "attributes": {
+     "width": "10"
+    }
+   },
+   {
+    "insert": "\n"
+   }
+  ]
+ },
+ {
+  "name": "invert: delete embed",
+  "op": "invert",
+  "a": [
+   {
+    "delete": 1
+   }
+  ],
+  "b": [
+   {
+    "insert": {
+     "image": "https://quilljs.com/assets/images/icon.png"
+    },
+    "attributes": {
+     "width": "10"
+    }
+   },
+   {
+    "insert": "\n"
+   }
+  ]
+ },
+ {
+  "name": "invert: combined",
+  "op": "invert",
+  "a": [
+   {
+    "retain": 1,
+    "attributes": {
+     "bold": true
+    }
+   },
+   {
+    "insert": "x"
+   },
+   {
+    "delete": 2
+   },
+   {
+    "retain": 1,
+    "attributes": {
+     "color": null
+    }
+   }
+  ],
+  "b": [
+   {
+    "insert": "ab",
+    "attributes": {
+     "color": "red"
+    }
+   },
+   {
+    "insert": "cd\n"
+   }
+  ]
+ },
+ {
+  "name": "eachLine: trailing text",
+  "op": "eachLine",
+  "a": [
+   {
+    "insert": "a\nb"
+   }
+  ]
+ },
+ {
+  "name": "eachLine: empty lines",
+  "op": "eachLine",
+  "a": [
+   {
+    "insert": "\n\n\n",
+    "attributes": {
+     "header": 1
+    }
+   }
+  ]
+ },
+ {
+  "name": "eachLine: custom newline",
+  "op": "eachLine",
+  "a": [
+   {
+    "insert": "a|b|",
+    "attributes": {
+     "bold": true
+    }
+   }
+  ],
+  "newline": "|"
+ },
+ {
+  "name": "eachLine: embeds",
+  "op": "eachLine",
+  "a": [
+   {
+    "insert": {
+     "image": "https://quilljs.com/assets/images/icon.png"
+    }
+   },
+   {
+    "insert": "\n"
+   },
+   {
+    "insert": {
+     "video": "v"
+    }
+   },
+   {
+    "insert": "x\n",
+    "attributes": {
+     "align": "center"
+    }
+   }
+  ]
+ },
+ {
+  "name": "eachLine: non-document",
+  "op": "eachLine",
+  "a": [
+   {
+    "retain": 2
+   }
+  ]
+ },
+ {
+  "name": "slice: embed boundary",
+  "op": "slice",
+  "a": [
+   {
+    "insert": "ab"
+   },
+   {
+    "insert": {
+     "image": "https://quilljs.com/assets/images/icon.png"
+    }
+   },
+   {
+    "insert": "cd"
+   }
+  ],
+  "start": 1,
+  "end": 4
+ },
+ {
+  "name": "slice: change",
+  "op": "slice",
+  "a": [
+   {
+    "retain": 2
+   },
+   {
+    "delete": 3
+   },
+   {
+    "insert": "x"
+   }
+  ],
+  "start": 1,
+  "end": 6
+ },
+ {
+  "name": "concat: empty",
+  "op": "concat",
+  "a": [],
+  "b": [
+   {
+    "insert": "a"
+   }
+  ]
+ }
+]

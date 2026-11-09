@@ -108,7 +108,10 @@ public:
     /// Splits a custom payload into its type and data.
     static std::optional<std::pair<QString, QJsonValue>> parse(const QJsonValue& data);
     /// The custom payload for `type` and `data`, as flutter_quill writes it
-    /// (CustomBlockEmbed.toJsonString): a compact JSON string.
+    /// (CustomBlockEmbed.toJsonString): a compact JSON string. flutter_quill
+    /// can only render custom embeds whose `data` is a string (its
+    /// CustomBlockEmbed is a BlockEmbed with String data), so encode
+    /// structured data as JSON text first, as its "notes" example does.
     static QString encode(const QString& type, const QJsonValue& data);
 
 private:

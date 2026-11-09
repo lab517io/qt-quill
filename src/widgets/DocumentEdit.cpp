@@ -40,8 +40,8 @@ QTextCharFormat blockCharFormat(const AttributeMap& line, const StyleOptions& st
     return formats::charFormat(inlineSubset(line), line, style);
 }
 
-QTextCharFormat embedCharFormat(const QJsonObject& embed, const AttributeMap& attrs,
-                                const AttributeMap& line, const StyleOptions& style)
+QTextCharFormat embedCharFormat(const QJsonObject& embed, const AttributeMap& attrs, const AttributeMap& line,
+                                const StyleOptions& style)
 {
     QTextCharFormat base = formats::charFormat(attrs, line, style);
     const QString type = embed.isEmpty() ? QString() : embed.begin().key();
@@ -81,7 +81,7 @@ void registerImageResource(QTextDocument* doc, const QString& source)
     const QString meta = source.mid(5, comma - 5);
     const QByteArray payload = source.mid(comma + 1).toLatin1();
     const QByteArray bytes = meta.endsWith(QLatin1String(";base64")) ? QByteArray::fromBase64(payload)
-                                                                      : QByteArray::fromPercentEncoding(payload);
+                                                                     : QByteArray::fromPercentEncoding(payload);
     QImage image;
     if (image.loadFromData(bytes))
         doc->addResource(QTextDocument::ImageResource, url, image);
@@ -121,6 +121,58 @@ Delta embedInsertChange(const Delta& contents, int index, int length, const QJso
     if (embedIndex)
         *embedIndex = at;
     return removal.compose(insert);
+}
+
+Delta flutterDeleteChange(const Delta& contents, int index, int length)
+{
+    const int total = int(contents.length());
+    if (length <= 0 || index < 0 || index >= total)
+        return {};
+    length = std::min(length, total - index);
+    const auto charAt = [&](int i) {
+        const Delta piece = contents.slice(i, i + 1);
+        return piece.ops().isEmpty() ? Op() : piece.ops().first();
+    };
+    const Op first = charAt(index);
+    const bool firstIsNewline = first.isTextInsert() && first.text() == QLatin1String("\n");
+    if (index + length >= total) // EnsureLastLineBreakDeleteRule
+        return length > 1 ? Delta().retain(index).remove(length - 1) : Delta();
+    Delta change = Delta().retain(index).remove(length);
+    if (!firstIsNewline)
+        return change;
+    // PreserveLineStyleOnMergeRule. The line whose "\n" is deleted is empty
+    // when it starts at 0 or follows another "\n"; then a next line with
+    // text keeps its own format.
+    const Op prev = index > 0 ? charAt(index - 1) : Op();
+    if (index == 0 || (prev.isTextInsert() && prev.text() == QLatin1String("\n"))) {
+        for (int i = index + length; i < total; ++i) {
+            const Op op = charAt(i);
+            if (op.isTextInsert() && op.text() == QLatin1String("\n"))
+                break;
+            if (!op.isTextInsert() || !op.text().trimmed().isEmpty())
+                return change;
+        }
+    }
+    const AttributeMap upper = first.attributes();
+    const Delta rest = contents.slice(index + length);
+    int offset = 0;
+    for (const Op& op : rest.ops()) {
+        const qsizetype nl = op.isTextInsert() ? op.text().indexOf(QLatin1Char('\n')) : -1;
+        if (nl < 0) {
+            offset += int(op.length());
+            continue;
+        }
+        AttributeMap attrs;
+        const AttributeMap lower = op.attributes();
+        for (auto it = lower.begin(); it != lower.end(); ++it)
+            attrs.insert(it.key(), QJsonValue::Null);
+        for (auto it = upper.begin(); it != upper.end(); ++it)
+            attrs.insert(it.key(), it.value());
+        offset += int(nl);
+        change.retain(offset).retain(1, attrs);
+        break;
+    }
+    return change;
 }
 
 QString normalizeText(const QString& text)
@@ -181,7 +233,11 @@ void restyleBlock(const QTextBlock& block, const Delta& line, const StyleOptions
     QTextBlockFormat bf = formats::blockFormat(lineAttrs, style);
     const QTextBlockFormat old = block.blockFormat();
     if (old.hasProperty(QTextFormat::ObjectIndex))
-        bf.setObjectIndex(old.objectIndex()); // list membership: regroupLists decides
+        bf.setObjectIndex(old.objectIndex());  // list membership: regroupLists decides
+    if (old.hasProperty(prop::GroupSpacing)) { // updateBlockSpacing decides
+        bf.setTopMargin(bf.topMargin() + old.doubleProperty(prop::GroupSpacing));
+        bf.setProperty(prop::GroupSpacing, old.doubleProperty(prop::GroupSpacing));
+    }
     if (!(bf == old))
         c.setBlockFormat(bf);
     const QTextCharFormat bcf = blockCharFormat(lineAttrs, style);
@@ -192,9 +248,8 @@ void restyleBlock(const QTextBlock& block, const Delta& line, const StyleOptions
     const Delta content = line.slice(0, line.length() - 1);
     for (const Op& op : content.ops()) {
         const int n = int(op.length());
-        const QTextCharFormat format = op.isEmbed()
-                                           ? embedCharFormat(op.embed(), op.attributes(), lineAttrs, style)
-                                           : formats::charFormat(op.attributes(), lineAttrs, style);
+        const QTextCharFormat format = op.isEmbed() ? embedCharFormat(op.embed(), op.attributes(), lineAttrs, style)
+                                                    : formats::charFormat(op.attributes(), lineAttrs, style);
         if (!rangeHasFormat(block, pos, pos + n, format)) {
             c.setPosition(pos);
             c.setPosition(pos + n, QTextCursor::KeepAnchor);
@@ -210,8 +265,7 @@ namespace {
 
 bool isKnownKey(const QString& k)
 {
-    return formats::inlineKeys().contains(k) || formats::lineKeys().contains(k)
-           || formats::passiveKeys().contains(k);
+    return formats::inlineKeys().contains(k) || formats::lineKeys().contains(k) || formats::passiveKeys().contains(k);
 }
 
 /// Quill treats `false` as "remove" for its formats.
@@ -337,8 +391,10 @@ Delta qtApplicable(const Delta& contents, const Delta& change, const Delta& targ
         // previous one: delete that one instead, the final separator takes
         // its attributes.
         return out
-            .compose(Delta().retain(newPos - 1).remove(1).retain(
-                1, attributes::diff(finalAttrs, detail::lastAttributes(target))))
+            .compose(Delta()
+                         .retain(newPos - 1)
+                         .remove(1)
+                         .retain(1, attributes::diff(finalAttrs, detail::lastAttributes(target))))
             .chop();
     }
     out = out.concat(rest.slice(0, rest.length() - 1)); // rest ends with "\n"
@@ -420,6 +476,7 @@ void restyleSpans(QTextDocument* doc, const QList<Span>& spans, const Delta& tar
         for (int n = first; n <= last && b.isValid(); ++n, b = b.next())
             detail::restyleBlock(b, walker.take(b.position(), b.length()), style);
         DeltaDocument::regroupLists(firstBlock, doc->findBlockByNumber(last), style);
+        DeltaDocument::updateBlockSpacing(firstBlock, doc->findBlockByNumber(last), style);
     }
 }
 

@@ -4,3 +4,7 @@ build/
 .cache/
 compile_commands.json
 node_modules/
+.dart_tool/
+tools/flutter-check/build/
+.flutter-plugins
+.flutter-plugins-dependencies

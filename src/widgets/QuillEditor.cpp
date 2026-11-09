@@ -13,9 +13,10 @@
 
 #include <QAbstractTextDocumentLayout>
 #include <QBuffer>
+#include <QDropEvent>
+#include <QHelpEvent>
 #include <QImageReader>
 #include <QJsonArray>
-#include <QDropEvent>
 #include <QMimeData>
 #include <QMouseEvent>
 #include <QPainter>
@@ -26,13 +27,15 @@
 #include <QTextFragment>
 #include <QTextLayout>
 #include <QToolTip>
-#include <QHelpEvent>
 
 namespace quill {
 
 namespace {
 
-QString key(const char* k) { return QString::fromLatin1(k); }
+QString key(const char* k)
+{
+    return QString::fromLatin1(k);
+}
 
 constexpr char kDeltaMime[] = "application/x-quill-delta+json";
 
@@ -80,7 +83,10 @@ AttributeMap merged(AttributeMap a, const AttributeMap& b)
 
 // --- Private ---------------------------------------------------------------------
 
-StyleOptions QuillEditorPrivate::docStyle() const { return DeltaDocument::documentStyle(q->document()); }
+StyleOptions QuillEditorPrivate::docStyle() const
+{
+    return DeltaDocument::documentStyle(q->document());
+}
 
 int QuillEditorPrivate::clampIndex(int index) const
 {
@@ -175,11 +181,26 @@ Delta QuillEditorPrivate::modify(Source src, const std::function<Delta()>& fn)
     const Delta old = contents;
     const qsizetype logStart = log.size();
     const Source savedSource = source;
+    // A change that restyles the cursor's line without moving the cursor
+    // (leaving a quote, a block format on an empty line) must restyle the
+    // typing format too: Qt keeps the old line's styling in it.
+    const QTextCursor before = q->textCursor();
+    const bool track = depth == 0 && !before.hasSelection();
+    const AttributeMap typing = track ? typingAttributes() : AttributeMap();
+    const AttributeMap lineBefore = track ? styledFor(before.block()) : AttributeMap();
     ++depth;
     source = src;
     const Delta input = fn();
     --depth;
     source = savedSource;
+    if (track) {
+        const QTextCursor after = q->textCursor();
+        if (!after.hasSelection() && after.position() == before.position() && styledFor(after.block()) != lineBefore) {
+            sanitizing = true;
+            q->setCurrentCharFormat(formats::charFormat(typing, styledFor(after.block()), docStyle()));
+            sanitizing = false;
+        }
+    }
 
     Delta tracked;
     for (qsizetype i = logStart; i < log.size(); ++i)
@@ -304,9 +325,10 @@ void QuillEditorPrivate::onContentsChange(int pos, int removed, int added)
         const Delta full = DeltaDocument::toDelta(doc);
         if (full != contents) {
             ++failures;
-            qWarning("quill: tracked contents drifted after contentsChange(%d, -%d, +%d)\n  change: %s\n  tracked: %s\n  actual: %s",
-                     pos, removed, added, change.toJson().constData(), contents.toJson().constData(),
-                     full.toJson().constData());
+            qWarning(
+                "quill: tracked contents drifted after contentsChange(%d, -%d, +%d)\n  change: %s\n  tracked: %s\n  actual: %s",
+                pos, removed, added, change.toJson().constData(), contents.toJson().constData(),
+                full.toJson().constData());
             change = old.diff(full);
             contents = full;
         }
@@ -439,7 +461,7 @@ Delta QuillEditorPrivate::plainTextChange(const Range& r, const QString& textIn)
     if (r.index > first.start) {
         const Delta prev = contents.slice(r.index - 1, r.index);
         inlineAttrs = prev.ops().first().isEmbed() ? detail::inlineSubset(prev.ops().first().attributes())
-                                                    : prev.ops().first().attributes();
+                                                   : prev.ops().first().attributes();
         const QString link = inlineAttrs.value(key("link")).toString();
         if (!link.isEmpty() && inlineAt(r.index + r.length).value(key("link")).toString() != link)
             inlineAttrs.remove(key("link"));
@@ -473,7 +495,12 @@ QuillEditor::QuillEditor(QWidget* parent) : QTextEdit(parent), d(std::make_uniqu
         d->syncSelection();
         d->sanitizeTypingFormat();
     });
-    connect(this, &QTextEdit::selectionChanged, this, [this] { d->syncSelection(); });
+    connect(this, &QTextEdit::selectionChanged, this, [this] {
+        d->syncSelection();
+        // Collapsing a selection keeps the cursor position (no
+        // cursorPositionChanged), e.g. after formatting a link.
+        d->sanitizeTypingFormat();
+    });
 
     setContents(Delta().insert(QStringLiteral("\n")), Source::Silent);
 }
@@ -526,7 +553,10 @@ QString QuillEditor::getText(int index, int length) const
     return text;
 }
 
-int QuillEditor::getLength() const { return int(d->contents.length()); }
+int QuillEditor::getLength() const
+{
+    return int(d->contents.length());
+}
 
 Delta QuillEditor::insertText(int index, const QString& textIn, const AttributeMap& attributes, Source source)
 {
@@ -564,14 +594,17 @@ Delta QuillEditor::insertEmbed(int index, const QString& type, const QJsonValue&
 Delta QuillEditor::insertBlockEmbed(int index, const QString& type, const QJsonValue& value, Source source)
 {
     return d->modify(source, [&] {
-        const Delta change = detail::embedInsertChange(d->contents, d->clampIndex(index), 0,
-                                                       QJsonObject{{type, value}}, true);
+        const Delta change =
+            detail::embedInsertChange(d->contents, d->clampIndex(index), 0, QJsonObject{{type, value}}, true);
         d->apply(change);
         return change;
     });
 }
 
-EmbedRegistry* QuillEditor::embeds() const { return d->embeds; }
+EmbedRegistry* QuillEditor::embeds() const
+{
+    return d->embeds;
+}
 
 Delta QuillEditor::deleteText(int index, int length, Source source)
 {
@@ -701,7 +734,10 @@ void QuillEditor::setSelection(int index, int length, Source source)
     d->selectionSource = saved;
 }
 
-StyleOptions QuillEditor::styleOptions() const { return d->style; }
+StyleOptions QuillEditor::styleOptions() const
+{
+    return d->style;
+}
 
 void QuillEditor::setStyleOptions(const StyleOptions& style)
 {
@@ -711,11 +747,32 @@ void QuillEditor::setStyleOptions(const StyleOptions& style)
     viewport()->update();
 }
 
-QStringList QuillEditor::pasteIgnoredAttributes() const { return d->pasteIgnored; }
-void QuillEditor::setPasteIgnoredAttributes(const QStringList& keys) { d->pasteIgnored = keys; }
+QuillEditor::EditingRules QuillEditor::editingRules() const
+{
+    return d->rules;
+}
+void QuillEditor::setEditingRules(EditingRules rules)
+{
+    d->rules = rules;
+}
 
-void QuillEditor::setVerifyChanges(bool on) { d->verify = on; }
-int QuillEditor::verificationFailures() const { return d->failures; }
+QStringList QuillEditor::pasteIgnoredAttributes() const
+{
+    return d->pasteIgnored;
+}
+void QuillEditor::setPasteIgnoredAttributes(const QStringList& keys)
+{
+    d->pasteIgnored = keys;
+}
+
+void QuillEditor::setVerifyChanges(bool on)
+{
+    d->verify = on;
+}
+int QuillEditor::verificationFailures() const
+{
+    return d->failures;
+}
 
 QString QuillEditor::imageSourceFor(const QImage& image)
 {
@@ -817,8 +874,9 @@ void QuillEditor::mousePressEvent(QMouseEvent* e)
             d->markerPressed = true;
             const int nl = b.position() + b.length() - 1;
             const bool checked = d->inlineAt(nl).value(key("list")).toString() == QLatin1String("checked");
-            updateContents(Delta().retain(nl).retain(1, AttributeMap{{key("list"), checked ? key("unchecked") : key("checked")}}),
-                           Source::User);
+            updateContents(
+                Delta().retain(nl).retain(1, AttributeMap{{key("list"), checked ? key("unchecked") : key("checked")}}),
+                Source::User);
             e->accept();
             return;
         }
@@ -853,11 +911,12 @@ void QuillEditor::mouseMoveEvent(QMouseEvent* e)
 {
     QTextEdit::mouseMoveEvent(e);
     const bool link = !anchorAt(e->pos()).isEmpty() && (isReadOnly() || (e->modifiers() & Qt::ControlModifier));
-    const bool marker = !isReadOnly()
-                        && document()->documentLayout()->blockWithMarkerAt(documentPos(this, e->pos())).isValid();
+    const bool marker =
+        !isReadOnly() && document()->documentLayout()->blockWithMarkerAt(documentPos(this, e->pos())).isValid();
     const int embed = embedAt(e->pos());
     const bool clickable = embed >= 0 && !d->embedInfo(embed).first->activatesOnDoubleClick();
-    viewport()->setCursor(link || marker || clickable ? Qt::PointingHandCursor : (isReadOnly() ? Qt::ArrowCursor : Qt::IBeamCursor));
+    viewport()->setCursor(link || marker || clickable ? Qt::PointingHandCursor
+                                                      : (isReadOnly() ? Qt::ArrowCursor : Qt::IBeamCursor));
 }
 
 // --- Decorations ---------------------------------------------------------------------
@@ -873,9 +932,7 @@ void QuillEditor::paintEvent(QPaintEvent* e)
         const StyleOptions style = d->docStyle();
         const qreal left = doc->documentMargin() + offset.x();
         const qreal width = (doc->textWidth() > 0 ? doc->textWidth() : viewport()->width()) - 2 * doc->documentMargin();
-        const auto kind = [](const QTextBlock& b) {
-            return BlockKind(b.blockFormat().intProperty(prop::BlockKind));
-        };
+        const auto kind = [](const QTextBlock& b) { return BlockKind(b.blockFormat().intProperty(prop::BlockKind)); };
 
         QTextBlock b = cursorForPosition(QPoint(0, 0)).block();
         while (kind(b) == BlockKind::CodeBlock && b.previous().isValid() && kind(b.previous()) == BlockKind::CodeBlock)
@@ -892,7 +949,12 @@ void QuillEditor::paintEvent(QPaintEvent* e)
         for (; b.isValid(); b = b.next()) {
             if (!b.isVisible())
                 continue;
-            const QRectF r = layout->blockBoundingRect(b).translated(offset);
+            // blockBoundingRect() excludes the block's margins. Decorations
+            // cover a line's own spacing, not the spacing above its group.
+            const QTextBlockFormat bf = b.blockFormat();
+            const qreal lineTop = bf.topMargin() - bf.doubleProperty(prop::GroupSpacing);
+            const QRectF r =
+                layout->blockBoundingRect(b).translated(offset).adjusted(0, -lineTop, 0, bf.bottomMargin());
             const qreal indent = b.blockFormat().indent() * doc->indentWidth();
             if (kind(b) == BlockKind::CodeBlock) {
                 const QRectF panel(left + indent, r.top(), width - indent, r.height());

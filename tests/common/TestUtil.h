@@ -26,8 +26,7 @@ inline QJsonDocument loadJson(const QString& relative)
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(file.readAll(), &error);
     if (error.error != QJsonParseError::NoError)
-        qFatal("cannot parse fixture %s: %s", qPrintable(file.fileName()),
-               qPrintable(error.errorString()));
+        qFatal("cannot parse fixture %s: %s", qPrintable(file.fileName()), qPrintable(error.errorString()));
     return doc;
 }
 
@@ -61,7 +60,7 @@ inline char* toString(const Delta& d)
 } // namespace quill
 
 namespace QTest {
-template <>
+template<>
 inline char* toString(const QJsonObject& o)
 {
     return QTest::toString(QString::fromUtf8(QJsonDocument(o).toJson(QJsonDocument::Compact)));

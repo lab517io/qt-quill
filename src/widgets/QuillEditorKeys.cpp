@@ -13,7 +13,10 @@
 namespace quill {
 
 namespace {
-QString key(const char* k) { return QString::fromLatin1(k); }
+QString key(const char* k)
+{
+    return QString::fromLatin1(k);
+}
 const QJsonValue Null(QJsonValue::Null);
 } // namespace
 
@@ -46,7 +49,11 @@ void QuillEditor::keyPressEvent(QKeyEvent* e)
         }
         break;
     case Qt::Key_Backspace:
-        if (mods == Qt::NoModifier && d->handleBackspace())
+        if ((mods == Qt::NoModifier || mods == Qt::ShiftModifier) && d->handleBackspace())
+            return;
+        break;
+    case Qt::Key_Delete:
+        if (mods == Qt::NoModifier && d->handleDelete())
             return;
         break;
     case Qt::Key_Tab:
@@ -76,7 +83,50 @@ void QuillEditor::keyPressEvent(QKeyEvent* e)
     default:
         break;
     }
+    if (e->matches(QKeySequence::Cut) && textCursor().hasSelection()) {
+        copy();
+        d->deleteRange(getSelection().index, getSelection().length);
+        return;
+    }
+    // Typing over a selection that spans lines: delete it as a Delta first.
+    if (!e->text().isEmpty() && e->text().at(0).isPrint() && !(mods & (Qt::ControlModifier | Qt::MetaModifier)))
+        d->deleteMultiLineSelection();
     QTextEdit::keyPressEvent(e);
+}
+
+void QuillEditorPrivate::deleteRange(int index, int length)
+{
+    const Delta change = rules == QuillEditor::EditingRules::FlutterQuill
+                             ? detail::flutterDeleteChange(contents, index, length)
+                             : Delta().retain(index).remove(std::min(length, int(contents.length()) - 1 - index));
+    if (!change.isEmpty())
+        q->updateContents(change, Source::User);
+    q->setSelection(index, 0, Source::Silent);
+}
+
+bool QuillEditorPrivate::deleteMultiLineSelection()
+{
+    const Range r = q->getSelection();
+    if (r.length == 0 || lineAt(r.index).start == lineAt(r.index + r.length).start)
+        return false;
+    deleteRange(r.index, r.length);
+    return true;
+}
+
+bool QuillEditorPrivate::handleDelete()
+{
+    const Range r = q->getSelection();
+    if (r.length != 0) {
+        deleteRange(r.index, r.length);
+        return true;
+    }
+    const Line line = lineAt(r.index);
+    if (r.index != line.end)
+        return false;
+    // Deleting a line's "\n": the merged line keeps this line's format
+    // (flutter_quill PreserveLineStyleOnMergeRule, Quill handleDelete).
+    deleteRange(r.index, 1);
+    return true;
 }
 
 void QuillEditorPrivate::toggle(const QString& name)
@@ -98,16 +148,15 @@ void QuillEditorPrivate::handleEnter(bool plain)
         const AttributeMap& a = line.attrs;
         if (line.isEmpty() && !formats::listGroup(a).isEmpty()) {
             // Quill "list empty enter": leave the list.
-            q->updateContents(lineFormatChange(r.index, 0, {{key("list"), Null}, {key("indent"), Null}}),
-                              Source::User);
+            q->updateContents(lineFormatChange(r.index, 0, {{key("list"), Null}, {key("indent"), Null}}), Source::User);
             return;
         }
         for (const char* k : {"blockquote", "code-block"}) {
             if (!line.isEmpty() || !a.contains(key(k)))
                 continue;
             // flutter_quill AutoExitBlockRule: an empty last line leaves the block.
-            const bool nextSame = line.end + 1 < int(contents.length())
-                                  && lineAt(line.end + 1).attrs.value(key(k)) == a.value(key(k));
+            const bool nextSame =
+                line.end + 1 < int(contents.length()) && lineAt(line.end + 1).attrs.value(key(k)) == a.value(key(k));
             if (!nextSame) {
                 q->updateContents(lineFormatChange(r.index, 0, {{key(k), Null}}), Source::User);
                 return;
@@ -116,7 +165,7 @@ void QuillEditorPrivate::handleEnter(bool plain)
         if (a.contains(key("header")) && r.index == line.end) {
             // Quill "header enter": the new line is a paragraph.
             change = Delta().retain(r.index).insert(QStringLiteral("\n"), a).retain(1, {{key("header"), Null}});
-        } else if (a.value(key("list")) == QJsonValue(key("checked"))) {
+        } else if (a.value(key("list")) == QJsonValue(key("checked")) && rules == QuillEditor::EditingRules::QuillJs) {
             // Quill "checklist enter": the new item is unchecked.
             change = Delta()
                          .retain(r.index)
@@ -138,11 +187,19 @@ void QuillEditorPrivate::handleEnter(bool plain)
 bool QuillEditorPrivate::handleBackspace()
 {
     const Range r = q->getSelection();
-    if (r.length != 0)
-        return false;
+    if (r.length != 0) {
+        deleteRange(r.index, r.length);
+        return true;
+    }
     const Line line = lineAt(r.index);
     if (r.index != line.start)
         return false;
+    if (rules == QuillEditor::EditingRules::FlutterQuill) {
+        // flutter_quill: delete the upper line's "\n" with its delete rules.
+        if (r.index > 0)
+            deleteRange(r.index - 1, 1);
+        return true;
+    }
     const AttributeMap& a = line.attrs;
     const auto removeLineFormat = [&](const AttributeMap& f) {
         q->updateContents(lineFormatChange(r.index, 0, f), Source::User);
@@ -186,10 +243,24 @@ bool QuillEditorPrivate::handleTab(bool back)
         q->updateContents(lineFormatChange(r.index, r.length, {{key("indent"), key("-1")}}), Source::User);
         return true; // never move focus
     }
-    if (multiLine || !formats::listGroup(first.attrs).isEmpty()) {
+    const bool list = !formats::listGroup(first.attrs).isEmpty();
+    const auto indent = [&] {
         q->updateContents(lineFormatChange(r.index, r.length, {{key("indent"), key("+1")}}), Source::User);
         return true;
+    };
+    if (r.length > 0) {
+        // flutter_quill indents a selection only in lists (and ignores Tab
+        // otherwise); Quill.js indents every selected line.
+        if (rules == QuillEditor::EditingRules::QuillJs || list)
+            return indent();
+        if (multiLine)
+            return true;
+        return false;
     }
+    // A list item indents when the caret is at its start (or it is empty);
+    // elsewhere Tab inserts "\t" (flutter_quill and Quill.js).
+    if (list && r.index == first.start)
+        return indent();
     return false; // QTextEdit inserts "\t" with the typing format
 }
 

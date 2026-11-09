@@ -70,12 +70,10 @@ QJsonObject Op::toJson() const
     QJsonObject json;
     switch (m_type) {
     case Type::Insert:
-        json.insert(QStringLiteral("insert"),
-                    m_isEmbed ? QJsonValue(m_embed) : QJsonValue(m_text));
+        json.insert(QStringLiteral("insert"), m_isEmbed ? QJsonValue(m_embed) : QJsonValue(m_text));
         break;
     case Type::Retain:
-        json.insert(QStringLiteral("retain"),
-                    m_isEmbed ? QJsonValue(m_embed) : QJsonValue(qint64(m_count)));
+        json.insert(QStringLiteral("retain"), m_isEmbed ? QJsonValue(m_embed) : QJsonValue(qint64(m_count)));
         break;
     case Type::Delete:
         json.insert(QStringLiteral("delete"), qint64(m_count));
@@ -99,8 +97,7 @@ bool readCount(const QJsonValue& value, const char* key, qsizetype* out, QString
 {
     const double d = value.toDouble(-1);
     if (!value.isDouble() || d < 0 || std::floor(d) != d)
-        return fail(error, QStringLiteral("\"%1\" must be a non-negative integer")
-                               .arg(QLatin1String(key)));
+        return fail(error, QStringLiteral("\"%1\" must be a non-negative integer").arg(QLatin1String(key)));
     *out = qsizetype(d);
     return true;
 }
@@ -153,9 +150,8 @@ std::optional<Op> Op::fromJson(const QJsonValue& value, QString* error)
 
 bool Op::operator==(const Op& other) const
 {
-    return m_type == other.m_type && m_isEmbed == other.m_isEmbed && m_count == other.m_count
-           && m_text == other.m_text && m_embed == other.m_embed
-           && m_attributes == other.m_attributes;
+    return m_type == other.m_type && m_isEmbed == other.m_isEmbed && m_count == other.m_count && m_text == other.m_text
+           && m_embed == other.m_embed && m_attributes == other.m_attributes;
 }
 
 } // namespace quill

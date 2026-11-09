@@ -1,0 +1,396 @@
+[
+    {
+        "attributes": {
+            "bold": true
+        },
+        "insert": "Bold"
+    },
+    {
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "bold": true,
+            "italic": true,
+            "strike": true,
+            "underline": true
+        },
+        "insert": "Italic underline strike"
+    },
+    {
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "bold": true,
+            "code": true,
+            "italic": true,
+            "strike": true,
+            "underline": true
+        },
+        "insert": "inline code"
+    },
+    {
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "bold": true,
+            "italic": true,
+            "script": "sub",
+            "strike": true,
+            "underline": true
+        },
+        "insert": "sub"
+    },
+    {
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "bold": true,
+            "italic": true,
+            "script": "super",
+            "strike": true,
+            "underline": true
+        },
+        "insert": "super"
+    },
+    {
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "background": "#FFFFEB3B",
+            "bold": true,
+            "color": "#FFF44336",
+            "italic": true,
+            "script": "super",
+            "strike": true,
+            "underline": true
+        },
+        "insert": "Red on yellow"
+    },
+    {
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "background": "#FFFFEB3B",
+            "bold": true,
+            "color": "#FFF44336",
+            "font": "monospace",
+            "italic": true,
+            "script": "super",
+            "size": "large",
+            "strike": true,
+            "underline": true
+        },
+        "insert": "Monospace large"
+    },
+    {
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "background": "#FFFFEB3B",
+            "bold": true,
+            "color": "#FFF44336",
+            "font": "monospace",
+            "italic": true,
+            "script": "super",
+            "size": "20",
+            "strike": true,
+            "underline": true
+        },
+        "insert": "Size 20"
+    },
+    {
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "background": "#FFFFEB3B",
+            "bold": true,
+            "color": "#FFF44336",
+            "font": "monospace",
+            "italic": true,
+            "link": "https://pub.dev/packages/flutter_quill",
+            "script": "super",
+            "size": "20",
+            "strike": true,
+            "underline": true
+        },
+        "insert": "Link"
+    },
+    {
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "background": "#FFFFEB3B",
+            "bold": true,
+            "color": "#FFF44336",
+            "font": "monospace",
+            "italic": true,
+            "script": "super",
+            "size": "20",
+            "strike": true,
+            "underline": true
+        },
+        "insert": "Heading 1"
+    },
+    {
+        "attributes": {
+            "header": 1
+        },
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "background": "#FFFFEB3B",
+            "bold": true,
+            "color": "#FFF44336",
+            "font": "monospace",
+            "italic": true,
+            "script": "super",
+            "size": "20",
+            "strike": true,
+            "underline": true
+        },
+        "insert": "Heading 2"
+    },
+    {
+        "attributes": {
+            "header": 2
+        },
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "background": "#FFFFEB3B",
+            "bold": true,
+            "color": "#FFF44336",
+            "font": "monospace",
+            "italic": true,
+            "script": "super",
+            "size": "20",
+            "strike": true,
+            "underline": true
+        },
+        "insert": "Heading 3"
+    },
+    {
+        "attributes": {
+            "header": 3
+        },
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "background": "#FFFFEB3B",
+            "bold": true,
+            "color": "#FFF44336",
+            "font": "monospace",
+            "italic": true,
+            "script": "super",
+            "size": "20",
+            "strike": true,
+            "underline": true
+        },
+        "insert": "Bullet"
+    },
+    {
+        "attributes": {
+            "list": "bullet"
+        },
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "background": "#FFFFEB3B",
+            "bold": true,
+            "color": "#FFF44336",
+            "font": "monospace",
+            "italic": true,
+            "script": "super",
+            "size": "20",
+            "strike": true,
+            "underline": true
+        },
+        "insert": "Nested"
+    },
+    {
+        "attributes": {
+            "indent": 1,
+            "list": "bullet"
+        },
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "background": "#FFFFEB3B",
+            "bold": true,
+            "color": "#FFF44336",
+            "font": "monospace",
+            "italic": true,
+            "script": "super",
+            "size": "20",
+            "strike": true,
+            "underline": true
+        },
+        "insert": "Ordered"
+    },
+    {
+        "attributes": {
+            "list": "ordered"
+        },
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "background": "#FFFFEB3B",
+            "bold": true,
+            "color": "#FFF44336",
+            "font": "monospace",
+            "italic": true,
+            "script": "super",
+            "size": "20",
+            "strike": true,
+            "underline": true
+        },
+        "insert": "Checked"
+    },
+    {
+        "attributes": {
+            "list": "checked"
+        },
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "background": "#FFFFEB3B",
+            "bold": true,
+            "color": "#FFF44336",
+            "font": "monospace",
+            "italic": true,
+            "script": "super",
+            "size": "20",
+            "strike": true,
+            "underline": true
+        },
+        "insert": "Unchecked"
+    },
+    {
+        "attributes": {
+            "list": "unchecked"
+        },
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "background": "#FFFFEB3B",
+            "bold": true,
+            "color": "#FFF44336",
+            "font": "monospace",
+            "italic": true,
+            "script": "super",
+            "size": "20",
+            "strike": true,
+            "underline": true
+        },
+        "insert": "Quote"
+    },
+    {
+        "attributes": {
+            "blockquote": true
+        },
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "background": "#FFFFEB3B",
+            "bold": true,
+            "color": "#FFF44336",
+            "font": "monospace",
+            "italic": true,
+            "script": "super",
+            "size": "20",
+            "strike": true,
+            "underline": true
+        },
+        "insert": "code();"
+    },
+    {
+        "attributes": {
+            "code-block": true
+        },
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "background": "#FFFFEB3B",
+            "bold": true,
+            "color": "#FFF44336",
+            "font": "monospace",
+            "italic": true,
+            "script": "super",
+            "size": "20",
+            "strike": true,
+            "underline": true
+        },
+        "insert": "Centered"
+    },
+    {
+        "attributes": {
+            "align": "center"
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "مرحبا"
+    },
+    {
+        "attributes": {
+            "align": "right",
+            "direction": "rtl"
+        },
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "height": "150",
+            "width": "200"
+        },
+        "insert": {
+            "image": "https://flutter.github.io/assets-for-api-docs/assets/widgets/owl.jpg"
+        }
+    },
+    {
+        "insert": "\n"
+    },
+    {
+        "insert": {
+            "video": "https://www.youtube.com/watch?v=V4hgdKhIqtc"
+        }
+    },
+    {
+        "insert": "\nFormula "
+    },
+    {
+        "insert": {
+            "formula": "e^{i\\pi}+1=0"
+        }
+    },
+    {
+        "insert": "\n"
+    },
+    {
+        "insert": {
+            "custom": "{\"notes\":\"[{\\\"insert\\\":\\\"Note ü 🎉\\\\n\\\"}]\"}"
+        }
+    },
+    {
+        "insert": "\n"
+    }
+]

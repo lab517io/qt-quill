@@ -17,7 +17,10 @@ namespace quill {
 
 namespace {
 
-QString str(const char* k) { return QString::fromLatin1(k); }
+QString str(const char* k)
+{
+    return QString::fromLatin1(k);
+}
 
 QFont fontOf(const EmbedContext& c)
 {
@@ -42,8 +45,9 @@ QColor withAlpha(QColor c, double alpha)
 
 QString compact(const QJsonValue& v, int max = 200)
 {
-    QString s = v.isString() ? v.toString()
-                             : QString::fromUtf8(QJsonDocument(QJsonArray{v}).toJson(QJsonDocument::Compact)).mid(1).chopped(1);
+    QString s = v.isString()
+                    ? v.toString()
+                    : QString::fromUtf8(QJsonDocument(QJsonArray{v}).toJson(QJsonDocument::Compact)).mid(1).chopped(1);
     if (s.size() > max)
         s = s.left(max - 1) + QChar(0x2026);
     return s;
@@ -65,7 +69,8 @@ void drawPictureGlyph(QPainter* p, const QPointF& center, qreal size, const QCol
     p->drawPath(m);
     p->drawEllipse(QPointF(r.left() + r.width() * 0.72, r.top() + r.height() * 0.3), size / 14, size / 14);
     if (broken)
-        p->drawLine(QPointF(r.left() - size * 0.1, r.bottom() + size * 0.1), QPointF(r.right() + size * 0.1, r.top() - size * 0.1));
+        p->drawLine(QPointF(r.left() - size * 0.1, r.bottom() + size * 0.1),
+                    QPointF(r.right() + size * 0.1, r.top() - size * 0.1));
 }
 
 void drawPlaceholderBox(QPainter* p, const QRectF& rect, const QColor& fg, bool dashed)
@@ -98,10 +103,22 @@ std::optional<double> attrLength(const AttributeMap& attrs, bool width)
 
 // --- ImageEmbed ----------------------------------------------------------------------
 
-QString ImageEmbed::key() const { return str("image"); }
-bool ImageEmbed::accepts(const QJsonValue& data) const { return data.isString(); }
-bool ImageEmbed::isBlock() const { return true; }
-bool ImageEmbed::activatesOnDoubleClick() const { return true; }
+QString ImageEmbed::key() const
+{
+    return str("image");
+}
+bool ImageEmbed::accepts(const QJsonValue& data) const
+{
+    return data.isString();
+}
+bool ImageEmbed::isBlock() const
+{
+    return true;
+}
+bool ImageEmbed::activatesOnDoubleClick() const
+{
+    return true;
+}
 
 QSizeF ImageEmbed::size(const EmbedContext& c) const
 {
@@ -156,7 +173,8 @@ void ImageEmbed::paint(QPainter* p, const QRectF& rect, const EmbedContext& c) c
             text = QObject::tr("Loading %1").arg(text);
         p->setFont(font);
         p->setPen(withAlpha(fg, 0.6));
-        const QRectF line(rect.left() + 6, center.y() + glyph * 0.5 + fm.height() * 0.3, rect.width() - 12, fm.height());
+        const QRectF line(rect.left() + 6, center.y() + glyph * 0.5 + fm.height() * 0.3, rect.width() - 12,
+                          fm.height());
         p->drawText(line, Qt::AlignHCenter | Qt::AlignTop | Qt::TextSingleLine,
                     fm.elidedText(text, Qt::ElideMiddle, line.width()));
     }
@@ -172,8 +190,14 @@ QString ImageEmbed::toolTip(const EmbedContext& c) const
 
 // --- VideoEmbed ----------------------------------------------------------------------
 
-QString VideoEmbed::key() const { return str("video"); }
-bool VideoEmbed::isBlock() const { return true; }
+QString VideoEmbed::key() const
+{
+    return str("video");
+}
+bool VideoEmbed::isBlock() const
+{
+    return true;
+}
 
 QSizeF VideoEmbed::size(const EmbedContext& c) const
 {
@@ -233,7 +257,10 @@ void VideoEmbed::paint(QPainter* p, const QRectF& rect, const EmbedContext& c) c
     }
 }
 
-QString VideoEmbed::toolTip(const EmbedContext& c) const { return compact(c.data); }
+QString VideoEmbed::toolTip(const EmbedContext& c) const
+{
+    return compact(c.data);
+}
 
 // --- FormulaEmbed --------------------------------------------------------------------
 
@@ -248,13 +275,17 @@ QFont formulaFont(const EmbedContext& c)
 constexpr qreal kChipPadding = 5;
 } // namespace
 
-QString FormulaEmbed::key() const { return str("formula"); }
+QString FormulaEmbed::key() const
+{
+    return str("formula");
+}
 
 QImage FormulaEmbed::rendered(const EmbedContext& c) const
 {
     if (!m_renderer)
         return {};
-    const QColor color = c.format.foreground().style() != Qt::NoBrush ? c.format.foreground().color() : QColor(Qt::black);
+    const QColor color =
+        c.format.foreground().style() != Qt::NoBrush ? c.format.foreground().color() : QColor(Qt::black);
     return m_renderer(c.data.toString(), fontOf(c), color);
 }
 
@@ -280,11 +311,17 @@ void FormulaEmbed::paint(QPainter* p, const QRectF& rect, const EmbedContext& c)
     drawChip(p, rect, formulaFont(c), tex, p->pen().color(), true);
 }
 
-QString FormulaEmbed::toolTip(const EmbedContext& c) const { return compact(c.data); }
+QString FormulaEmbed::toolTip(const EmbedContext& c) const
+{
+    return compact(c.data);
+}
 
 // --- GenericEmbed --------------------------------------------------------------------
 
-QString GenericEmbed::key() const { return QString(); }
+QString GenericEmbed::key() const
+{
+    return QString();
+}
 
 QString GenericEmbed::label(const EmbedContext& c)
 {

@@ -11,22 +11,22 @@
 
 #include <QApplication>
 #include <QCloseEvent>
-#include <QDir>
 #include <QDialog>
 #include <QDialogButtonBox>
+#include <QDir>
 #include <QDockWidget>
-#include <QFormLayout>
-#include <QJsonArray>
-#include <QJsonObject>
-#include <QLineEdit>
-#include <QPlainTextEdit>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QFormLayout>
+#include <QJsonArray>
 #include <QJsonDocument>
+#include <QJsonObject>
 #include <QLabel>
+#include <QLineEdit>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QPlainTextEdit>
 #include <QSaveFile>
 #include <QStatusBar>
 #include <QStyleFactory>
@@ -34,8 +34,7 @@
 #include <QVBoxLayout>
 
 MainWindow::MainWindow(QWidget* parent)
-    : QMainWindow(parent), m_editor(new quill::QuillEditor), m_findBar(new quill::QuillFindBar),
-      m_status(new QLabel)
+    : QMainWindow(parent), m_editor(new quill::QuillEditor), m_findBar(new quill::QuillFindBar), m_status(new QLabel)
 {
     auto* central = new QWidget(this);
     auto* layout = new QVBoxLayout(central);
@@ -66,9 +65,10 @@ MainWindow::MainWindow(QWidget* parent)
     m_editor->embeds()->emplace<NotesEmbed>();
     connect(m_editor, &quill::QuillEditor::embedActivated, this,
             [this](const QString& type, const QJsonValue& data, int index) {
-                const QString value = data.isString()
-                                          ? data.toString()
-                                          : QString::fromUtf8(QJsonDocument(QJsonObject{{type, data}}).toJson(QJsonDocument::Compact));
+                const QString value =
+                    data.isString()
+                        ? data.toString()
+                        : QString::fromUtf8(QJsonDocument(QJsonObject{{type, data}}).toJson(QJsonDocument::Compact));
                 statusBar()->showMessage(tr("Embed \"%1\" at %2: %3").arg(type).arg(index).arg(value.left(200)), 8000);
             });
 
@@ -94,7 +94,8 @@ void MainWindow::buildMenus()
     file->addAction(tr("&Open..."), QKeySequence::Open, this, [this] {
         if (!maybeSave())
             return;
-        const QString path = QFileDialog::getOpenFileName(this, tr("Open Delta"), QString(), tr("Delta JSON (*.json);;All files (*)"));
+        const QString path =
+            QFileDialog::getOpenFileName(this, tr("Open Delta"), QString(), tr("Delta JSON (*.json);;All files (*)"));
         QString error;
         if (!path.isEmpty() && !openFile(path, &error))
             QMessageBox::warning(this, tr("Open"), error);
@@ -126,6 +127,14 @@ void MainWindow::buildMenus()
     edit->addAction(tr("&Find"), QKeySequence::Find, m_findBar, &quill::QuillFindBar::activate);
     edit->addSeparator();
     edit->addAction(tr("Insert &custom embed..."), this, &MainWindow::insertCustomEmbed);
+    edit->addSeparator();
+    QAction* quillJs = edit->addAction(tr("Quill.js &keyboard rules"));
+    quillJs->setCheckable(true);
+    quillJs->setToolTip(tr("Backspace at a line start removes block formats first; checked items continue unchecked"));
+    connect(quillJs, &QAction::toggled, this, [this](bool on) {
+        m_editor->setEditingRules(on ? quill::QuillEditor::EditingRules::QuillJs
+                                     : quill::QuillEditor::EditingRules::FlutterQuill);
+    });
 
     QMenu* view = menuBar()->addMenu(tr("&View"));
     view->addAction(m_dock->toggleViewAction());
@@ -178,7 +187,8 @@ bool MainWindow::loadJson(const QByteArray& json, const QString& name, QString* 
     const auto delta = quill::Delta::fromJson(json, &parseError);
     if (!delta || !delta->isDocument()) {
         if (error)
-            *error = tr("%1 is not a Delta document: %2").arg(name, parseError.isEmpty() ? tr("contains changes") : parseError);
+            *error = tr("%1 is not a Delta document: %2")
+                         .arg(name, parseError.isEmpty() ? tr("contains changes") : parseError);
         return false;
     }
     m_editor->setContents(*delta);
@@ -224,7 +234,10 @@ bool MainWindow::maybeSave()
     return answer == QMessageBox::Discard;
 }
 
-bool MainWindow::save() { return m_path.isEmpty() ? saveAs() : writeFile(m_path); }
+bool MainWindow::save()
+{
+    return m_path.isEmpty() ? saveAs() : writeFile(m_path);
+}
 
 bool MainWindow::saveAs()
 {
@@ -273,7 +286,8 @@ void MainWindow::insertCustomEmbed()
     auto* type = new QLineEdit(QStringLiteral("notes"), &dialog);
     auto* data = new QPlainTextEdit(&dialog);
     data->setPlainText(QStringLiteral("\"[{\\\"insert\\\":\\\"A note\\\\n\\\"}]\""));
-    data->setToolTip(tr("JSON value; text that is not valid JSON is used as a string"));
+    data->setToolTip(
+        tr("JSON value; stored as a string (flutter_quill needs string data), text that is not JSON is used as is"));
     form->addRow(tr("Type:"), type);
     form->addRow(tr("Data (JSON):"), data);
     auto* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
@@ -284,8 +298,11 @@ void MainWindow::insertCustomEmbed()
         return;
     // Parse as a JSON value (wrapped, so scalars parse too).
     const QJsonDocument parsed = QJsonDocument::fromJson("[" + data->toPlainText().toUtf8() + "]");
-    const QJsonValue value = parsed.isArray() && parsed.array().size() == 1 ? parsed.array().first()
-                                                                            : QJsonValue(data->toPlainText());
+    QJsonValue value =
+        parsed.isArray() && parsed.array().size() == 1 ? parsed.array().first() : QJsonValue(data->toPlainText());
+    // flutter_quill renders custom embeds only when their data is a string.
+    if (!value.isString())
+        value = QString::fromUtf8(QJsonDocument(QJsonArray{value}).toJson(QJsonDocument::Compact)).mid(1).chopped(1);
     const int index = m_editor->getSelection().index;
     m_editor->insertBlockEmbed(index, QStringLiteral("custom"),
                                quill::CustomEmbedRenderer::encode(type->text().trimmed(), value), quill::Source::User);
@@ -293,7 +310,8 @@ void MainWindow::insertCustomEmbed()
 
 void MainWindow::updateTitle()
 {
-    setWindowTitle(tr("%1%2 - quill-demo").arg(m_name, m_editor->document()->isModified() ? QStringLiteral(" *") : QString()));
+    setWindowTitle(
+        tr("%1%2 - quill-demo").arg(m_name, m_editor->document()->isModified() ? QStringLiteral(" *") : QString()));
 }
 
 void MainWindow::updateStatus()

@@ -1,0 +1,10 @@
+{
+ "roundTrip": {
+  "documents/embeds_video.json": "flutter_quill's Document._transform puts a video on a line of its own when loading: it inserts \"\\n\" before and after the inline video. quill-qt keeps the document as it is (and inserts videos on their own line itself).",
+  "flutter_quill/example_default_sample.json": "flutter_quill's own sample is not stable in flutter_quill: Document._transform inserts \"\\n\" between its two consecutive video embeds."
+ },
+ "render": {
+  "documents/unknown_attributes.json": "Invalid attribute values (\"header\": 7) throw while rendering in flutter_quill (\"Invalid level 7\"); the data round-trips. quill-qt reports them as load warnings and renders the text without the format.",
+  "documents/embeds_custom_malformed.json": "flutter_quill 11.6 throws while rendering these \"custom\" embeds: a value that is an object instead of a JSON string ('_Map<String, dynamic>' is not a subtype of 'String'), a string that is not JSON (FormatException in CustomBlockEmbed.fromJsonString), and inner data that is not a string (CustomBlockEmbed extends BlockEmbed, whose data is a String). quill-qt reads all three, shows a chip, keeps the value; the demo always writes string data."
+ }
+}

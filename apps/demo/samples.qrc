@@ -6,6 +6,7 @@
     <file alias="checklist.json">../../tests/fixtures/documents/checklist.json</file>
     <file alias="embeds.json">../../tests/fixtures/documents/embeds.json</file>
     <file alias="embeds_custom_flutter_quill.json">../../tests/fixtures/documents/embeds_custom_flutter_quill.json</file>
+    <file alias="embeds_custom_malformed.json">../../tests/fixtures/documents/embeds_custom_malformed.json</file>
     <file alias="embeds_formula.json">../../tests/fixtures/documents/embeds_formula.json</file>
     <file alias="embeds_unknown.json">../../tests/fixtures/documents/embeds_unknown.json</file>
     <file alias="embeds_video.json">../../tests/fixtures/documents/embeds_video.json</file>

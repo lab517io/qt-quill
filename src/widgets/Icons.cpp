@@ -16,7 +16,10 @@ namespace {
 // All glyphs are drawn on a 24 x 24 grid.
 using Draw = std::function<void(QPainter&, const QColor&)>;
 
-QPen pen(const QColor& c, qreal w = 2) { return QPen(c, w, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin); }
+QPen pen(const QColor& c, qreal w = 2)
+{
+    return QPen(c, w, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+}
 
 void letter(QPainter& p, const QColor& c, const QString& text, qreal size, bool bold = true, bool italic = false,
             const QRectF& box = QRectF(0, 0, 24, 24))
@@ -65,7 +68,8 @@ const QHash<QString, Draw>& glyphs()
         {QStringLiteral("undo"), [](QPainter& p, const QColor& c) { arrow(p, c, false); }},
         {QStringLiteral("redo"), [](QPainter& p, const QColor& c) { arrow(p, c, true); }},
         {QStringLiteral("bold"), [](QPainter& p, const QColor& c) { letter(p, c, QStringLiteral("B"), 17); }},
-        {QStringLiteral("italic"), [](QPainter& p, const QColor& c) { letter(p, c, QStringLiteral("I"), 17, false, true); }},
+        {QStringLiteral("italic"),
+         [](QPainter& p, const QColor& c) { letter(p, c, QStringLiteral("I"), 17, false, true); }},
         {QStringLiteral("underline"),
          [](QPainter& p, const QColor& c) {
              letter(p, c, QStringLiteral("U"), 15, false, false, QRectF(0, -2, 24, 24));
@@ -76,7 +80,8 @@ const QHash<QString, Draw>& glyphs()
              letter(p, c, QStringLiteral("S"), 16, false);
              lines(p, c, {{4, 20}}, 12.5);
          }},
-        {QStringLiteral("code"), [](QPainter& p, const QColor& c) {
+        {QStringLiteral("code"),
+         [](QPainter& p, const QColor& c) {
              p.setPen(pen(c));
              p.drawPolyline(QPolygonF{{9, 7}, {4, 12}, {9, 17}});
              p.drawPolyline(QPolygonF{{15, 7}, {20, 12}, {15, 17}});
@@ -97,7 +102,9 @@ const QHash<QString, Draw>& glyphs()
              letter(p, c, QStringLiteral("a"), 10, false, false, QRectF(13, 5, 10, 18));
          }},
         {QStringLiteral("color"),
-         [](QPainter& p, const QColor& c) { letter(p, c, QStringLiteral("A"), 15, true, false, QRectF(0, -3, 24, 22)); }},
+         [](QPainter& p, const QColor& c) {
+             letter(p, c, QStringLiteral("A"), 15, true, false, QRectF(0, -3, 24, 22));
+         }},
         {QStringLiteral("background"),
          [](QPainter& p, const QColor& c) {
              p.setPen(pen(c));
@@ -151,10 +158,14 @@ const QHash<QString, Draw>& glyphs()
              p.setPen(pen(c, 1.5));
              p.drawPolyline(QPolygonF{{7, 9}, {4, 12}, {7, 15}});
          }},
-        {QStringLiteral("align-left"), [](QPainter& p, const QColor& c) { lines(p, c, {{4, 20}, {4, 14}, {4, 20}, {4, 14}}, 5, 4.6); }},
-        {QStringLiteral("align-center"), [](QPainter& p, const QColor& c) { lines(p, c, {{4, 20}, {7, 17}, {4, 20}, {7, 17}}, 5, 4.6); }},
-        {QStringLiteral("align-right"), [](QPainter& p, const QColor& c) { lines(p, c, {{4, 20}, {10, 20}, {4, 20}, {10, 20}}, 5, 4.6); }},
-        {QStringLiteral("align-justify"), [](QPainter& p, const QColor& c) { lines(p, c, {{4, 20}, {4, 20}, {4, 20}, {4, 20}}, 5, 4.6); }},
+        {QStringLiteral("align-left"),
+         [](QPainter& p, const QColor& c) { lines(p, c, {{4, 20}, {4, 14}, {4, 20}, {4, 14}}, 5, 4.6); }},
+        {QStringLiteral("align-center"),
+         [](QPainter& p, const QColor& c) { lines(p, c, {{4, 20}, {7, 17}, {4, 20}, {7, 17}}, 5, 4.6); }},
+        {QStringLiteral("align-right"),
+         [](QPainter& p, const QColor& c) { lines(p, c, {{4, 20}, {10, 20}, {4, 20}, {10, 20}}, 5, 4.6); }},
+        {QStringLiteral("align-justify"),
+         [](QPainter& p, const QColor& c) { lines(p, c, {{4, 20}, {4, 20}, {4, 20}, {4, 20}}, 5, 4.6); }},
         {QStringLiteral("direction-rtl"),
          [](QPainter& p, const QColor& c) {
              lines(p, c, {{9, 20}, {9, 20}}, 6, 5);
@@ -196,8 +207,7 @@ const QHash<QString, Draw>& glyphs()
              p.setBrush(c);
              p.drawPolygon(QPolygonF{{10, 9}, {15, 12}, {10, 15}});
          }},
-        {QStringLiteral("formula"),
-         [](QPainter& p, const QColor& c) { letter(p, c, QStringLiteral("∑"), 17, false); }},
+        {QStringLiteral("formula"), [](QPainter& p, const QColor& c) { letter(p, c, QStringLiteral("∑"), 17, false); }},
         {QStringLiteral("search"),
          [](QPainter& p, const QColor& c) {
              p.setPen(pen(c));
@@ -210,11 +220,13 @@ const QHash<QString, Draw>& glyphs()
              p.drawLine(QPointF(7, 7), QPointF(17, 17));
              p.drawLine(QPointF(17, 7), QPointF(7, 17));
          }},
-        {QStringLiteral("previous"), [](QPainter& p, const QColor& c) {
+        {QStringLiteral("previous"),
+         [](QPainter& p, const QColor& c) {
              p.setPen(pen(c));
              p.drawPolyline(QPolygonF{{7, 15}, {12, 9}, {17, 15}});
          }},
-        {QStringLiteral("next"), [](QPainter& p, const QColor& c) {
+        {QStringLiteral("next"),
+         [](QPainter& p, const QColor& c) {
              p.setPen(pen(c));
              p.drawPolyline(QPolygonF{{7, 9}, {12, 15}, {17, 9}});
          }},
@@ -268,6 +280,9 @@ QIcon toolbarIcon(const QString& name)
     return QIcon(new GlyphEngine(*it));
 }
 
-QStringList toolbarIconNames() { return glyphs().keys(); }
+QStringList toolbarIconNames()
+{
+    return glyphs().keys();
+}
 
 } // namespace quill::detail

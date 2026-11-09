@@ -107,11 +107,12 @@ private slots:
 
     void actionsAndGroups()
     {
-        const QStringList expected{"undo", "redo", "font", "size", "bold", "italic", "underline", "strike", "code",
-                                   "subscript", "superscript", "small", "color", "background", "clear", "header",
-                                   "list-bullet", "list-ordered", "list-check", "outdent", "indent", "align-left",
-                                   "align-center", "align-right", "align-justify", "direction-rtl", "blockquote",
-                                   "code-block", "link", "image", "video", "formula", "search"};
+        const QStringList expected{
+            "undo",       "redo",         "font",        "size",          "bold",          "italic",     "underline",
+            "strike",     "code",         "subscript",   "superscript",   "small",         "color",      "background",
+            "clear",      "header",       "list-bullet", "list-ordered",  "list-check",    "outdent",    "indent",
+            "align-left", "align-center", "align-right", "align-justify", "direction-rtl", "blockquote", "code-block",
+            "link",       "image",        "video",       "formula",       "search"};
         QCOMPARE(bar->actionNames(), expected);
         QStringList grouped;
         for (const QString& g : QuillToolbar::groupNames())
@@ -120,7 +121,8 @@ private slots:
         for (const QString& name : expected) {
             QVERIFY2(bar->action(name), qPrintable(name));
             if (!bar->action(name)->icon().isNull() || name == QLatin1String("font") || name == QLatin1String("size")
-                || name == QLatin1String("header") || name == QLatin1String("color") || name == QLatin1String("background"))
+                || name == QLatin1String("header") || name == QLatin1String("color")
+                || name == QLatin1String("background"))
                 continue;
             QFAIL(qPrintable(QStringLiteral("no icon for ") + name));
         }
@@ -146,7 +148,11 @@ private slots:
         a("underline")->trigger();
         a("strike")->trigger();
         a("code")->trigger();
-        check(e->getContents(), delta("[{'insert':'hello','attributes':{'bold':true,'code':true,'italic':true,'strike':true,'underline':true}},{'insert':' world\\n'}]"), __LINE__);
+        check(
+            e->getContents(),
+            delta(
+                "[{'insert':'hello','attributes':{'bold':true,'code':true,'italic':true,'strike':true,'underline':true}},{'insert':' world\\n'}]"),
+            __LINE__);
         a("bold")->trigger(); // off
         QVERIFY(!a("bold")->isChecked());
         check(rec->last().change, delta("[{'retain':5,'attributes':{'bold':null}}]"), __LINE__);
@@ -167,7 +173,8 @@ private slots:
         QVERIFY(a("bold")->isChecked());
         QCOMPARE(rec->records.size(), 0);
         QTest::keyClicks(e, QStringLiteral("X"));
-        check(e->getContents(), delta("[{'insert':'a'},{'insert':'X','attributes':{'bold':true}},{'insert':'b\\n'}]"), __LINE__);
+        check(e->getContents(), delta("[{'insert':'a'},{'insert':'X','attributes':{'bold':true}},{'insert':'b\\n'}]"),
+              __LINE__);
     }
 
     void scriptIsExclusive()
@@ -178,23 +185,36 @@ private slots:
         a("subscript")->trigger();
         QVERIFY(a("subscript")->isChecked());
         QVERIFY(!a("superscript")->isChecked());
-        check(e->getContents(), delta("[{'insert':'x'},{'insert':'2','attributes':{'script':'sub'}},{'insert':'\\n'}]"), __LINE__);
+        check(e->getContents(), delta("[{'insert':'x'},{'insert':'2','attributes':{'script':'sub'}},{'insert':'\\n'}]"),
+              __LINE__);
     }
 
     void listsAndIndent()
     {
         start("[{'insert':'a\\nb\\n'}]", 0, 3);
         a("list-ordered")->trigger();
-        check(e->getContents(), delta("[{'insert':'a'},{'insert':'\\n','attributes':{'list':'ordered'}},{'insert':'b'},{'insert':'\\n','attributes':{'list':'ordered'}}]"), __LINE__);
+        check(
+            e->getContents(),
+            delta(
+                "[{'insert':'a'},{'insert':'\\n','attributes':{'list':'ordered'}},{'insert':'b'},{'insert':'\\n','attributes':{'list':'ordered'}}]"),
+            __LINE__);
         QVERIFY(a("list-ordered")->isChecked());
         a("list-bullet")->trigger();
         QVERIFY(a("list-bullet")->isChecked());
         QVERIFY(!a("list-ordered")->isChecked());
         a("indent")->trigger();
-        check(e->getContents(), delta("[{'insert':'a'},{'insert':'\\n','attributes':{'indent':1,'list':'bullet'}},{'insert':'b'},{'insert':'\\n','attributes':{'indent':1,'list':'bullet'}}]"), __LINE__);
+        check(
+            e->getContents(),
+            delta(
+                "[{'insert':'a'},{'insert':'\\n','attributes':{'indent':1,'list':'bullet'}},{'insert':'b'},{'insert':'\\n','attributes':{'indent':1,'list':'bullet'}}]"),
+            __LINE__);
         a("outdent")->trigger();
         a("list-check")->trigger();
-        check(e->getContents(), delta("[{'insert':'a'},{'insert':'\\n','attributes':{'list':'unchecked'}},{'insert':'b'},{'insert':'\\n','attributes':{'list':'unchecked'}}]"), __LINE__);
+        check(
+            e->getContents(),
+            delta(
+                "[{'insert':'a'},{'insert':'\\n','attributes':{'list':'unchecked'}},{'insert':'b'},{'insert':'\\n','attributes':{'list':'unchecked'}}]"),
+            __LINE__);
         QVERIFY(a("list-check")->isChecked());
         a("list-check")->trigger(); // off
         check(e->getContents(), delta("[{'insert':'a\\nb\\n'}]"), __LINE__);
@@ -208,7 +228,8 @@ private slots:
         QVERIFY(a("align-center")->isChecked());
         QVERIFY(!a("align-left")->isChecked());
         a("direction-rtl")->trigger();
-        check(e->getContents(), delta("[{'insert':'a'},{'insert':'\\n','attributes':{'align':'center','direction':'rtl'}}]"), __LINE__);
+        check(e->getContents(),
+              delta("[{'insert':'a'},{'insert':'\\n','attributes':{'align':'center','direction':'rtl'}}]"), __LINE__);
         a("align-left")->trigger();
         a("direction-rtl")->trigger();
         check(e->getContents(), delta("[{'insert':'a\\n'}]"), __LINE__);
@@ -226,7 +247,11 @@ private slots:
         e->setSelection(3, 0);
         QCOMPARE(combo("header")->currentIndex(), 0); // Normal
         Q_EMIT combo("header")->activated(1);
-        check(e->getContents(), delta("[{'insert':'a'},{'insert':'\\n','attributes':{'header':2}},{'insert':'b'},{'insert':'\\n','attributes':{'header':1}}]"), __LINE__);
+        check(
+            e->getContents(),
+            delta(
+                "[{'insert':'a'},{'insert':'\\n','attributes':{'header':2}},{'insert':'b'},{'insert':'\\n','attributes':{'header':1}}]"),
+            __LINE__);
         e->setSelection(0, 4);
         QCOMPARE(combo("header")->currentIndex(), -1); // mixed
         Q_EMIT combo("header")->activated(0);
@@ -241,11 +266,16 @@ private slots:
         QCOMPARE(combo("font")->currentIndex(), -1);
         Q_EMIT combo("font")->activated(1); // Serif
         Q_EMIT combo("size")->activated(1); // Large
-        check(e->getContents(), delta("[{'insert':'a','attributes':{'size':'15.0'}},{'insert':'b','attributes':{'font':'serif','size':'large'}},"
-                                      "{'insert':'c','attributes':{'size':'15.0'}},{'insert':'\\n'}]"), __LINE__);
+        check(
+            e->getContents(),
+            delta(
+                "[{'insert':'a','attributes':{'size':'15.0'}},{'insert':'b','attributes':{'font':'serif','size':'large'}},"
+                "{'insert':'c','attributes':{'size':'15.0'}},{'insert':'\\n'}]"),
+            __LINE__);
         QCOMPARE(combo("font")->currentText(), QStringLiteral("Serif"));
         Q_EMIT combo("size")->activated(combo("size")->findText(QStringLiteral("24")));
-        check(e->getContents().slice(1, 2), delta("[{'insert':'b','attributes':{'font':'serif','size':'24'}}]"), __LINE__);
+        check(e->getContents().slice(1, 2), delta("[{'insert':'b','attributes':{'font':'serif','size':'24'}}]"),
+              __LINE__);
         Q_EMIT combo("font")->activated(combo("font")->findText(QStringLiteral("Clear")));
         Q_EMIT combo("size")->activated(combo("size")->findText(QStringLiteral("Clear")));
         check(e->getContents().slice(1, 2), delta("[{'insert':'b'}]"), __LINE__);
@@ -263,7 +293,8 @@ private slots:
         Q_EMIT colorButton("background")->moreRequested();
         check(rec->last().change, delta("[{'retain':2,'attributes':{'background':'#FF0000FF'}}]"), __LINE__);
         colorButton("color")->selectColor(std::nullopt);
-        check(e->getContents(), delta("[{'insert':'ab','attributes':{'background':'#FF0000FF'}},{'insert':'c\\n'}]"), __LINE__);
+        check(e->getContents(), delta("[{'insert':'ab','attributes':{'background':'#FF0000FF'}},{'insert':'c\\n'}]"),
+              __LINE__);
         QVERIFY(!colorButton("color")->currentColor());
         // CSS dialect writes CSS colours.
         StyleOptions css = e->styleOptions();
@@ -277,14 +308,19 @@ private slots:
 
     void clearFormatting()
     {
-        start("[{'insert':'ab','attributes':{'bold':true,'italic':true}},{'insert':'\\n','attributes':{'header':1}}]", 0, 1);
+        start("[{'insert':'ab','attributes':{'bold':true,'italic':true}},{'insert':'\\n','attributes':{'header':1}}]",
+              0, 1);
         a("clear")->trigger();
-        check(e->getContents(), delta("[{'insert':'a'},{'insert':'b','attributes':{'bold':true,'italic':true}},{'insert':'\\n'}]"), __LINE__);
+        check(e->getContents(),
+              delta("[{'insert':'a'},{'insert':'b','attributes':{'bold':true,'italic':true}},{'insert':'\\n'}]"),
+              __LINE__);
         // Collapsed: clears the typing format only.
         e->setSelection(2, 0);
         a("clear")->trigger();
         QTest::keyClicks(e, QStringLiteral("c"));
-        check(e->getContents(), delta("[{'insert':'a'},{'insert':'b','attributes':{'bold':true,'italic':true}},{'insert':'c\\n'}]"), __LINE__);
+        check(e->getContents(),
+              delta("[{'insert':'a'},{'insert':'b','attributes':{'bold':true,'italic':true}},{'insert':'c\\n'}]"),
+              __LINE__);
     }
 
     void links()
@@ -293,7 +329,9 @@ private slots:
         start("[{'insert':'see \\n'}]", 4);
         bar->linkAnswer = QuillToolbar::LinkEdit{QStringLiteral("docs"), QStringLiteral("https://d"), false};
         a("link")->trigger();
-        check(e->getContents(), delta("[{'insert':'see '},{'insert':'docs','attributes':{'link':'https://d'}},{'insert':'\\n'}]"), __LINE__);
+        check(e->getContents(),
+              delta("[{'insert':'see '},{'insert':'docs','attributes':{'link':'https://d'}},{'insert':'\\n'}]"),
+              __LINE__);
         QCOMPARE(e->getSelection(), (Range{8, 0}));
         // Collapsed inside a link: the whole link is edited.
         e->setSelection(6, 0);
@@ -302,12 +340,16 @@ private slots:
         a("link")->trigger();
         QCOMPARE(bar->linkAsked.text, QStringLiteral("docs"));
         QCOMPARE(bar->linkAsked.url, QStringLiteral("https://d"));
-        check(e->getContents(), delta("[{'insert':'see '},{'insert':'docs','attributes':{'link':'https://new'}},{'insert':'\\n'}]"), __LINE__);
+        check(e->getContents(),
+              delta("[{'insert':'see '},{'insert':'docs','attributes':{'link':'https://new'}},{'insert':'\\n'}]"),
+              __LINE__);
         // Changed text replaces it.
         e->setSelection(5, 0);
         bar->linkAnswer = QuillToolbar::LinkEdit{QStringLiteral("manual"), QStringLiteral("https://new"), false};
         a("link")->trigger();
-        check(e->getContents(), delta("[{'insert':'see '},{'insert':'manual','attributes':{'link':'https://new'}},{'insert':'\\n'}]"), __LINE__);
+        check(e->getContents(),
+              delta("[{'insert':'see '},{'insert':'manual','attributes':{'link':'https://new'}},{'insert':'\\n'}]"),
+              __LINE__);
         // Remove.
         e->setSelection(5, 0);
         bar->linkAnswer = QuillToolbar::LinkEdit{QString(), QString(), true};
@@ -322,7 +364,8 @@ private slots:
         QCOMPARE(bar->linkAsked.text, QStringLiteral("see"));
         bar->linkAnswer = QuillToolbar::LinkEdit{QStringLiteral("see"), QStringLiteral("https://s"), false};
         a("link")->trigger();
-        check(e->getContents(), delta("[{'insert':'see','attributes':{'link':'https://s'}},{'insert':' manual\\n'}]"), __LINE__);
+        check(e->getContents(), delta("[{'insert':'see','attributes':{'link':'https://s'}},{'insert':' manual\\n'}]"),
+              __LINE__);
     }
 
     void embeds()
@@ -332,14 +375,20 @@ private slots:
         start("[{'insert':'ab'},{'insert':'\\n','attributes':{'header':2}}]", 1, 1);
         bar->imageAnswer = QStringLiteral("file:///tmp/x.png");
         a("image")->trigger();
-        check(e->getContents(), delta("[{'insert':'a'},{'insert':'\\n','attributes':{'header':2}},{'insert':{'image':'file:///tmp/x.png'}},"
-                                      "{'insert':'\\n','attributes':{'header':2}}]"), __LINE__);
+        check(
+            e->getContents(),
+            delta("[{'insert':'a'},{'insert':'\\n','attributes':{'header':2}},{'insert':{'image':'file:///tmp/x.png'}},"
+                  "{'insert':'\\n','attributes':{'header':2}}]"),
+            __LINE__);
         QCOMPARE(e->getSelection(), (Range{3, 0}));
         e->formatLine(3, 0, AttributeMap{{QStringLiteral("header"), QJsonValue::Null}});
         bar->videoAnswer = QStringLiteral("https://v");
         a("video")->trigger();
-        check(e->getContents(), delta("[{'insert':'a'},{'insert':'\\n','attributes':{'header':2}},{'insert':{'image':'file:///tmp/x.png'}},"
-                                      "{'insert':'\\n'},{'insert':{'video':'https://v'}},{'insert':'\\n'}]"), __LINE__);
+        check(
+            e->getContents(),
+            delta("[{'insert':'a'},{'insert':'\\n','attributes':{'header':2}},{'insert':{'image':'file:///tmp/x.png'}},"
+                  "{'insert':'\\n'},{'insert':{'video':'https://v'}},{'insert':'\\n'}]"),
+            __LINE__);
         QCOMPARE(e->getSelection(), (Range{5, 0}));
         e->insertText(5, QStringLiteral(" x"));
         e->setSelection(6, 0);
@@ -347,14 +396,20 @@ private slots:
         a("formula")->trigger();
         bar->formulaAnswer.clear(); // cancelled
         a("formula")->trigger();
-        check(e->getContents().slice(4), delta("[{'insert':{'video':'https://v'}},{'insert':' '},{'insert':{'formula':'e=mc^2'}},"
-                                               "{'insert':'x\\n'}]"), __LINE__);
+        check(e->getContents().slice(4),
+              delta("[{'insert':{'video':'https://v'}},{'insert':' '},{'insert':{'formula':'e=mc^2'}},"
+                    "{'insert':'x\\n'}]"),
+              __LINE__);
         QCOMPARE(e->getSelection(), (Range{7, 0}));
         // In the middle of a line both halves keep the line format.
         start("[{'insert':'abcd'},{'insert':'\\n','attributes':{'list':'bullet'}}]", 2, 0);
         a("image")->trigger();
-        check(e->getContents(), delta("[{'insert':'ab'},{'insert':'\\n','attributes':{'list':'bullet'}},{'insert':{'image':'file:///tmp/x.png'}},"
-                                      "{'insert':'\\ncd'},{'insert':'\\n','attributes':{'list':'bullet'}}]"), __LINE__);
+        check(
+            e->getContents(),
+            delta(
+                "[{'insert':'ab'},{'insert':'\\n','attributes':{'list':'bullet'}},{'insert':{'image':'file:///tmp/x.png'}},"
+                "{'insert':'\\ncd'},{'insert':'\\n','attributes':{'list':'bullet'}}]"),
+            __LINE__);
     }
 
     void historyAndReadOnly()

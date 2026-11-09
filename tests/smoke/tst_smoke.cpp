@@ -127,11 +127,9 @@ private slots:
         for (qreal dx = 4; dx <= textX && !toggled; dx += 2) {
             const QPoint pt(int(textX - dx), int(br.top() + line.height() / 2));
             QTest::mouseClick(edit.viewport(), Qt::LeftButton, {}, pt);
-            toggled = edit.document()->firstBlock().blockFormat().marker()
-                      == QTextBlockFormat::MarkerType::Checked;
+            toggled = edit.document()->firstBlock().blockFormat().marker() == QTextBlockFormat::MarkerType::Checked;
         }
-        qInfo("Qt %s: built-in checkbox toggle on click: %s", qVersion(),
-              toggled ? "YES" : "NO");
+        qInfo("Qt %s: built-in checkbox toggle on click: %s", qVersion(), toggled ? "YES" : "NO");
     }
 };
 

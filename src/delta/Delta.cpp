@@ -60,8 +60,7 @@ struct EmbedTypeAndData
 
 // getEmbedTypeAndData(a, b): `a` is the insert or retain value of `aOp`
 // (selected by aInsertSide), `b` is the embed of `bOp` on the side given.
-EmbedTypeAndData getEmbedTypeAndData(const Op& aOp, bool aInsertSide, const Op& bOp,
-                                     bool bInsertSide)
+EmbedTypeAndData getEmbedTypeAndData(const Op& aOp, bool aInsertSide, const Op& bOp, bool bInsertSide)
 {
     const bool aIsObject = aOp.isEmbed() && (aInsertSide ? aOp.isInsert() : aOp.isRetain());
     if (!aIsObject)
@@ -72,8 +71,7 @@ EmbedTypeAndData getEmbedTypeAndData(const Op& aOp, bool aInsertSide, const Op& 
     const QString embedType = aOp.embed().isEmpty() ? QString() : aOp.embed().begin().key();
     const QString otherType = bOp.embed().isEmpty() ? QString() : bOp.embed().begin().key();
     if (embedType.isEmpty() || embedType != otherType) {
-        throw DeltaError("embed types not matched: " + embedType.toStdString()
-                         + " != " + otherType.toStdString());
+        throw DeltaError("embed types not matched: " + embedType.toStdString() + " != " + otherType.toStdString());
     }
     return {embedType, aOp.embed().value(embedType), bOp.embed().value(embedType)};
 }
@@ -282,12 +280,10 @@ Delta Delta::diff(const Delta& other, const std::optional<fastdiff::CursorInfo>&
                 opLength = std::min({thisIter.peekLength(), otherIter.peekLength(), length});
                 const Op thisOp = thisIter.next(opLength);
                 const Op otherOp = otherIter.next(opLength);
-                const bool sameInsert = thisOp.isEmbed() == otherOp.isEmbed()
-                                        && thisOp.text() == otherOp.text()
+                const bool sameInsert = thisOp.isEmbed() == otherOp.isEmbed() && thisOp.text() == otherOp.text()
                                         && thisOp.embed() == otherOp.embed();
                 if (sameInsert) {
-                    retDelta.retain(opLength,
-                                    attributes::diff(thisOp.attributes(), otherOp.attributes()));
+                    retDelta.retain(opLength, attributes::diff(thisOp.attributes(), otherOp.attributes()));
                 } else {
                     retDelta.push(otherOp).remove(opLength);
                 }
@@ -311,8 +307,7 @@ void Delta::eachLine(const std::function<bool(const Delta&, const AttributeMap&,
             return;
         const Op* thisOp = iter.peek();
         const qsizetype start = thisOp->length() - iter.peekLength();
-        const qsizetype index =
-            thisOp->isEmbed() ? -1 : thisOp->text().indexOf(newline, start) - start;
+        const qsizetype index = thisOp->isEmbed() ? -1 : thisOp->text().indexOf(newline, start) - start;
         if (index < 0) {
             line.push(iter.next());
         } else if (index > 0) {
@@ -345,8 +340,7 @@ Delta Delta::invert(const Delta& base) const
                 if (op.isDelete()) {
                     inverted.push(baseOp);
                 } else if (op.isRetain() && op.hasAttributes()) {
-                    inverted.retain(baseOp.length(),
-                                    attributes::invert(op.attributes(), baseOp.attributes()));
+                    inverted.retain(baseOp.length(), attributes::invert(op.attributes(), baseOp.attributes()));
                 }
             }
             baseIndex += length;
@@ -411,8 +405,8 @@ Delta Delta::compose(const Delta& other) const
                     newOp = thisIsInsert ? Op::insert(embed) : Op::retain(embed);
                 }
                 // Preserve null when composing with a retain, otherwise remove it for inserts
-                newOp.setAttributes(attributes::compose(thisOp.attributes(), otherOp.attributes(),
-                                                        thisOp.isCountRetain()));
+                newOp.setAttributes(
+                    attributes::compose(thisOp.attributes(), otherOp.attributes(), thisOp.isCountRetain()));
                 delta.push(newOp);
 
                 // Optimization if rest of other is just retain
@@ -436,8 +430,7 @@ Delta Delta::transform(const Delta& other, bool priority) const
     OpIterator otherIter(other.m_ops);
     Delta delta;
     while (thisIter.hasNext() || otherIter.hasNext()) {
-        if (thisIter.peekType() == Op::Type::Insert
-            && (priority || otherIter.peekType() != Op::Type::Insert)) {
+        if (thisIter.peekType() == Op::Type::Insert && (priority || otherIter.peekType() != Op::Type::Insert)) {
             delta.retain(thisIter.next().length());
         } else if (otherIter.peekType() == Op::Type::Insert) {
             delta.push(otherIter.next());
@@ -451,8 +444,7 @@ Delta Delta::transform(const Delta& other, bool priority) const
             } else if (otherOp.isDelete()) {
                 delta.push(otherOp);
             } else {
-                const AttributeMap attrs =
-                    attributes::transform(thisOp.attributes(), otherOp.attributes(), priority);
+                const AttributeMap attrs = attributes::transform(thisOp.attributes(), otherOp.attributes(), priority);
                 if (!otherOp.isEmbed()) {
                     // We retain either their retain or insert
                     delta.retain(length, attrs);
@@ -460,15 +452,13 @@ Delta Delta::transform(const Delta& other, bool priority) const
                 }
                 QJsonObject transformedData = otherOp.embed();
                 if (thisOp.isEmbed()) {
-                    const QString embedType =
-                        thisOp.embed().isEmpty() ? QString() : thisOp.embed().begin().key();
+                    const QString embedType = thisOp.embed().isEmpty() ? QString() : thisOp.embed().begin().key();
                     if (!embedType.isEmpty() && otherOp.embed().contains(embedType)
                         && otherOp.embed().begin().key() == embedType) {
                         const EmbedHandler handler = getHandler(embedType);
                         QJsonObject embed;
-                        embed.insert(embedType,
-                                     handler.transform(thisOp.embed().value(embedType),
-                                                       otherOp.embed().value(embedType), priority));
+                        embed.insert(embedType, handler.transform(thisOp.embed().value(embedType),
+                                                                  otherOp.embed().value(embedType), priority));
                         transformedData = embed;
                     }
                 }

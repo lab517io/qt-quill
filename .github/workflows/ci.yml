@@ -1,0 +1,81 @@
+# CI for quill-qt. The jobs only call the provider-neutral scripts in ci/,
+# so moving to another CI service means rewriting this file only.
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test-linux:
+    name: build and test (${{ matrix.config }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [Debug, Release, Asan]
+    steps:
+      - uses: actions/checkout@v4
+      - run: ci/install-deps-ubuntu.sh
+      - run: ci/build.sh ${{ matrix.config }}
+      - run: ci/test.sh ${{ matrix.config }}
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-output-${{ matrix.config }}
+          path: |
+            build/*/Testing/Temporary/LastTest.log
+            build/*/test-output/
+
+  oracle:
+    name: OT oracle drift (quill-delta, dart_quill_delta)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.9
+      - run: ci/check-oracle.sh
+
+  flutter-quill:
+    name: flutter_quill compatibility
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.9
+      - run: ci/check-flutter.sh
+
+  screenshots:
+    name: demo screenshots
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: ci/install-deps-ubuntu.sh
+      - run: ci/build.sh Release
+      - run: ci/screenshot.sh release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: build/release/screenshots/
+
+  format:
+    name: clang-format
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends clang-format-18
+      - run: ci/format-check.sh

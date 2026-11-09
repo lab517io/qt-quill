@@ -68,12 +68,16 @@ void QuillFindBar::setEditor(QuillEditor* editor)
     refresh();
 }
 
-void QuillFindBar::setCaseSensitive(bool on) { m_case->setChecked(on); }
+void QuillFindBar::setCaseSensitive(bool on)
+{
+    m_case->setChecked(on);
+}
 
 void QuillFindBar::activate()
 {
     show();
-    if (m_editor && m_editor->textCursor().hasSelection() && !m_editor->textCursor().selectedText().contains(QChar::ParagraphSeparator))
+    if (m_editor && m_editor->textCursor().hasSelection()
+        && !m_editor->textCursor().selectedText().contains(QChar::ParagraphSeparator))
         m_input->setText(m_editor->textCursor().selectedText());
     m_input->setFocus();
     m_input->selectAll();
@@ -90,8 +94,14 @@ void QuillFindBar::close()
     Q_EMIT closed();
 }
 
-void QuillFindBar::findNext() { step(1); }
-void QuillFindBar::findPrevious() { step(-1); }
+void QuillFindBar::findNext()
+{
+    step(1);
+}
+void QuillFindBar::findPrevious()
+{
+    step(-1);
+}
 
 bool QuillFindBar::eventFilter(QObject* watched, QEvent* event)
 {

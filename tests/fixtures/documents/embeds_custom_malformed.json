@@ -1,0 +1,37 @@
+[
+ {
+  "insert": "Malformed custom embeds for flutter_quill: an object value, a string that is not JSON, and inner data that is not a string\n"
+ },
+ {
+  "insert": {
+   "custom": {
+    "poll": {
+     "question": "Tea or coffee?",
+     "options": [
+      "tea",
+      "coffee"
+     ]
+    }
+   }
+  }
+ },
+ {
+  "insert": "\n"
+ },
+ {
+  "insert": {
+   "custom": "not json { at all"
+  }
+ },
+ {
+  "insert": "\n"
+ },
+ {
+  "insert": {
+   "custom": "{\"unknownType\": {\"a\": [1, 2.5, null, true]}}"
+  }
+ },
+ {
+  "insert": " trailing text\n"
+ }
+]

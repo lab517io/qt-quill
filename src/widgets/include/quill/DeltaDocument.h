@@ -56,12 +56,11 @@ public:
 
     /// Exports the whole document. The result is a document Delta ending
     /// with "\n" whose length equals doc->characterCount().
-    static Delta toDelta(const QTextDocument* doc, const ExportOptions& options = {},
-                         QStringList* warnings = nullptr);
+    static Delta toDelta(const QTextDocument* doc, const ExportOptions& options = {}, QStringList* warnings = nullptr);
     /// Exports positions [from, to). Equals toDelta(doc).slice(from, to) for
     /// documents without tables or frames.
-    static Delta toDelta(const QTextDocument* doc, int from, int to,
-                         const ExportOptions& options = {}, QStringList* warnings = nullptr);
+    static Delta toDelta(const QTextDocument* doc, int from, int to, const ExportOptions& options = {},
+                         QStringList* warnings = nullptr);
 
     /// Applies the change Delta `change` to `doc`, whose current contents are
     /// `contents` (== toDelta(doc)), and returns the contents it now has.
@@ -91,8 +90,12 @@ public:
     /// them) from their line attributes, reproducing flutter_quill's numbering:
     /// a deeper level does not interrupt its parent list, a different list
     /// type at the same level starts a new list, any non-list line ends all.
-    static void regroupLists(const QTextBlock& first, const QTextBlock& last,
-                             const StyleOptions& style);
+    static void regroupLists(const QTextBlock& first, const QTextBlock& last, const StyleOptions& style);
+
+    /// Adds flutter_quill's spacing above each list, quote and code group
+    /// (a run of lines of the same kind) for the blocks from `first` to
+    /// `last`, extended by one block on each side. Visual only.
+    static void updateBlockSpacing(const QTextBlock& first, const QTextBlock& last, const StyleOptions& style);
 
     /// The style options `load` actually used for `doc` (base font filled in).
     static StyleOptions effectiveStyle(const QTextDocument* doc, const StyleOptions& style);

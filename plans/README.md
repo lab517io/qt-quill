@@ -18,7 +18,7 @@ Decisions fixed on 2026-11-08 (see `../PLAN.md`, section 8):
 | 5 ✅ | [M5-editor-widget.md](M5-editor-widget.md) | `QuillEditor`: Quill-like API, change Deltas, keyboard behaviour, decorations | 4 |
 | 6 ✅ | [M6-toolbar-demo.md](M6-toolbar-demo.md) | `QuillToolbar`, demo application, file I/O | 5 |
 | 7 ✅ | [M7-embeds.md](M7-embeds.md) | Embed registry: image loading, video, formula, flutter_quill `custom` | 5 |
-| 8 | [M8-fidelity-ci.md](M8-fidelity-ci.md) | quill-delta oracle, flutter_quill fixtures, CI pipeline | 2, 4 |
+| 8 ✅ | [M8-fidelity-ci.md](M8-fidelity-ci.md) | quill-delta oracle, flutter_quill fixtures, CI pipeline | 2, 4 |
 | 9 | [M9-cross-platform.md](M9-cross-platform.md) | Windows and macOS builds, platform differences | 6 |
 
 Each plan has the same sections: Goal, Deliverables, Design, Tasks, Tests,

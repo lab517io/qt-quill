@@ -35,7 +35,13 @@ LinkDialog::LinkDialog(const QString& text, const QString& url, bool editing, QW
     resize(420, sizeHint().height());
 }
 
-QString LinkDialog::text() const { return m_text->text(); }
-QString LinkDialog::url() const { return m_url->text().trimmed(); }
+QString LinkDialog::text() const
+{
+    return m_text->text();
+}
+QString LinkDialog::url() const
+{
+    return m_url->text().trimmed();
+}
 
 } // namespace quill::detail

@@ -5,7 +5,7 @@ the [Quill Delta](https://quilljs.com/docs/delta) format, compatible with
 [flutter_quill](https://pub.dev/packages/flutter_quill) and
 [Quill](https://github.com/slab/quill).
 
-**Status:** milestones M1 (skeleton), M2 (Delta core), M3 (Delta → QTextDocument), M4 (QTextDocument → Delta), M5 (editor widget), M6 (toolbar, demo) and M7 (embeds) done. See
+**Status:** milestones M1 (skeleton), M2 (Delta core), M3 (Delta → QTextDocument), M4 (QTextDocument → Delta), M5 (editor widget), M6 (toolbar, demo), M7 (embeds) and M8 (fidelity harness, CI) done. See
 [PLAN.md](PLAN.md) for the design and [plans/](plans/README.md) for the
 milestone plans.
 
@@ -110,10 +110,13 @@ The API follows Quill's (`getContents`, `setContents`, `updateContents`,
 `formatLine`, `removeFormat`, `getFormat`, `getSelection`, `setSelection`).
 Every edit, whether typed, pasted, undone or made through the API, emits one
 `textChange` with a Quill-shaped change Delta and its source (`Api`, `User`,
-`Silent`). Keyboard behaviour follows Quill and flutter_quill: lists continue
-on Enter and end on an empty item, Tab indents list items, Backspace at a
-line start outdents or removes the block format, `1. ` / `- ` / `[] ` start
-lists, Ctrl+B/I/U/Shift+X toggle formats. `DeltaDocument::apply()` applies a
+`Silent`). Keyboard behaviour follows flutter_quill (checked against it, see
+below): lists continue on Enter and end on an empty item, quotes and code
+blocks end on an empty last line, Tab at the start of a list item indents,
+Backspace at a line start merges the lines keeping the upper line's format,
+`1. ` / `- ` / `[] ` start lists, Ctrl+B/I/U/Shift+X toggle formats.
+`setEditingRules(QuillEditor::EditingRules::QuillJs)` selects Quill.js's
+Backspace (outdent, then remove the block format) and checklist rules. `DeltaDocument::apply()` applies a
 change Delta to a plain `QTextDocument` without the widget.
 
 ## Embeds
@@ -158,11 +161,37 @@ build/debug/apps/demo/quill-demo [file.json] [--sample showcase.json] [--dark] [
 ci/screenshot.sh       # one PNG per embedded sample, light and dark
 ```
 
+## Compatibility checks
+
+- **Delta core vs quill-delta:** 4074 operation cases (hand-written plus 500
+  seeded random scenarios) evaluated by the pinned npm package and replayed
+  in C++ (`tst_oracle`), plus slab/delta's own test-suite (`tst_slab_recorded`).
+  flutter_quill's `dart_quill_delta` is compared on the same cases.
+- **flutter_quill itself** (`ci/check-flutter.sh`, headless): every fixture and
+  every document quill-qt's editor exports loads in flutter_quill 11.6 without
+  loss and renders; flutter_quill's own exports load in quill-qt without loss;
+  21 editing scripts recorded in a real flutter_quill editor (Enter, Backspace,
+  Tab, toolbar formats) give the same documents in `QuillEditor`
+  (`tst_flutter_parity`).
+- Where flutter_quill and Quill.js keyboards differ, `QuillEditor` follows
+  flutter_quill; `setEditingRules(QuillEditor::EditingRules::QuillJs)`
+  switches to Quill.js's rules.
+
+Things flutter_quill does that quill-qt does not copy, found by these checks:
+it moves inline videos onto their own line when loading, cannot render
+invalid attribute values (`"header": 7`) or `custom` embeds whose value or
+inner data is not a JSON string, and cannot lay out text with lone
+surrogates. quill-qt writes custom embeds as strings
+(`CustomEmbedRenderer::encode`).
+
 ## Building and testing
 
 ```sh
-ci/build.sh            # Debug and Release into build/debug, build/release
+ci/build.sh            # Debug and Release into build/debug, build/release (Asan: sanitizers)
 ci/test.sh             # ctest with QT_QPA_PLATFORM=offscreen, no display needed
+ci/check-oracle.sh     # regenerate the OT oracle (Node, optional Dart) and fail on drift
+ci/check-flutter.sh    # flutter_quill compatibility (Flutter)
+ci/format-check.sh     # clang-format-18 (--fix to format)
 build/debug/apps/demo/quill-demo --sample showcase.json
 ```
 
@@ -175,5 +204,8 @@ apps/demo/     quill-demo
 tests/         QtTest suites and fixtures
 ci/            provider-neutral build and test scripts
 tools/oracle/  Node.js scripts that record reference behaviour into tests/fixtures
+tools/dart-oracle/    the same OT cases on dart_quill_delta
+tools/flutter-check/  flutter_quill compatibility tests (Flutter)
+.github/workflows/    CI: build/test (Debug, Release, ASan+UBSan), oracle, flutter_quill, screenshots, format
 plans/         milestone plans
 ```

@@ -22,8 +22,8 @@ QTextCharFormat blockCharFormat(const AttributeMap& line, const StyleOptions& st
 
 /// Char format of the object replacement character representing `embed`
 /// (e.g. {"image": "x.png"}) with op attributes `attrs` on a line `line`.
-QTextCharFormat embedCharFormat(const QJsonObject& embed, const AttributeMap& attrs,
-                                const AttributeMap& line, const StyleOptions& style);
+QTextCharFormat embedCharFormat(const QJsonObject& embed, const AttributeMap& attrs, const AttributeMap& line,
+                                const StyleOptions& style);
 
 /// Decodes a data: image URL into a document resource; other URLs are left
 /// to QTextDocument (file, qrc) or the editor (http, M7).
@@ -46,6 +46,13 @@ void restyleBlock(const QTextBlock& block, const Delta& line, const StyleOptions
 /// `embedIndex` receives the embed's index in the result.
 Delta embedInsertChange(const Delta& contents, int index, int length, const QJsonObject& embed, bool block,
                         int* embedIndex = nullptr);
+
+/// flutter_quill's delete rules for deleting [index, index + length) of the
+/// document `contents`: EnsureLastLineBreakDeleteRule (the final "\n"
+/// stays), PreserveLineStyleOnMergeRule (deleting a range that starts with
+/// a line's "\n" gives the merged line that line's attributes, unless the
+/// line is empty and the next is not), else a plain delete.
+Delta flutterDeleteChange(const Delta& contents, int index, int length);
 
 /// Attributes of the last op of `delta` (for a line Delta: the line attributes).
 AttributeMap lastAttributes(const Delta& delta);

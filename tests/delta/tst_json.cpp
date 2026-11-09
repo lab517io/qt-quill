@@ -30,10 +30,9 @@ private slots:
                             .insert("Hi", {{"bold", true}, {"color", "#ff0000"}})
                             .insert(QJsonObject{{"image", "a.png"}}, {{"width", "100"}})
                             .insert("\n", {{"header", 1}});
-        QCOMPARE(d.toJson(),
-                 QByteArray(R"([{"insert":"Hi","attributes":{"bold":true,"color":"#ff0000"}},)"
-                            R"({"insert":{"image":"a.png"},"attributes":{"width":"100"}},)"
-                            R"({"insert":"\n","attributes":{"header":1}}])"));
+        QCOMPARE(d.toJson(), QByteArray(R"([{"insert":"Hi","attributes":{"bold":true,"color":"#ff0000"}},)"
+                                        R"({"insert":{"image":"a.png"},"attributes":{"width":"100"}},)"
+                                        R"({"insert":"\n","attributes":{"header":1}}])"));
         QCOMPARE(Delta().retain(3, {{"bold", QJsonValue::Null}}).remove(2).toJson(Delta::JsonShape::OpsObject),
                  QByteArray(R"({"ops":[{"retain":3,"attributes":{"bold":null}},{"delete":2}]})"));
     }

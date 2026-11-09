@@ -33,7 +33,7 @@ struct CursorInfo
 
 /// Diffs two strings (UTF-16 code units, never splitting surrogate pairs).
 /// `cleanup` applies semantic cleanup, as Delta::diff() does.
-QList<Diff> diff(const QString& text1, const QString& text2,
-                 const std::optional<CursorInfo>& cursor = std::nullopt, bool cleanup = false);
+QList<Diff> diff(const QString& text1, const QString& text2, const std::optional<CursorInfo>& cursor = std::nullopt,
+                 bool cleanup = false);
 
 } // namespace quill::fastdiff

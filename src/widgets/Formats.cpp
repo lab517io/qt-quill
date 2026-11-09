@@ -12,7 +12,10 @@ namespace quill {
 
 namespace {
 
-QString str(const char* s) { return QString::fromLatin1(s); }
+QString str(const char* s)
+{
+    return QString::fromLatin1(s);
+}
 
 std::optional<int> intValue(const QJsonValue& v)
 {
@@ -82,13 +85,11 @@ QStringList genericFamilies(const QString& name, QFont::StyleHint* hint)
 {
     if (name == QLatin1String("serif")) {
         *hint = QFont::Serif;
-        return {str("serif"), str("Noto Serif"), str("DejaVu Serif"), str("Times New Roman"),
-                str("Times")};
+        return {str("serif"), str("Noto Serif"), str("DejaVu Serif"), str("Times New Roman"), str("Times")};
     }
     if (name == QLatin1String("sans-serif")) {
         *hint = QFont::SansSerif;
-        return {str("sans-serif"), str("Noto Sans"), str("DejaVu Sans"), str("Arial"),
-                str("Helvetica")};
+        return {str("sans-serif"), str("Noto Sans"), str("DejaVu Sans"), str("Arial"), str("Helvetica")};
     }
     if (name == QLatin1String("monospace")) {
         *hint = QFont::Monospace;
@@ -115,10 +116,16 @@ StyleOptions StyleOptions::dark()
     s.linkColor = QColor(0x64, 0xB5, 0xF6);            // blue.shade300
     s.inlineCodeBackground = QColor(0x42, 0x42, 0x42); // grey.shade800
     s.codeBlockBackground = QColor(0x30, 0x30, 0x30);
-    s.codeBlockForeground = QColor(0x90, 0xCA, 0xF9);  // blue.shade200
+    s.codeBlockForeground = QColor(0x90, 0xCA, 0xF9); // blue.shade200
     s.blockquoteForeground = QColor(255, 255, 255, 170);
-    s.blockquoteBarColor = QColor(0x61, 0x61, 0x61);   // grey.shade700
+    s.blockquoteBarColor = QColor(0x61, 0x61, 0x61); // grey.shade700
     return s;
+}
+
+double StyleOptions::scaledSpacing(double px) const
+{
+    // referenceSize is in px (flutter_quill's logical pixels); 1 pt = 4/3 px.
+    return px * basePointSize() * 4.0 / 3.0 / referenceSize;
 }
 
 double StyleOptions::basePointSize() const
@@ -140,24 +147,22 @@ namespace formats {
 
 const QSet<QString>& inlineKeys()
 {
-    static const QSet<QString> keys{str("bold"),   str("italic"), str("underline"), str("strike"),
-                                    str("code"),   str("script"), str("link"),      str("color"),
-                                    str("background"), str("font"), str("size"),    str("small")};
+    static const QSet<QString> keys{str("bold"),       str("italic"), str("underline"), str("strike"),
+                                    str("code"),       str("script"), str("link"),      str("color"),
+                                    str("background"), str("font"),   str("size"),      str("small")};
     return keys;
 }
 
 const QSet<QString>& lineKeys()
 {
-    static const QSet<QString> keys{str("header"),     str("list"),       str("indent"),
-                                    str("align"),      str("direction"),  str("blockquote"),
-                                    str("code-block"), str("line-height")};
+    static const QSet<QString> keys{str("header"),    str("list"),       str("indent"),     str("align"),
+                                    str("direction"), str("blockquote"), str("code-block"), str("line-height")};
     return keys;
 }
 
 const QSet<QString>& passiveKeys()
 {
-    static const QSet<QString> keys{str("width"), str("height"), str("style"), str("token"),
-                                    str("placeholder")};
+    static const QSet<QString> keys{str("width"), str("height"), str("style"), str("token"), str("placeholder")};
     return keys;
 }
 
@@ -298,6 +303,16 @@ QTextBlockFormat blockFormat(const AttributeMap& line, const StyleOptions& style
     if (auto lh = doubleValue(line.value(QLatin1String("line-height"))); lh && *lh > 0)
         f.setLineHeight(*lh * 100.0, QTextBlockFormat::ProportionalHeight);
 
+    // flutter_quill's per-line vertical spacing (group spacing is added by
+    // DeltaDocument::updateBlockSpacing, as it depends on the line above).
+    if (kind == BlockKind::Header)
+        f.setTopMargin(style.scaledSpacing(style.headerSpacingTop[f.headingLevel() - 1]));
+    if (quote) {
+        f.setTopMargin(style.scaledSpacing(style.quoteLineSpacingTop));
+        f.setBottomMargin(style.scaledSpacing(style.quoteLineSpacingBottom));
+    } else if (list && !codeBlock) {
+        f.setBottomMargin(style.scaledSpacing(style.listLineSpacingBottom));
+    }
     return f;
 }
 
@@ -326,13 +341,12 @@ QTextListFormat listFormat(const AttributeMap& line, const StyleOptions& style)
     QTextListFormat f;
     if (group == QLatin1String("ordered")) {
         // flutter_quill: 1. / a. / i. cycling with the indent level.
-        static const QTextListFormat::Style styles[] = {QTextListFormat::ListDecimal,
-                                                        QTextListFormat::ListLowerAlpha,
+        static const QTextListFormat::Style styles[] = {QTextListFormat::ListDecimal, QTextListFormat::ListLowerAlpha,
                                                         QTextListFormat::ListLowerRoman};
         f.setStyle(styles[level % 3]);
     } else {
-        static const QTextListFormat::Style styles[] = {
-            QTextListFormat::ListDisc, QTextListFormat::ListCircle, QTextListFormat::ListSquare};
+        static const QTextListFormat::Style styles[] = {QTextListFormat::ListDisc, QTextListFormat::ListCircle,
+                                                        QTextListFormat::ListSquare};
         f.setStyle(styles[level % 3]);
     }
     f.setIndent(level + 1);
@@ -344,20 +358,19 @@ QStringList validate(const AttributeMap& attrs, bool line, const StyleOptions& s
 {
     QStringList problems;
     const auto complain = [&](const QString& key) {
-        problems.append(QStringLiteral("%1: unsupported value %2")
-                            .arg(key, QString::fromUtf8(QJsonDocument(QJsonArray{attrs.value(key)})
-                                                            .toJson(QJsonDocument::Compact))
-                                          .mid(1)
-                                          .chopped(1)));
+        problems.append(
+            QStringLiteral("%1: unsupported value %2")
+                .arg(key, QString::fromUtf8(QJsonDocument(QJsonArray{attrs.value(key)}).toJson(QJsonDocument::Compact))
+                              .mid(1)
+                              .chopped(1)));
     };
     for (auto it = attrs.begin(); it != attrs.end(); ++it) {
         const QString& key = it.key();
         const QJsonValue v = it.value();
         if (v.isNull())
             continue; // removal marker, valid anywhere
-        if (key == QLatin1String("bold") || key == QLatin1String("italic")
-            || key == QLatin1String("underline") || key == QLatin1String("strike")
-            || key == QLatin1String("code") || key == QLatin1String("small")
+        if (key == QLatin1String("bold") || key == QLatin1String("italic") || key == QLatin1String("underline")
+            || key == QLatin1String("strike") || key == QLatin1String("code") || key == QLatin1String("small")
             || key == QLatin1String("blockquote")) {
             if (!v.isBool())
                 complain(key);
@@ -371,8 +384,7 @@ QStringList validate(const AttributeMap& attrs, bool line, const StyleOptions& s
             if (!v.isString())
                 complain(key);
         } else if (key == QLatin1String("color") || key == QLatin1String("background")) {
-            if (!colors::parse(v.toString(), style.colorDialect)
-                && v.toString() != QLatin1String("inherit"))
+            if (!colors::parse(v.toString(), style.colorDialect) && v.toString() != QLatin1String("inherit"))
                 complain(key);
         } else if (key == QLatin1String("size")) {
             if (!sizeAttribute(v, style) && v.toString() != QLatin1String("0"))

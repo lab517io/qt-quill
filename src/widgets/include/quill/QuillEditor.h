@@ -29,6 +29,10 @@ class QuillEditorPrivate;
 /// do not overload QTextEdit::textChanged() and QTextEdit::selectionChanged(),
 /// which keep working.
 ///
+/// Indices are UTF-16 code units, as in Quill.js. An index inside a
+/// surrogate pair (an emoji) splits it; flutter_quill cannot lay out the
+/// resulting lone surrogates, so keep API indices on code point boundaries.
+///
 /// The document belongs to the editor; do not replace it with setDocument().
 /// Changes made to document() with plain QTextCursor calls are still tracked
 /// and reported as Source::User changes.
@@ -36,6 +40,15 @@ class QuillEditor : public QTextEdit
 {
     Q_OBJECT
 public:
+    /// Whose keyboard rules the editor follows where flutter_quill and
+    /// Quill.js differ. FlutterQuill (default): Backspace at a line start
+    /// merges the lines (the merged line keeps the upper line's format),
+    /// Enter on a checked item continues checked. QuillJs: Backspace at a
+    /// line start first outdents and removes list, header, quote and code
+    /// formats; a checked item continues unchecked.
+    enum class EditingRules { FlutterQuill, QuillJs };
+    Q_ENUM(EditingRules)
+
     explicit QuillEditor(QWidget* parent = nullptr);
     ~QuillEditor() override;
 
@@ -55,8 +68,7 @@ public:
     /// Inserts text with exactly `attributes` (Quill.js would also let the text
     /// inherit the formats of the neighbouring text; pass them instead).
     /// Newlines in `text` split the line and keep its line format.
-    Delta insertText(int index, const QString& text, const AttributeMap& attributes = {},
-                     Source source = Source::Api);
+    Delta insertText(int index, const QString& text, const AttributeMap& attributes = {}, Source source = Source::Api);
     Delta insertEmbed(int index, const QString& type, const QJsonValue& value, Source source = Source::Api);
     /// Inserts an embed on a line of its own, as flutter_quill inserts block
     /// embeds (images, videos, custom): the line is split around it when
@@ -99,6 +111,8 @@ public:
     StyleOptions styleOptions() const;
     /// Changes the styling and re-renders the document (contents unchanged).
     void setStyleOptions(const StyleOptions& style);
+    EditingRules editingRules() const;
+    void setEditingRules(EditingRules rules);
     /// Attributes dropped from pasted HTML. Default: font, size, color, background.
     QStringList pasteIgnoredAttributes() const;
     void setPasteIgnoredAttributes(const QStringList& keys);

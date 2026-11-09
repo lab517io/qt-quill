@@ -83,7 +83,7 @@ std::optional<QColor> parseHex(const QString& hex, ColorDialect dialect)
         return QColor::fromRgb(QRgb(0xFF000000u | v));
     case 8:
         if (dialect == ColorDialect::Flutter)
-            return QColor::fromRgba(QRgb(v)); // AARRGGBB
+            return QColor::fromRgba(QRgb(v));                          // AARRGGBB
         return QColor::fromRgba(QRgb((v >> 8) | ((v & 0xFFu) << 24))); // RRGGBBAA
     default:
         return std::nullopt;
@@ -105,9 +105,8 @@ std::optional<double> component(QString s, double percentScale)
 
 std::optional<QColor> parseFunction(const QString& value)
 {
-    static const QRegularExpression re(
-        QStringLiteral(R"(^\s*(rgba?|hsla?)\s*\(([^)]*)\)\s*$)"),
-        QRegularExpression::CaseInsensitiveOption);
+    static const QRegularExpression re(QStringLiteral(R"(^\s*(rgba?|hsla?)\s*\(([^)]*)\)\s*$)"),
+                                       QRegularExpression::CaseInsensitiveOption);
     const QRegularExpressionMatch m = re.match(value);
     if (!m.hasMatch())
         return std::nullopt;
@@ -138,8 +137,8 @@ std::optional<QColor> parseFunction(const QString& value)
                 return std::nullopt;
             rgb[i] = std::clamp(*c, 0.0, 255.0);
         }
-        QColor color = QColor::fromRgbF(float(rgb[0] / 255.0), float(rgb[1] / 255.0),
-                                        float(rgb[2] / 255.0), float(alpha));
+        QColor color =
+            QColor::fromRgbF(float(rgb[0] / 255.0), float(rgb[1] / 255.0), float(rgb[2] / 255.0), float(alpha));
         return color;
     }
     const auto h = component(QString(parts.at(0)).remove(QStringLiteral("deg")), 360.0);
@@ -150,8 +149,8 @@ std::optional<QColor> parseFunction(const QString& value)
     double hue = std::fmod(*h, 360.0);
     if (hue < 0)
         hue += 360.0;
-    return QColor::fromHslF(float(hue / 360.0), float(std::clamp(*s, 0.0, 1.0)),
-                            float(std::clamp(*l, 0.0, 1.0)), float(alpha));
+    return QColor::fromHslF(float(hue / 360.0), float(std::clamp(*s, 0.0, 1.0)), float(std::clamp(*l, 0.0, 1.0)),
+                            float(alpha));
 }
 
 std::optional<QColor> parseName(const QString& name, ColorDialect dialect)

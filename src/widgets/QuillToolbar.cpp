@@ -20,7 +20,10 @@ namespace quill {
 
 namespace {
 
-QString key(const char* k) { return QString::fromLatin1(k); }
+QString key(const char* k)
+{
+    return QString::fromLatin1(k);
+}
 const QJsonValue Null(QJsonValue::Null);
 
 QList<QuillToolbar::Choice> defaultFonts()
@@ -39,20 +42,25 @@ QList<QuillToolbar::Choice> defaultFonts()
 
 QList<QuillToolbar::Choice> defaultSizes()
 {
-    QList<QuillToolbar::Choice> sizes{{QObject::tr("Small"), key("small")},
-                                      {QObject::tr("Large"), key("large")},
-                                      {QObject::tr("Huge"), key("huge")}};
+    QList<QuillToolbar::Choice> sizes{
+        {QObject::tr("Small"), key("small")}, {QObject::tr("Large"), key("large")}, {QObject::tr("Huge"), key("huge")}};
     for (int s : {10, 12, 14, 16, 18, 20, 24, 32, 48})
         sizes.append({QString::number(s), QString::number(s)});
     sizes.append({QObject::tr("Clear"), Null});
     return sizes;
 }
 
-bool isOn(const QJsonValue& v) { return !v.isUndefined() && !v.isNull() && v != QJsonValue(false) && !v.isArray(); }
+bool isOn(const QJsonValue& v)
+{
+    return !v.isUndefined() && !v.isNull() && v != QJsonValue(false) && !v.isArray();
+}
 
 } // namespace
 
-QuillToolbar::QuillToolbar(QWidget* parent) : QToolBar(parent) { build(); }
+QuillToolbar::QuillToolbar(QWidget* parent) : QToolBar(parent)
+{
+    build();
+}
 
 QuillToolbar::QuillToolbar(QuillEditor* editor, QWidget* parent) : QToolBar(parent)
 {
@@ -64,8 +72,8 @@ QuillToolbar::~QuillToolbar() = default;
 
 QStringList QuillToolbar::groupNames()
 {
-    return {key("history"), key("font"), key("inline"), key("color"), key("clear"), key("header"),
-            key("list"),    key("align"), key("block"), key("insert"), key("search")};
+    return {key("history"), key("font"),  key("inline"), key("color"),  key("clear"), key("header"),
+            key("list"),    key("align"), key("block"),  key("insert"), key("search")};
 }
 
 QAction* QuillToolbar::addToggle(const QString& group, const QString& name, const QString& text)
@@ -278,7 +286,10 @@ void QuillToolbar::setEditor(QuillEditor* editor)
     updateState();
 }
 
-QuillEditor* QuillToolbar::editor() const { return m_editor; }
+QuillEditor* QuillToolbar::editor() const
+{
+    return m_editor;
+}
 
 void QuillToolbar::setFindBar(QuillFindBar* bar)
 {
@@ -291,9 +302,18 @@ void QuillToolbar::setFindBar(QuillFindBar* bar)
     }
 }
 
-QAction* QuillToolbar::action(const QString& name) const { return m_actions.value(name); }
-QStringList QuillToolbar::actionNames() const { return m_order; }
-QStringList QuillToolbar::groupActions(const QString& group) const { return m_groups.value(group); }
+QAction* QuillToolbar::action(const QString& name) const
+{
+    return m_actions.value(name);
+}
+QStringList QuillToolbar::actionNames() const
+{
+    return m_order;
+}
+QStringList QuillToolbar::groupActions(const QString& group) const
+{
+    return m_groups.value(group);
+}
 
 void QuillToolbar::setGroupVisible(const QString& group, bool visible)
 {
@@ -316,16 +336,18 @@ void QuillToolbar::toggle(const QString& name, bool checked)
         return;
     QuillEditor* e = m_editor;
     const QJsonValue off = Null;
-    static const QStringList inlineToggles{key("bold"), key("italic"), key("underline"), key("strike"), key("code"),
-                                           key("small")};
+    static const QStringList inlineToggles{key("bold"),   key("italic"), key("underline"),
+                                           key("strike"), key("code"),   key("small")};
     if (inlineToggles.contains(name)) {
         e->format(name, checked ? QJsonValue(true) : off, Source::User);
     } else if (name == QLatin1String("subscript") || name == QLatin1String("superscript")) {
-        e->format(key("script"), checked ? QJsonValue(name == QLatin1String("subscript") ? key("sub") : key("super")) : off,
+        e->format(key("script"),
+                  checked ? QJsonValue(name == QLatin1String("subscript") ? key("sub") : key("super")) : off,
                   Source::User);
     } else if (name.startsWith(QLatin1String("list-"))) {
-        static const QHash<QString, QString> values{
-            {key("list-bullet"), key("bullet")}, {key("list-ordered"), key("ordered")}, {key("list-check"), key("unchecked")}};
+        static const QHash<QString, QString> values{{key("list-bullet"), key("bullet")},
+                                                    {key("list-ordered"), key("ordered")},
+                                                    {key("list-check"), key("unchecked")}};
         e->format(key("list"), checked ? QJsonValue(values.value(name)) : off, Source::User);
     } else if (name == QLatin1String("indent") || name == QLatin1String("outdent")) {
         e->format(key("indent"), name == QLatin1String("indent") ? key("+1") : key("-1"), Source::User);
@@ -460,8 +482,8 @@ void QuillToolbar::insertEmbed(const QString& type, const QString& value)
     // Block embeds (image, video) go on a line of their own, as in flutter_quill.
     const bool block = m_editor->embeds()->rendererFor(type, value)->isBlock();
     int at = r.index;
-    const Delta change = detail::embedInsertChange(m_editor->getContents(), r.index, r.length,
-                                                   QJsonObject{{type, value}}, block, &at);
+    const Delta change =
+        detail::embedInsertChange(m_editor->getContents(), r.index, r.length, QJsonObject{{type, value}}, block, &at);
     m_editor->updateContents(change, Source::User);
     m_editor->setSelection(at + 1, 0, Source::Silent);
     refocus();

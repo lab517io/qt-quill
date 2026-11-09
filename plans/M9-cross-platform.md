@@ -59,3 +59,11 @@ that and fixes what differs.
   `QTextEdit` list handling; the Linux job should also build with the same
   `aqtinstall` Qt as the other platforms to separate Qt-version issues from
   platform issues.
+
+## Notes from M8
+
+- The CI workflow is GitHub Actions with Linux jobs only; add Windows and
+  macOS build/test jobs calling the same `ci/*.sh` (or `.ps1` equivalents).
+- `tests/lsan.supp` and the Asan config are Linux/GCC specific.
+- `ci/check-flutter.sh` and `ci/check-oracle.sh` are platform independent and
+  need to run on one platform only.

@@ -6,8 +6,8 @@
 
 #include <QAbstractTextDocumentLayout>
 #include <QJsonDocument>
-#include <QNetworkAccessManager>
 #include <QJsonObject>
+#include <QNetworkAccessManager>
 #include <QPainter>
 #include <QPixmap>
 #include <QPointer>
@@ -23,17 +23,35 @@ namespace quill {
 // --- EmbedRenderer ------------------------------------------------------------------
 
 EmbedRenderer::~EmbedRenderer() = default;
-bool EmbedRenderer::accepts(const QJsonValue&) const { return true; }
-bool EmbedRenderer::isBlock() const { return false; }
-bool EmbedRenderer::activatesOnDoubleClick() const { return false; }
-bool EmbedRenderer::activate(QuillEditor*, const EmbedContext&) { return false; }
-QString EmbedRenderer::toolTip(const EmbedContext&) const { return {}; }
+bool EmbedRenderer::accepts(const QJsonValue&) const
+{
+    return true;
+}
+bool EmbedRenderer::isBlock() const
+{
+    return false;
+}
+bool EmbedRenderer::activatesOnDoubleClick() const
+{
+    return false;
+}
+bool EmbedRenderer::activate(QuillEditor*, const EmbedContext&)
+{
+    return false;
+}
+QString EmbedRenderer::toolTip(const EmbedContext&) const
+{
+    return {};
+}
 
 // --- CustomEmbedRenderer ------------------------------------------------------------
 
 CustomEmbedRenderer::CustomEmbedRenderer(QString type) : m_type(std::move(type)) {}
 
-QString CustomEmbedRenderer::key() const { return QStringLiteral("custom"); }
+QString CustomEmbedRenderer::key() const
+{
+    return QStringLiteral("custom");
+}
 
 bool CustomEmbedRenderer::accepts(const QJsonValue& data) const
 {
@@ -41,7 +59,10 @@ bool CustomEmbedRenderer::accepts(const QJsonValue& data) const
     return parsed && parsed->first == m_type;
 }
 
-bool CustomEmbedRenderer::isBlock() const { return true; }
+bool CustomEmbedRenderer::isBlock() const
+{
+    return true;
+}
 
 std::optional<std::pair<QString, QJsonValue>> CustomEmbedRenderer::parse(const QJsonValue& data)
 {
@@ -262,8 +283,14 @@ EmbedContext EmbedRegistry::context(QTextDocument* doc, int position, const QTex
     return c;
 }
 
-void EmbedRegistry::setRemoteImagesEnabled(bool on) { d->remote = on; }
-bool EmbedRegistry::remoteImagesEnabled() const { return d->remote; }
+void EmbedRegistry::setRemoteImagesEnabled(bool on)
+{
+    d->remote = on;
+}
+bool EmbedRegistry::remoteImagesEnabled() const
+{
+    return d->remote;
+}
 
 void EmbedRegistry::setNetworkAccessManager(QNetworkAccessManager* manager)
 {
@@ -272,7 +299,10 @@ void EmbedRegistry::setNetworkAccessManager(QNetworkAccessManager* manager)
         d->m_loader->setManager(manager);
 }
 
-QNetworkAccessManager* EmbedRegistry::networkAccessManager() const { return d->loader()->manager(); }
+QNetworkAccessManager* EmbedRegistry::networkAccessManager() const
+{
+    return d->loader()->manager();
+}
 
 void EmbedRegistry::setImageCacheLimit(qint64 bytes)
 {

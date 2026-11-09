@@ -83,18 +83,24 @@ bool NotesEmbed::activate(quill::QuillEditor* editor, const quill::EmbedContext&
     if (editor->isReadOnly())
         return false;
     bool ok = false;
-    QString text = QInputDialog::getMultiLineText(editor, QObject::tr("Edit note"), QObject::tr("Note:"),
-                                                  noteText(c).chopped(noteText(c).endsWith(QLatin1Char('\n')) ? 1 : 0), &ok);
+    QString text =
+        QInputDialog::getMultiLineText(editor, QObject::tr("Edit note"), QObject::tr("Note:"),
+                                       noteText(c).chopped(noteText(c).endsWith(QLatin1Char('\n')) ? 1 : 0), &ok);
     if (!ok)
         return true;
     if (!text.endsWith(QLatin1Char('\n')))
         text += QLatin1Char('\n');
     const QString note = QString::fromUtf8(quill::Delta().insert(text).toJson());
     const QString value = encode(customType(), note);
-    editor->updateContents(quill::Delta().retain(c.position).remove(1).insert(
-                               QJsonObject{{QStringLiteral("custom"), value}}, c.attributes),
+    editor->updateContents(quill::Delta()
+                               .retain(c.position)
+                               .remove(1)
+                               .insert(QJsonObject{{QStringLiteral("custom"), value}}, c.attributes),
                            quill::Source::User);
     return true;
 }
 
-QString NotesEmbed::toolTip(const quill::EmbedContext&) const { return QObject::tr("Click to edit the note"); }
+QString NotesEmbed::toolTip(const quill::EmbedContext&) const
+{
+    return QObject::tr("Click to edit the note");
+}

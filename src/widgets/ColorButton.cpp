@@ -13,12 +13,13 @@ namespace quill::detail {
 QList<QColor> defaultPaletteColors()
 {
     // Flutter Colors.*[500], in Material order.
-    static const QList<QColor> colors{
-        QColor(QRgb(0xF44336)), QColor(QRgb(0xE91E63)), QColor(QRgb(0x9C27B0)), QColor(QRgb(0x673AB7)), QColor(QRgb(0x3F51B5)),
-        QColor(QRgb(0x2196F3)), QColor(QRgb(0x03A9F4)), QColor(QRgb(0x00BCD4)), QColor(QRgb(0x009688)), QColor(QRgb(0x4CAF50)),
-        QColor(QRgb(0x8BC34A)), QColor(QRgb(0xCDDC39)), QColor(QRgb(0xFFEB3B)), QColor(QRgb(0xFFC107)), QColor(QRgb(0xFF9800)),
-        QColor(QRgb(0xFF5722)), QColor(QRgb(0x795548)), QColor(QRgb(0x9E9E9E)), QColor(QRgb(0x607D8B)), QColor(QRgb(0x000000)),
-        QColor(QRgb(0xFFFFFF))};
+    static const QList<QColor> colors{QColor(QRgb(0xF44336)), QColor(QRgb(0xE91E63)), QColor(QRgb(0x9C27B0)),
+                                      QColor(QRgb(0x673AB7)), QColor(QRgb(0x3F51B5)), QColor(QRgb(0x2196F3)),
+                                      QColor(QRgb(0x03A9F4)), QColor(QRgb(0x00BCD4)), QColor(QRgb(0x009688)),
+                                      QColor(QRgb(0x4CAF50)), QColor(QRgb(0x8BC34A)), QColor(QRgb(0xCDDC39)),
+                                      QColor(QRgb(0xFFEB3B)), QColor(QRgb(0xFFC107)), QColor(QRgb(0xFF9800)),
+                                      QColor(QRgb(0xFF5722)), QColor(QRgb(0x795548)), QColor(QRgb(0x9E9E9E)),
+                                      QColor(QRgb(0x607D8B)), QColor(QRgb(0x000000)), QColor(QRgb(0xFFFFFF))};
     return colors;
 }
 

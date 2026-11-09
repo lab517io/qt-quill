@@ -4,7 +4,8 @@ foreach(test
         tst_op
         tst_delta_api
         tst_json
-        tst_properties)
+        tst_properties
+        tst_oracle)
     quillqt_add_test(${test} SOURCES ${test}.cpp LIBS QuillQt::Delta)
 endforeach()
 

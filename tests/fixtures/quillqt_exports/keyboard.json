@@ -1,0 +1,63 @@
+[
+    {
+        "insert": "one"
+    },
+    {
+        "attributes": {
+            "list": "ordered"
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "nested"
+    },
+    {
+        "attributes": {
+            "indent": 1,
+            "list": "ordered"
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "two"
+    },
+    {
+        "attributes": {
+            "list": "ordered"
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "bullet"
+    },
+    {
+        "attributes": {
+            "list": "bullet"
+        },
+        "insert": "\n"
+    },
+    {
+        "insert": "task"
+    },
+    {
+        "attributes": {
+            "list": "unchecked"
+        },
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "bold": true
+        },
+        "insert": "bold"
+    },
+    {
+        "insert": " plain\ttab"
+    },
+    {
+        "attributes": {
+            "list": "unchecked"
+        },
+        "insert": "\n"
+    }
+]

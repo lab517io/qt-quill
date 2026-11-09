@@ -137,14 +137,14 @@ private slots:
                 if (op.text().at(k) == QLatin1Char('\n'))
                     continue; // block separator: its attributes live on the block
                 QCOMPARE(doc.characterAt(int(pos)), op.text().at(k));
-                const AttributeMap stored =
-                    formatAt(doc, int(pos)).property(prop::InlineAttributes).toJsonObject();
+                const AttributeMap stored = formatAt(doc, int(pos)).property(prop::InlineAttributes).toJsonObject();
                 if (stored != op.attributes())
-                    QFAIL(qPrintable(QStringLiteral("position %1 (%2): stored %3, delta %4")
-                                         .arg(pos)
-                                         .arg(op.text().at(k))
-                                         .arg(QString::fromUtf8(QJsonDocument(stored).toJson(QJsonDocument::Compact)),
-                                              QString::fromUtf8(QJsonDocument(op.attributes()).toJson(QJsonDocument::Compact)))));
+                    QFAIL(qPrintable(
+                        QStringLiteral("position %1 (%2): stored %3, delta %4")
+                            .arg(pos)
+                            .arg(op.text().at(k))
+                            .arg(QString::fromUtf8(QJsonDocument(stored).toJson(QJsonDocument::Compact)),
+                                 QString::fromUtf8(QJsonDocument(op.attributes()).toJson(QJsonDocument::Compact)))));
             }
         }
 
@@ -287,8 +287,7 @@ private slots:
         QVERIFY(!blockWithText(doc, "paragraph").textList());
         QCOMPARE(item("again one").second, QStringLiteral("1.")); // paragraph ends the list
         QCOMPARE(item("again two").second, QStringLiteral("2."));
-        QCOMPARE(blockWithText(doc, "one").blockFormat().property(prop::BlockKind).toInt(),
-                 int(BlockKind::ListItem));
+        QCOMPARE(blockWithText(doc, "one").blockFormat().property(prop::BlockKind).toInt(), int(BlockKind::ListItem));
     }
 
     void checklists()
@@ -440,7 +439,13 @@ private slots:
         o.style.baseFont = QFont(QStringLiteral("Sans"), 20);
         o.style.colorDialect = ColorDialect::Css;
         o.style.indentWidth = 40;
-        QVERIFY(DeltaDocument::load(&doc, testutil::delta(R"([{"insert":"r","attributes":{"color":"red","size":"8"}},{"insert":"\n","attributes":{"indent":1}}])"), o).ok);
+        QVERIFY(
+            DeltaDocument::load(
+                &doc,
+                testutil::delta(
+                    R"([{"insert":"r","attributes":{"color":"red","size":"8"}},{"insert":"\n","attributes":{"indent":1}}])"),
+                o)
+                .ok);
         const QTextCharFormat f = formatAt(doc, 0);
         QCOMPARE(f.foreground().color(), QColor(255, 0, 0)); // CSS red
         QCOMPARE(f.fontPointSize(), 10.0);                   // 8/16 of 20pt

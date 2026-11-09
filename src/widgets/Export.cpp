@@ -24,9 +24,15 @@
 namespace quill {
 namespace {
 
-QString key(const char* k) { return QString::fromLatin1(k); }
+QString key(const char* k)
+{
+    return QString::fromLatin1(k);
+}
 
-bool nearlyEqual(double a, double b) { return std::abs(a - b) < 0.01; }
+bool nearlyEqual(double a, double b)
+{
+    return std::abs(a - b) < 0.01;
+}
 
 std::optional<double> pointSize(const QTextCharFormat& f)
 {
@@ -53,7 +59,10 @@ QStringList families(const QTextCharFormat& f)
     return list;
 }
 
-bool isBold(const QTextCharFormat& f) { return f.fontWeight() >= QFont::DemiBold; }
+bool isBold(const QTextCharFormat& f)
+{
+    return f.fontWeight() >= QFont::DemiBold;
+}
 
 void setFlag(AttributeMap& out, const char* name, bool actual, bool expected)
 {
@@ -106,8 +115,8 @@ QString alignmentValue(const QTextBlockFormat& f)
 
 std::optional<double> lineHeightValue(const QTextBlockFormat& f)
 {
-    if (!f.hasProperty(QTextFormat::LineHeight)
-        || f.lineHeightType() != QTextBlockFormat::ProportionalHeight || nearlyEqual(f.lineHeight(), 100.0))
+    if (!f.hasProperty(QTextFormat::LineHeight) || f.lineHeightType() != QTextBlockFormat::ProportionalHeight
+        || nearlyEqual(f.lineHeight(), 100.0))
         return std::nullopt;
     return f.lineHeight() / 100.0;
 }
@@ -142,8 +151,7 @@ class Exporter
 public:
     Exporter(const QTextDocument* doc, const StyleOptions& style, QStringList* warnings)
         : m_doc(doc), m_style(style), m_warnings(warnings)
-    {
-    }
+    {}
 
     Delta run(int from, int to)
     {
@@ -165,9 +173,8 @@ public:
             // setPlainText) carry no stored attributes; their text matches the
             // line as it is now.
             const QTextBlockFormat bf = block.blockFormat();
-            const AttributeMap styledFor = bf.hasProperty(prop::BlockAttributes)
-                                               ? bf.property(prop::BlockAttributes).toJsonObject()
-                                               : line;
+            const AttributeMap styledFor =
+                bf.hasProperty(prop::BlockAttributes) ? bf.property(prop::BlockAttributes).toJsonObject() : line;
             for (QTextBlock::iterator it = block.begin(); !it.atEnd(); ++it) {
                 const QTextFragment fragment = it.fragment();
                 const int fStart = std::max(fragment.position(), from);
@@ -192,13 +199,13 @@ private:
         QTextCursor c(block);
         if (c.currentFrame() != m_doc->rootFrame()) {
             m_warnedFrame = true;
-            m_warnings->append(QStringLiteral(
-                "tables and frames have no Delta equivalent; their cells were exported as plain lines"));
+            m_warnings->append(
+                QStringLiteral("tables and frames have no Delta equivalent; their cells were exported as plain lines"));
         }
     }
 
-    void appendFragment(Delta& delta, const QString& text, const QTextCharFormat& format,
-                        const AttributeMap& styledFor, const AttributeMap& line)
+    void appendFragment(Delta& delta, const QString& text, const QTextCharFormat& format, const AttributeMap& styledFor,
+                        const AttributeMap& line)
     {
         // Embeds are one character each; Qt may merge identical ones into one fragment.
         qsizetype runStart = 0;
@@ -216,8 +223,8 @@ private:
         flushText(text.size());
     }
 
-    void appendText(Delta& delta, const QString& text, const QTextCharFormat& format,
-                    const AttributeMap& styledFor, const AttributeMap& line)
+    void appendText(Delta& delta, const QString& text, const QTextCharFormat& format, const AttributeMap& styledFor,
+                    const AttributeMap& line)
     {
         const AttributeMap attrs = DeltaDocument::inlineAttributes(format, styledFor, m_style);
         // Soft line breaks (Shift+Enter) do not exist in Quill: each becomes a

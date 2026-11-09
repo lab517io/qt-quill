@@ -1,0 +1,197 @@
+[
+ {
+  "insert": "Heading 1"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "header": 1
+  }
+ },
+ {
+  "insert": "Heading 2"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "header": 2
+  }
+ },
+ {
+  "insert": "Heading 3"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "header": 3
+  }
+ },
+ {
+  "insert": "Heading 4"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "header": 4
+  }
+ },
+ {
+  "insert": "Heading 5"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "header": 5
+  }
+ },
+ {
+  "insert": "Heading 6"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "header": 6
+  }
+ },
+ {
+  "insert": "Bullet"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "bullet"
+  }
+ },
+ {
+  "insert": "Bullet nested"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "bullet",
+   "indent": 1
+  }
+ },
+ {
+  "insert": "Ordered"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "ordered"
+  }
+ },
+ {
+  "insert": "Ordered nested"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "ordered",
+   "indent": 2
+  }
+ },
+ {
+  "insert": "Checked"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "checked"
+  }
+ },
+ {
+  "insert": "Unchecked"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "unchecked"
+  }
+ },
+ {
+  "insert": "Quote"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "blockquote": true
+  }
+ },
+ {
+  "insert": "var code = true;"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "code-block": true
+  }
+ },
+ {
+  "insert": "Left"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "align": "left"
+  }
+ },
+ {
+  "insert": "Center"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "align": "center"
+  }
+ },
+ {
+  "insert": "Right"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "align": "right"
+  }
+ },
+ {
+  "insert": "Justify"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "align": "justify"
+  }
+ },
+ {
+  "insert": "مرحبا"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "direction": "rtl",
+   "align": "right"
+  }
+ },
+ {
+  "insert": "Indented"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "indent": 3
+  }
+ },
+ {
+  "insert": "Line height"
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "line-height": 1.5
+  }
+ },
+ {
+  "insert": "\n"
+ }
+]

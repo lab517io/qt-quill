@@ -49,10 +49,15 @@ private slots:
     {
         auto e = testutil::makeEditor(false);
         ChangeRecorder rec(e.get());
-        const Delta doc = delta("[{'insert':'Hello','attributes':{'bold':true}},{'insert':'\\n','attributes':{'header':1}}]");
+        const Delta doc =
+            delta("[{'insert':'Hello','attributes':{'bold':true}},{'insert':'\\n','attributes':{'header':1}}]");
         const Delta change = e->setContents(doc);
         check(e->getContents(), doc, __LINE__);
-        check(change, delta("[{'insert':'Hello','attributes':{'bold':true}},{'insert':'\\n','attributes':{'header':1}},{'delete':1}]"), __LINE__);
+        check(
+            change,
+            delta(
+                "[{'insert':'Hello','attributes':{'bold':true}},{'insert':'\\n','attributes':{'header':1}},{'delete':1}]"),
+            __LINE__);
         QCOMPARE(rec.records.size(), 1);
         QCOMPARE(rec.last().source, Source::Api);
         QVERIFY(!e->document()->isUndoAvailable());
@@ -83,14 +88,19 @@ private slots:
         auto e = testutil::makeEditor(false);
         e->setContents(delta("[{'insert':'Title'},{'insert':'\\n','attributes':{'header':1}}]"));
         const Delta change = e->insertText(2, QStringLiteral("a\nb"));
-        check(e->getContents(), delta("[{'insert':'Tia'},{'insert':'\\n','attributes':{'header':1}},"
-                                      "{'insert':'btle'},{'insert':'\\n','attributes':{'header':1}}]"), __LINE__);
-        check(change, delta("[{'retain':2},{'insert':'a'},{'insert':'\\n','attributes':{'header':1}},{'insert':'b'}]"), __LINE__);
+        check(e->getContents(),
+              delta("[{'insert':'Tia'},{'insert':'\\n','attributes':{'header':1}},"
+                    "{'insert':'btle'},{'insert':'\\n','attributes':{'header':1}}]"),
+              __LINE__);
+        check(change, delta("[{'retain':2},{'insert':'a'},{'insert':'\\n','attributes':{'header':1}},{'insert':'b'}]"),
+              __LINE__);
         // Line formats in the attributes apply to the inserted lines.
         e->setContents(delta("[{'insert':'end\\n'}]"));
         e->insertText(0, QStringLiteral("Head\n"), attrs("{'header':2,'italic':true}"));
-        check(e->getContents(), delta("[{'insert':'Head','attributes':{'italic':true}},{'insert':'\\n','attributes':{'header':2}},"
-                                      "{'insert':'end\\n'}]"), __LINE__);
+        check(e->getContents(),
+              delta("[{'insert':'Head','attributes':{'italic':true}},{'insert':'\\n','attributes':{'header':2}},"
+                    "{'insert':'end\\n'}]"),
+              __LINE__);
         QCOMPARE(e->verificationFailures(), 0);
     }
 
@@ -103,7 +113,9 @@ private slots:
         check(e->getContents(), delta("[{'insert':'a'},{'insert':{'image':'x.png'}},{'insert':'b\\n'}]"), __LINE__);
         QCOMPARE(e->getText(), QStringLiteral("a￼b\n"));
         e->insertEmbed(0, QStringLiteral("video"), QStringLiteral("https://v"));
-        check(e->getContents(), delta("[{'insert':{'video':'https://v'}},{'insert':'a'},{'insert':{'image':'x.png'}},{'insert':'b\\n'}]"), __LINE__);
+        check(e->getContents(),
+              delta("[{'insert':{'video':'https://v'}},{'insert':'a'},{'insert':{'image':'x.png'}},{'insert':'b\\n'}]"),
+              __LINE__);
         QCOMPARE(e->verificationFailures(), 0);
     }
 
@@ -129,23 +141,38 @@ private slots:
         e->setContents(delta("[{'insert':'ab\\ncd\\n'}]"));
         // Inline formats skip newlines; the returned change says so.
         const Delta change = e->formatText(1, 3, attrs("{'bold':true}"));
-        check(e->getContents(), delta("[{'insert':'a'},{'insert':'b','attributes':{'bold':true}},{'insert':'\\n'},"
-                                      "{'insert':'c','attributes':{'bold':true}},{'insert':'d\\n'}]"), __LINE__);
-        check(change, delta("[{'retain':1},{'retain':1,'attributes':{'bold':true}},{'retain':1},{'retain':1,'attributes':{'bold':true}}]"), __LINE__);
+        check(e->getContents(),
+              delta("[{'insert':'a'},{'insert':'b','attributes':{'bold':true}},{'insert':'\\n'},"
+                    "{'insert':'c','attributes':{'bold':true}},{'insert':'d\\n'}]"),
+              __LINE__);
+        check(
+            change,
+            delta(
+                "[{'retain':1},{'retain':1,'attributes':{'bold':true}},{'retain':1},{'retain':1,'attributes':{'bold':true}}]"),
+            __LINE__);
         // false and null remove.
         e->formatText(0, 2, attrs("{'bold':false}"));
         e->formatText(3, 1, QJsonObject{{QStringLiteral("bold"), QJsonValue::Null}});
         check(e->getContents(), delta("[{'insert':'ab\\ncd\\n'}]"), __LINE__);
         // Line formats apply only to newlines in the range.
         e->formatText(0, 3, attrs("{'header':1,'italic':true}"));
-        check(e->getContents(), delta("[{'insert':'ab','attributes':{'italic':true}},{'insert':'\\n','attributes':{'header':1}},{'insert':'cd\\n'}]"), __LINE__);
+        check(
+            e->getContents(),
+            delta(
+                "[{'insert':'ab','attributes':{'italic':true}},{'insert':'\\n','attributes':{'header':1}},{'insert':'cd\\n'}]"),
+            __LINE__);
         // Unknown attributes keep Delta semantics.
         e->formatText(3, 3, attrs("{'token':'t1'}"));
-        check(e->getContents(), delta("[{'insert':'ab','attributes':{'italic':true}},{'insert':'\\n','attributes':{'header':1}},"
-                                      "{'insert':'cd','attributes':{'token':'t1'}},{'insert':'\\n'}]"), __LINE__);
+        check(e->getContents(),
+              delta("[{'insert':'ab','attributes':{'italic':true}},{'insert':'\\n','attributes':{'header':1}},"
+                    "{'insert':'cd','attributes':{'token':'t1'}},{'insert':'\\n'}]"),
+              __LINE__);
         e->formatText(3, 3, attrs("{'mark':'m'}"));
-        check(e->getContents(), delta("[{'insert':'ab','attributes':{'italic':true}},{'insert':'\\n','attributes':{'header':1}},"
-                                      "{'insert':'cd','attributes':{'mark':'m','token':'t1'}},{'insert':'\\n','attributes':{'mark':'m'}}]"), __LINE__);
+        check(
+            e->getContents(),
+            delta("[{'insert':'ab','attributes':{'italic':true}},{'insert':'\\n','attributes':{'header':1}},"
+                  "{'insert':'cd','attributes':{'mark':'m','token':'t1'}},{'insert':'\\n','attributes':{'mark':'m'}}]"),
+            __LINE__);
         QCOMPARE(rec.mismatches, 0);
         QCOMPARE(e->verificationFailures(), 0);
     }
@@ -167,7 +194,11 @@ private slots:
         auto e = testutil::makeEditor(false);
         e->setContents(delta("[{'insert':'a\\nb\\nc\\n'}]"));
         const Delta change = e->formatLine(0, 3, attrs("{'list':'ordered'}"));
-        check(change, delta("[{'retain':1},{'retain':1,'attributes':{'list':'ordered'}},{'retain':1},{'retain':1,'attributes':{'list':'ordered'}}]"), __LINE__);
+        check(
+            change,
+            delta(
+                "[{'retain':1},{'retain':1,'attributes':{'list':'ordered'}},{'retain':1},{'retain':1,'attributes':{'list':'ordered'}}]"),
+            __LINE__);
         QTextBlock first = e->document()->firstBlock();
         QVERIFY(first.textList());
         QCOMPARE(first.textList(), first.next().textList());
@@ -176,16 +207,20 @@ private slots:
         e->formatLine(2, 0, attrs("{'indent':'+1'}"));
         e->formatLine(2, 0, attrs("{'indent':'+1'}"));
         e->formatLine(2, 0, attrs("{'indent':'-1'}"));
-        check(e->getContents(), delta("[{'insert':'a'},{'insert':'\\n','attributes':{'list':'ordered'}},"
-                                      "{'insert':'b'},{'insert':'\\n','attributes':{'indent':1,'list':'ordered'}},{'insert':'c\\n'}]"), __LINE__);
+        check(e->getContents(),
+              delta("[{'insert':'a'},{'insert':'\\n','attributes':{'list':'ordered'}},"
+                    "{'insert':'b'},{'insert':'\\n','attributes':{'indent':1,'list':'ordered'}},{'insert':'c\\n'}]"),
+              __LINE__);
         QCOMPARE(e->document()->findBlockByNumber(1).textList()->format().style(), QTextListFormat::ListLowerAlpha);
         e->formatLine(2, 0, attrs("{'indent':'-1'}"));
         e->formatLine(2, 0, attrs("{'indent':'-1'}"));
-        check(e->getContents().slice(2, 4), delta("[{'insert':'b'},{'insert':'\\n','attributes':{'list':'ordered'}}]"), __LINE__);
+        check(e->getContents().slice(2, 4), delta("[{'insert':'b'},{'insert':'\\n','attributes':{'list':'ordered'}}]"),
+              __LINE__);
         // Exclusive block formats; header coexists (flutter_quill).
         e->formatLine(4, 0, attrs("{'blockquote':true}"));
         e->formatLine(4, 0, attrs("{'code-block':true,'header':2}"));
-        check(e->getContents().slice(4), delta("[{'insert':'c'},{'insert':'\\n','attributes':{'code-block':true,'header':2}}]"), __LINE__);
+        check(e->getContents().slice(4),
+              delta("[{'insert':'c'},{'insert':'\\n','attributes':{'code-block':true,'header':2}}]"), __LINE__);
         e->formatLine(0, 6, attrs("{'list':false,'code-block':null,'header':null}"));
         check(e->getContents(), delta("[{'insert':'a\\nb\\nc\\n'}]"), __LINE__);
         QVERIFY(!e->document()->firstBlock().textList());
@@ -200,29 +235,36 @@ private slots:
         QCOMPARE(e->document()->firstBlock().blockFormat().marker(), QTextBlockFormat::MarkerType::Unchecked);
         e->formatLine(0, 0, attrs("{'list':'checked'}"));
         QCOMPARE(e->document()->firstBlock().blockFormat().marker(), QTextBlockFormat::MarkerType::Checked);
-        check(e->getContents(), delta("[{'insert':'todo'},{'insert':'\\n','attributes':{'list':'checked'}}]"), __LINE__);
+        check(e->getContents(), delta("[{'insert':'todo'},{'insert':'\\n','attributes':{'list':'checked'}}]"),
+              __LINE__);
     }
 
     void removeFormat()
     {
         auto e = testutil::makeEditor(false);
-        e->setContents(delta("[{'insert':'ab','attributes':{'bold':true}},{'insert':'\\n','attributes':{'header':1}},"
-                             "{'insert':'cd','attributes':{'italic':true}},{'insert':{'image':'x.png'},'attributes':{'width':'10'}},"
-                             "{'insert':'\\n','attributes':{'list':'bullet'}}]"));
+        e->setContents(delta(
+            "[{'insert':'ab','attributes':{'bold':true}},{'insert':'\\n','attributes':{'header':1}},"
+            "{'insert':'cd','attributes':{'italic':true}},{'insert':{'image':'x.png'},'attributes':{'width':'10'}},"
+            "{'insert':'\\n','attributes':{'list':'bullet'}}]"));
         e->removeFormat(1, 3);
         // Range [1,4) loses formats; the line containing 4 loses its line format
         // but keeps inline formats after the range; embeds keep attributes.
-        check(e->getContents(), delta("[{'insert':'a','attributes':{'bold':true}},{'insert':'b\\nc'},"
-                                      "{'insert':'d','attributes':{'italic':true}},{'insert':{'image':'x.png'},'attributes':{'width':'10'}},"
-                                      "{'insert':'\\n'}]"), __LINE__);
+        check(
+            e->getContents(),
+            delta(
+                "[{'insert':'a','attributes':{'bold':true}},{'insert':'b\\nc'},"
+                "{'insert':'d','attributes':{'italic':true}},{'insert':{'image':'x.png'},'attributes':{'width':'10'}},"
+                "{'insert':'\\n'}]"),
+            __LINE__);
         QCOMPARE(e->verificationFailures(), 0);
     }
 
     void getFormat()
     {
         auto e = testutil::makeEditor(false);
-        e->setContents(delta("[{'insert':'ab','attributes':{'bold':true}},{'insert':'cd','attributes':{'bold':true,'italic':true}},"
-                             "{'insert':'\\n','attributes':{'header':1}},{'insert':'ef'},{'insert':'\\n','attributes':{'header':2}}]"));
+        e->setContents(delta(
+            "[{'insert':'ab','attributes':{'bold':true}},{'insert':'cd','attributes':{'bold':true,'italic':true}},"
+            "{'insert':'\\n','attributes':{'header':1}},{'insert':'ef'},{'insert':'\\n','attributes':{'header':2}}]"));
         QCOMPARE(e->getFormat(1), attrs("{'bold':true,'header':1}"));
         QCOMPARE(e->getFormat(3), attrs("{'bold':true,'italic':true,'header':1}"));
         QCOMPARE(e->getFormat(0), attrs("{'bold':true,'header':1}")); // line start: character at
@@ -242,14 +284,17 @@ private slots:
         QVERIFY(e->format(QStringLiteral("bold"), true).isEmpty());
         QCOMPARE(e->getFormat(), attrs("{'bold':true}"));
         QTest::keyClicks(e.get(), QStringLiteral("XY"));
-        check(e->getContents(), delta("[{'insert':'a'},{'insert':'XY','attributes':{'bold':true}},{'insert':'b\\n'}]"), __LINE__);
+        check(e->getContents(), delta("[{'insert':'a'},{'insert':'XY','attributes':{'bold':true}},{'insert':'b\\n'}]"),
+              __LINE__);
         QCOMPARE(rec.last().source, Source::User);
         // With a selection, format() formats it and keeps the selection.
         e->setSelection(0, 1);
         e->format(QStringLiteral("italic"), true);
         e->format(QStringLiteral("align"), QStringLiteral("center"));
-        check(e->getContents(), delta("[{'insert':'a','attributes':{'italic':true}},{'insert':'XY','attributes':{'bold':true}},"
-                                      "{'insert':'b'},{'insert':'\\n','attributes':{'align':'center'}}]"), __LINE__);
+        check(e->getContents(),
+              delta("[{'insert':'a','attributes':{'italic':true}},{'insert':'XY','attributes':{'bold':true}},"
+                    "{'insert':'b'},{'insert':'\\n','attributes':{'align':'center'}}]"),
+              __LINE__);
         QCOMPARE(e->getSelection(), (Range{0, 1}));
         QCOMPARE(rec.mismatches, 0);
     }
@@ -259,27 +304,48 @@ private slots:
         auto e = testutil::makeEditor(false);
         ChangeRecorder rec(e.get());
         e->setContents(delta("[{'insert':'abc'},{'insert':'\\n','attributes':{'header':1}}]"));
-        const Delta c1 = delta("[{'retain':1},{'insert':'X','attributes':{'italic':true}},{'retain':1,'attributes':{'bold':true}},{'delete':1}]");
+        const Delta c1 = delta(
+            "[{'retain':1},{'insert':'X','attributes':{'italic':true}},{'retain':1,'attributes':{'bold':true}},{'delete':1}]");
         check(e->updateContents(c1), c1, __LINE__);
-        check(e->getContents(), delta("[{'insert':'a'},{'insert':'X','attributes':{'italic':true}},{'insert':'b','attributes':{'bold':true}},"
-                                      "{'insert':'\\n','attributes':{'header':1}}]"), __LINE__);
+        check(
+            e->getContents(),
+            delta(
+                "[{'insert':'a'},{'insert':'X','attributes':{'italic':true}},{'insert':'b','attributes':{'bold':true}},"
+                "{'insert':'\\n','attributes':{'header':1}}]"),
+            __LINE__);
         // Inserted lines get exactly the inserted newline's attributes.
         e->updateContents(delta("[{'retain':3},{'insert':'\\n','attributes':{'list':'bullet'}}]"));
-        check(e->getContents(), delta("[{'insert':'a'},{'insert':'X','attributes':{'italic':true}},{'insert':'b','attributes':{'bold':true}},"
-                                      "{'insert':'\\n','attributes':{'list':'bullet'}},{'insert':'\\n','attributes':{'header':1}}]"), __LINE__);
+        check(
+            e->getContents(),
+            delta(
+                "[{'insert':'a'},{'insert':'X','attributes':{'italic':true}},{'insert':'b','attributes':{'bold':true}},"
+                "{'insert':'\\n','attributes':{'list':'bullet'}},{'insert':'\\n','attributes':{'header':1}}]"),
+            __LINE__);
         // Deleting the final newline leaves a plain one.
         e->updateContents(delta("[{'retain':4},{'delete':1}]"));
-        check(e->getContents(), delta("[{'insert':'a'},{'insert':'X','attributes':{'italic':true}},{'insert':'b','attributes':{'bold':true}},"
-                                      "{'insert':'\\n','attributes':{'list':'bullet'}}]"), __LINE__);
+        check(
+            e->getContents(),
+            delta(
+                "[{'insert':'a'},{'insert':'X','attributes':{'italic':true}},{'insert':'b','attributes':{'bold':true}},"
+                "{'insert':'\\n','attributes':{'list':'bullet'}}]"),
+            __LINE__);
         // Inserting after the final newline appends a line.
         e->updateContents(delta("[{'retain':4},{'insert':'tail'}]"));
-        check(e->getContents(), delta("[{'insert':'a'},{'insert':'X','attributes':{'italic':true}},{'insert':'b','attributes':{'bold':true}},"
-                                      "{'insert':'\\n','attributes':{'list':'bullet'}},{'insert':'tail\\n'}]"), __LINE__);
+        check(
+            e->getContents(),
+            delta(
+                "[{'insert':'a'},{'insert':'X','attributes':{'italic':true}},{'insert':'b','attributes':{'bold':true}},"
+                "{'insert':'\\n','attributes':{'list':'bullet'}},{'insert':'tail\\n'}]"),
+            __LINE__);
         // Retains beyond the end are ignored.
         e->updateContents(delta("[{'retain':100,'attributes':{'underline':true}}]"));
-        check(e->getContents(), delta("[{'insert':'a','attributes':{'underline':true}},{'insert':'X','attributes':{'italic':true,'underline':true}},"
-                                      "{'insert':'b','attributes':{'bold':true,'underline':true}},"
-                                      "{'insert':'\\n','attributes':{'list':'bullet'}},{'insert':'tail','attributes':{'underline':true}},{'insert':'\\n'}]"), __LINE__);
+        check(
+            e->getContents(),
+            delta(
+                "[{'insert':'a','attributes':{'underline':true}},{'insert':'X','attributes':{'italic':true,'underline':true}},"
+                "{'insert':'b','attributes':{'bold':true,'underline':true}},"
+                "{'insert':'\\n','attributes':{'list':'bullet'}},{'insert':'tail','attributes':{'underline':true}},{'insert':'\\n'}]"),
+            __LINE__);
         // Replace everything.
         e->updateContents(delta("[{'delete':100},{'insert':'new\\n'}]"));
         check(e->getContents(), delta("[{'insert':'new\\n'}]"), __LINE__);
@@ -353,7 +419,11 @@ private slots:
         QVERIFY(!e->document()->firstBlock().textList());
         e->redo();
         e->redo();
-        check(e->getContents(), delta("[{'insert':'ab'},{'insert':'c','attributes':{'bold':true}},{'insert':'\\n','attributes':{'list':'bullet'}}]"), __LINE__);
+        check(
+            e->getContents(),
+            delta(
+                "[{'insert':'ab'},{'insert':'c','attributes':{'bold':true}},{'insert':'\\n','attributes':{'list':'bullet'}}]"),
+            __LINE__);
         QCOMPARE(rec.mismatches, 0);
         QCOMPARE(e->verificationFailures(), 0);
     }
@@ -361,7 +431,8 @@ private slots:
     void styleOptionsKeepContents()
     {
         auto e = testutil::makeEditor(false);
-        const Delta doc = testutil::delta("[{'insert':'T'},{'insert':'\\n','attributes':{'header':1}},{'insert':'x','attributes':{'size':'large'}},{'insert':'\\n'}]");
+        const Delta doc = testutil::delta(
+            "[{'insert':'T'},{'insert':'\\n','attributes':{'header':1}},{'insert':'x','attributes':{'size':'large'}},{'insert':'\\n'}]");
         e->setContents(doc);
         StyleOptions s = e->styleOptions();
         s.headerSizes[0] = 40;
@@ -384,9 +455,9 @@ private slots:
     void fixturesRoundTrip()
     {
         QFETCH(QString, file);
-        const Delta doc = *Delta::fromJson(testutil::loadJson(file).isArray()
-                                               ? QJsonValue(testutil::loadJson(file).array())
-                                               : QJsonValue(testutil::loadJson(file).object()));
+        const Delta doc =
+            *Delta::fromJson(testutil::loadJson(file).isArray() ? QJsonValue(testutil::loadJson(file).array())
+                                                                : QJsonValue(testutil::loadJson(file).object()));
         auto e = testutil::makeEditor(false);
         e->setContents(doc);
         Delta canonical;
@@ -409,29 +480,36 @@ private slots:
         e->setContents(doc);
         QRandomGenerator rng(qHash(file));
         const QList<AttributeMap> inlineChoices{
-            attrs("{'bold':true}"), attrs("{'bold':null}"), attrs("{'italic':true,'underline':true}"),
+            attrs("{'bold':true}"),         attrs("{'bold':null}"),    attrs("{'italic':true,'underline':true}"),
             attrs("{'color':'#FF00FF00'}"), attrs("{'size':'large'}"), attrs("{'link':'https://l'}"),
-            attrs("{'code':true}"), attrs("{'script':'sub'}"), attrs("{'background':null,'color':null}"),
-            attrs("{'font':'monospace'}"), attrs("{'small':true}"), attrs("{'token':'x'}")};
+            attrs("{'code':true}"),         attrs("{'script':'sub'}"), attrs("{'background':null,'color':null}"),
+            attrs("{'font':'monospace'}"),  attrs("{'small':true}"),   attrs("{'token':'x'}")};
         const QList<AttributeMap> lineChoices{
-            attrs("{'header':1}"), attrs("{'header':null}"), attrs("{'list':'bullet'}"), attrs("{'list':'ordered'}"),
-            attrs("{'list':'checked'}"), attrs("{'list':null}"), attrs("{'indent':'+1'}"), attrs("{'indent':'-1'}"),
-            attrs("{'align':'center'}"), attrs("{'direction':'rtl','align':'right'}"), attrs("{'blockquote':true}"),
-            attrs("{'code-block':true}"), attrs("{'line-height':1.5}")};
-        const QStringList texts{QStringLiteral("x"), QStringLiteral("hello "), QStringLiteral("\n"),
+            attrs("{'header':1}"),        attrs("{'header':null}"),
+            attrs("{'list':'bullet'}"),   attrs("{'list':'ordered'}"),
+            attrs("{'list':'checked'}"),  attrs("{'list':null}"),
+            attrs("{'indent':'+1'}"),     attrs("{'indent':'-1'}"),
+            attrs("{'align':'center'}"),  attrs("{'direction':'rtl','align':'right'}"),
+            attrs("{'blockquote':true}"), attrs("{'code-block':true}"),
+            attrs("{'line-height':1.5}")};
+        const QStringList texts{QStringLiteral("x"),    QStringLiteral("hello "),      QStringLiteral("\n"),
                                 QStringLiteral("a\nb"), QStringLiteral("é\U0001F600"), QStringLiteral("\n\n")};
-        const int steps = qEnvironmentVariableIsSet("QUILLQT_FUZZ_STEPS") ? qEnvironmentVariableIntValue("QUILLQT_FUZZ_STEPS") : 150;
+        const int steps =
+            qEnvironmentVariableIsSet("QUILLQT_FUZZ_STEPS") ? qEnvironmentVariableIntValue("QUILLQT_FUZZ_STEPS") : 150;
         for (int step = 0; step < steps; ++step) {
             const int len = e->getLength();
             const int index = int(rng.bounded(len));
             const int length = int(rng.bounded(std::min(len - index, 12) + 1));
             const Delta before = e->getContents();
             QString op;
-            const auto json = [](const AttributeMap& m) { return QString::fromUtf8(QJsonDocument(m).toJson(QJsonDocument::Compact)); };
+            const auto json = [](const AttributeMap& m) {
+                return QString::fromUtf8(QJsonDocument(m).toJson(QJsonDocument::Compact));
+            };
             switch (rng.bounded(9)) {
             case 0: {
                 const QString t = texts.at(rng.bounded(texts.size()));
-                const AttributeMap a = rng.bounded(2) ? inlineChoices.at(rng.bounded(inlineChoices.size())) : AttributeMap();
+                const AttributeMap a =
+                    rng.bounded(2) ? inlineChoices.at(rng.bounded(inlineChoices.size())) : AttributeMap();
                 op = QStringLiteral("insertText(%1, %2, %3)").arg(index).arg(t, json(a));
                 e->insertText(index, t, a);
                 break;

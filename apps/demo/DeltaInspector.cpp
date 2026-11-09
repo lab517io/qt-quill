@@ -90,6 +90,6 @@ void DeltaInspector::showChange(int row)
         m_details->clear();
         return;
     }
-    m_details->setPlainText(tr("change:\n%1\nold contents:\n%2")
-                                .arg(pretty(m_entries.at(row).change), pretty(m_entries.at(row).old)));
+    m_details->setPlainText(
+        tr("change:\n%1\nold contents:\n%2").arg(pretty(m_entries.at(row).change), pretty(m_entries.at(row).old)));
 }

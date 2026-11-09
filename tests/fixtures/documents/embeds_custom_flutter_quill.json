@@ -23,31 +23,7 @@
  },
  {
   "insert": {
-   "custom": {
-    "poll": {
-     "question": "Tea or coffee?",
-     "options": [
-      "tea",
-      "coffee"
-     ]
-    }
-   }
-  }
- },
- {
-  "insert": "\n"
- },
- {
-  "insert": {
-   "custom": "not json { at all"
-  }
- },
- {
-  "insert": "\n"
- },
- {
-  "insert": {
-   "custom": "{\"unknownType\": {\"a\": [1, 2.5, null, true]}}"
+   "custom": "{\"unknownType\":\"payload ünïcode\"}"
   }
  },
  {

@@ -356,3 +356,15 @@ once: 3 000 random API steps per document and 60 000 key events, zero drift.
   cursor; contents are unaffected (verified).
 - Inserts with `null` attribute values are cleaned before applying; nulls
   only mean "remove" in retains.
+
+## Later change (M8)
+
+Recording flutter_quill 11.6 in a real editor widget showed that several
+keyboard rules taken from Quill.js here differ from flutter_quill. Following
+"flutter_quill compatibility first", `QuillEditor` now defaults to
+`EditingRules::FlutterQuill` (Backspace at a line start merges the lines with
+flutter_quill's PreserveLineStyleOnMergeRule, a checked item continues
+checked, Tab inside list item text inserts "\t"); the Quill.js rules are
+kept as `EditingRules::QuillJs`. Selection deletes, Ctrl+X and typing over a
+multi-line selection now go through Delta semantics (Qt kept the first
+line's format).

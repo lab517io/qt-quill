@@ -16,7 +16,7 @@ QString render(const QList<Diff>& diffs)
 {
     QString s;
     for (const Diff& d : diffs) {
-        s += d.first == Operation::Insert ? QLatin1Char('+')
+        s += d.first == Operation::Insert   ? QLatin1Char('+')
              : d.first == Operation::Delete ? QLatin1Char('-')
                                             : QLatin1Char('=');
         s += QString(d.second).replace(QChar(u'\0'), QStringLiteral("\\0"));
@@ -87,7 +87,8 @@ private slots:
         const QString a = QStringLiteral("\U0001F600");
         const QString b = QString(a.at(0)) + QLatin1Char('x') + a.at(1);
         QCOMPARE(render(diff(a, b)), QStringLiteral("-%1|+%2|").arg(a, b));
-        QCOMPARE(render(diff(QStringLiteral("ab") + a + QStringLiteral("cd"), QStringLiteral("ab") + b + QStringLiteral("cd"))),
+        QCOMPARE(render(diff(QStringLiteral("ab") + a + QStringLiteral("cd"),
+                             QStringLiteral("ab") + b + QStringLiteral("cd"))),
                  QStringLiteral("=ab|-%1|+%2|=cd|").arg(a, b));
         // Second fast-diff 1.3.0 overflow (merge sweeps never settle); the
         // result only has to be a valid diff.

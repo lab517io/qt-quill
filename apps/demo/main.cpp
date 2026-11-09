@@ -26,8 +26,10 @@ int main(int argc, char* argv[])
     parser.addHelpOption();
     parser.addVersionOption();
     parser.addPositionalArgument(QStringLiteral("file"), QStringLiteral("Delta JSON document to open."));
-    const QCommandLineOption sample(QStringLiteral("sample"), QStringLiteral("Load an embedded sample."), QStringLiteral("name"));
-    const QCommandLineOption screenshot(QStringLiteral("screenshot"), QStringLiteral("Save a screenshot and exit."), QStringLiteral("png"));
+    const QCommandLineOption sample(QStringLiteral("sample"), QStringLiteral("Load an embedded sample."),
+                                    QStringLiteral("name"));
+    const QCommandLineOption screenshot(QStringLiteral("screenshot"), QStringLiteral("Save a screenshot and exit."),
+                                        QStringLiteral("png"));
     const QCommandLineOption dark(QStringLiteral("dark"), QStringLiteral("Dark palette."));
     const QCommandLineOption log(QStringLiteral("log"), QStringLiteral("Print change Deltas."));
     parser.addOptions({sample, screenshot, dark, log});
@@ -50,8 +52,8 @@ int main(int argc, char* argv[])
     if (parser.isSet(log)) {
         QObject::connect(window.editor(), &quill::QuillEditor::textChange,
                          [](const quill::Delta& change, const quill::Delta&, quill::Source source) {
-                             QTextStream(stdout) << (source == quill::Source::User ? "user " : "api  ") << change.toJson()
-                                                 << Qt::endl;
+                             QTextStream(stdout)
+                                 << (source == quill::Source::User ? "user " : "api  ") << change.toJson() << Qt::endl;
                          });
     }
     window.show();

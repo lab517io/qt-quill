@@ -1,0 +1,3 @@
+{
+ "diff: emoji replaced": "dart_quill_delta's diff (diff_match_patch on UTF-16 code units) splits the surrogate pair of an emoji and inserts a lone low surrogate (\\ude03); quill-delta (fast-diff 1.3.0) keeps it whole. Documents diffed by flutter_quill can therefore get invalid UTF-16."
+}

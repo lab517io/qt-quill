@@ -46,8 +46,7 @@ private slots:
     void reduce()
     {
         const qsizetype total =
-            m_iteration.reduce([](qsizetype acc, const Op& op, qsizetype) { return acc + op.length(); },
-                               qsizetype(0));
+            m_iteration.reduce([](qsizetype acc, const Op& op, qsizetype) { return acc + op.length(); }, qsizetype(0));
         QCOMPARE(total, m_iteration.length());
     }
 

@@ -10,7 +10,10 @@ namespace {
 constexpr int kTimeoutMs = 30000;
 constexpr qint64 kMaxBytes = 64 * 1024 * 1024; // per image download
 
-qsizetype costOf(const QImage& image) { return qsizetype(image.sizeInBytes() / 1024) + 1; }
+qsizetype costOf(const QImage& image)
+{
+    return qsizetype(image.sizeInBytes() / 1024) + 1;
+}
 } // namespace
 
 ImageLoader::ImageLoader(QObject* parent) : QObject(parent)
@@ -29,7 +32,10 @@ ImageLoader::~ImageLoader()
     }
 }
 
-void ImageLoader::setManager(QNetworkAccessManager* manager) { m_external = manager; }
+void ImageLoader::setManager(QNetworkAccessManager* manager)
+{
+    m_external = manager;
+}
 
 QNetworkAccessManager* ImageLoader::manager()
 {
@@ -40,7 +46,10 @@ QNetworkAccessManager* ImageLoader::manager()
     return m_own;
 }
 
-void ImageLoader::setCacheLimit(qint64 bytes) { m_cache.setMaxCost(qsizetype(std::max<qint64>(1, bytes / 1024))); }
+void ImageLoader::setCacheLimit(qint64 bytes)
+{
+    m_cache.setMaxCost(qsizetype(std::max<qint64>(1, bytes / 1024)));
+}
 
 ImageLoader::State ImageLoader::state(const QUrl& url) const
 {

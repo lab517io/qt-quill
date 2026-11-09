@@ -73,18 +73,41 @@ int charCodeAt(const QString& s, qsizetype i)
     return s.at(i).unicode();
 }
 
-bool isSurrogatePairStart(int code) { return code >= 0xd800 && code <= 0xdbff; }
-bool isSurrogatePairEnd(int code) { return code >= 0xdc00 && code <= 0xdfff; }
-bool startsWithPairEnd(const QString& s) { return isSurrogatePairEnd(charCodeAt(s, 0)); }
-bool endsWithPairStart(const QString& s) { return isSurrogatePairStart(charCodeAt(s, s.size() - 1)); }
+bool isSurrogatePairStart(int code)
+{
+    return code >= 0xd800 && code <= 0xdbff;
+}
+bool isSurrogatePairEnd(int code)
+{
+    return code >= 0xdc00 && code <= 0xdfff;
+}
+bool startsWithPairEnd(const QString& s)
+{
+    return isSurrogatePairEnd(charCodeAt(s, 0));
+}
+bool endsWithPairStart(const QString& s)
+{
+    return isSurrogatePairStart(charCodeAt(s, s.size() - 1));
+}
 
 // JavaScript /\s/ for a single UTF-16 code unit.
 bool isJsWhitespace(char16_t c)
 {
     switch (c) {
-    case 0x0009: case 0x000a: case 0x000b: case 0x000c: case 0x000d: case 0x0020:
-    case 0x00a0: case 0x1680: case 0x2028: case 0x2029: case 0x202f: case 0x205f:
-    case 0x3000: case 0xfeff:
+    case 0x0009:
+    case 0x000a:
+    case 0x000b:
+    case 0x000c:
+    case 0x000d:
+    case 0x0020:
+    case 0x00a0:
+    case 0x1680:
+    case 0x2028:
+    case 0x2029:
+    case 0x202f:
+    case 0x205f:
+    case 0x3000:
+    case 0xfeff:
         return true;
     default:
         return c >= 0x2000 && c <= 0x200a;
@@ -105,8 +128,8 @@ void splice(Diffs& diffs, qsizetype index, qsizetype removeCount, const Diffs& i
 
 // --- Forward declarations ----------------------------------------------------
 
-Diffs diffMain(const QString& text1, const QString& text2,
-               const std::optional<CursorInfo>& cursor, bool cleanup, bool fixUnicode);
+Diffs diffMain(const QString& text1, const QString& text2, const std::optional<CursorInfo>& cursor, bool cleanup,
+               bool fixUnicode);
 Diffs diffCompute(const QString& text1, const QString& text2);
 Diffs diffBisect(const QString& text1, const QString& text2);
 Diffs diffBisectSplit(const QString& text1, const QString& text2, qsizetype x, qsizetype y);
@@ -117,13 +140,12 @@ std::optional<std::vector<QString>> diffHalfMatch(const QString& text1, const QS
 void diffCleanupSemantic(Diffs& diffs);
 void diffCleanupSemanticLossless(Diffs& diffs);
 void diffCleanupMerge(Diffs& diffs, bool fixUnicode, int depth = 0);
-std::optional<Diffs> findCursorEditDiff(const QString& oldText, const QString& newText,
-                                        const CursorInfo& cursor);
+std::optional<Diffs> findCursorEditDiff(const QString& oldText, const QString& newText, const CursorInfo& cursor);
 
 // --- Implementation ------------------------------------------------------------
 
-Diffs diffMain(const QString& text1In, const QString& text2In,
-               const std::optional<CursorInfo>& cursor, bool cleanup, bool fixUnicode)
+Diffs diffMain(const QString& text1In, const QString& text2In, const std::optional<CursorInfo>& cursor, bool cleanup,
+               bool fixUnicode)
 {
     if (text1In == text2In) {
         if (!text1In.isEmpty())
@@ -365,8 +387,7 @@ qsizetype diffCommonSuffix(const QString& text1, const QString& text2)
     return pointermid;
 }
 
-std::optional<std::vector<QString>> diffHalfMatchI(const QString& longtext,
-                                                   const QString& shorttext, qsizetype i)
+std::optional<std::vector<QString>> diffHalfMatchI(const QString& longtext, const QString& shorttext, qsizetype i)
 {
     const QString seed = substring(longtext, i, i + longtext.size() / 4);
     qsizetype j = -1;
@@ -374,11 +395,9 @@ std::optional<std::vector<QString>> diffHalfMatchI(const QString& longtext,
     QString bestLongtextA, bestLongtextB, bestShorttextA, bestShorttextB;
     while ((j = shorttext.indexOf(seed, j + 1)) != -1) {
         const qsizetype prefixLength = diffCommonPrefix(substring(longtext, i), substring(shorttext, j));
-        const qsizetype suffixLength =
-            diffCommonSuffix(substring(longtext, 0, i), substring(shorttext, 0, j));
+        const qsizetype suffixLength = diffCommonSuffix(substring(longtext, 0, i), substring(shorttext, 0, j));
         if (bestCommon.size() < suffixLength + prefixLength) {
-            bestCommon = substring(shorttext, j - suffixLength, j)
-                         + substring(shorttext, j, j + prefixLength);
+            bestCommon = substring(shorttext, j - suffixLength, j) + substring(shorttext, j, j + prefixLength);
             bestLongtextA = substring(longtext, 0, i - suffixLength);
             bestLongtextB = substring(longtext, i + prefixLength);
             bestShorttextA = substring(shorttext, 0, j - suffixLength);
@@ -386,8 +405,7 @@ std::optional<std::vector<QString>> diffHalfMatchI(const QString& longtext,
         }
     }
     if (bestCommon.size() * 2 >= longtext.size())
-        return std::vector<QString>{bestLongtextA, bestLongtextB, bestShorttextA, bestShorttextB,
-                                    bestCommon};
+        return std::vector<QString>{bestLongtextA, bestLongtextB, bestShorttextA, bestShorttextB, bestCommon};
     return std::nullopt;
 }
 
@@ -442,8 +460,7 @@ void diffCleanupSemantic(Diffs& diffs)
                 lengthInsertions2 += diffs[pointer].second.size();
             else
                 lengthDeletions2 += diffs[pointer].second.size();
-            if (!lastequality.isEmpty()
-                && lastequality.size() <= std::max(lengthInsertions1, lengthDeletions1)
+            if (!lastequality.isEmpty() && lastequality.size() <= std::max(lengthInsertions1, lengthDeletions1)
                 && lastequality.size() <= std::max(lengthInsertions2, lengthDeletions2)) {
                 const qsizetype eq = equalities.value(equalitiesLength - 1);
                 diffs.insert(eq, {DIFF_DELETE, lastequality});
@@ -476,8 +493,7 @@ void diffCleanupSemantic(Diffs& diffs)
             if (overlapLength1 >= overlapLength2) {
                 if (overlapLength1 * 2 >= deletion.size() || overlapLength1 * 2 >= insertion.size()) {
                     diffs.insert(pointer, {DIFF_EQUAL, substring(insertion, 0, overlapLength1)});
-                    diffs[pointer - 1].second =
-                        substring(deletion, 0, deletion.size() - overlapLength1);
+                    diffs[pointer - 1].second = substring(deletion, 0, deletion.size() - overlapLength1);
                     diffs[pointer + 1].second = substring(insertion, overlapLength1);
                     pointer++;
                 }
@@ -485,8 +501,7 @@ void diffCleanupSemantic(Diffs& diffs)
                 if (overlapLength2 * 2 >= deletion.size() || overlapLength2 * 2 >= insertion.size()) {
                     diffs.insert(pointer, {DIFF_EQUAL, substring(deletion, 0, overlapLength2)});
                     diffs[pointer - 1].first = DIFF_INSERT;
-                    diffs[pointer - 1].second =
-                        substring(insertion, 0, insertion.size() - overlapLength2);
+                    diffs[pointer - 1].second = substring(insertion, 0, insertion.size() - overlapLength2);
                     diffs[pointer + 1].first = DIFF_DELETE;
                     diffs[pointer + 1].second = substring(deletion, overlapLength2);
                     pointer++;
@@ -513,11 +528,10 @@ int cleanupSemanticScore(const QString& one, const QString& two)
     // /\n\r?\n$/ and /^\r?\n\r?\n/
     const bool blankLine1 =
         lineBreak1 && (one.endsWith(QLatin1String("\n\n")) || one.endsWith(QLatin1String("\n\r\n")));
-    const bool blankLine2 = lineBreak2
-                            && (two.startsWith(QLatin1String("\n\n"))
-                                || two.startsWith(QLatin1String("\r\n\n"))
-                                || two.startsWith(QLatin1String("\n\r\n"))
-                                || two.startsWith(QLatin1String("\r\n\r\n")));
+    const bool blankLine2 =
+        lineBreak2
+        && (two.startsWith(QLatin1String("\n\n")) || two.startsWith(QLatin1String("\r\n\n"))
+            || two.startsWith(QLatin1String("\n\r\n")) || two.startsWith(QLatin1String("\r\n\r\n")));
     if (blankLine1 || blankLine2)
         return 5;
     if (lineBreak1 || lineBreak2)
@@ -551,14 +565,12 @@ void diffCleanupSemanticLossless(Diffs& diffs)
             QString bestEquality1 = equality1;
             QString bestEdit = edit;
             QString bestEquality2 = equality2;
-            int bestScore =
-                cleanupSemanticScore(equality1, edit) + cleanupSemanticScore(edit, equality2);
+            int bestScore = cleanupSemanticScore(equality1, edit) + cleanupSemanticScore(edit, equality2);
             while (charAt(edit, 0) == charAt(equality2, 0)) {
                 equality1 += charAt(edit, 0);
                 edit = substring(edit, 1) + charAt(equality2, 0);
                 equality2 = substring(equality2, 1);
-                const int score =
-                    cleanupSemanticScore(equality1, edit) + cleanupSemanticScore(edit, equality2);
+                const int score = cleanupSemanticScore(equality1, edit) + cleanupSemanticScore(edit, equality2);
                 if (score >= bestScore) {
                     bestScore = score;
                     bestEquality1 = equality1;
@@ -671,8 +683,7 @@ void diffCleanupMerge(Diffs& diffs, bool fixUnicode, int depth)
                     commonlength = diffCommonSuffix(textInsert, textDelete);
                     if (commonlength != 0) {
                         diffs[pointer].second =
-                            substring(textInsert, textInsert.size() - commonlength)
-                            + diffs[pointer].second;
+                            substring(textInsert, textInsert.size() - commonlength) + diffs[pointer].second;
                         textInsert = substring(textInsert, 0, textInsert.size() - commonlength);
                         textDelete = substring(textDelete, 0, textDelete.size() - commonlength);
                     }
@@ -689,8 +700,7 @@ void diffCleanupMerge(Diffs& diffs, bool fixUnicode, int depth)
                     splice(diffs, pointer - n, n, {{DIFF_DELETE, textDelete}});
                     pointer = pointer - n + 1;
                 } else {
-                    splice(diffs, pointer - n, n,
-                           {{DIFF_DELETE, textDelete}, {DIFF_INSERT, textInsert}});
+                    splice(diffs, pointer - n, n, {{DIFF_DELETE, textDelete}, {DIFF_INSERT, textInsert}});
                     pointer = pointer - n + 2;
                 }
             }
@@ -759,19 +769,16 @@ Diffs removeEmptyTuples(const Diffs& tuples)
     return ret;
 }
 
-std::optional<Diffs> makeEditSplice(const QString& before, const QString& oldMiddle,
-                                    const QString& newMiddle, const QString& after)
+std::optional<Diffs> makeEditSplice(const QString& before, const QString& oldMiddle, const QString& newMiddle,
+                                    const QString& after)
 {
     if (endsWithPairStart(before) || startsWithPairEnd(after))
         return std::nullopt;
-    return removeEmptyTuples({{DIFF_EQUAL, before},
-                              {DIFF_DELETE, oldMiddle},
-                              {DIFF_INSERT, newMiddle},
-                              {DIFF_EQUAL, after}});
+    return removeEmptyTuples(
+        {{DIFF_EQUAL, before}, {DIFF_DELETE, oldMiddle}, {DIFF_INSERT, newMiddle}, {DIFF_EQUAL, after}});
 }
 
-std::optional<Diffs> findCursorEditDiff(const QString& oldText, const QString& newText,
-                                        const CursorInfo& cursor)
+std::optional<Diffs> findCursorEditDiff(const QString& oldText, const QString& newText, const CursorInfo& cursor)
 {
     // The JavaScript uses labeled blocks: a `break` falls through to the next
     // block, a `return` ends the search (possibly with null). Each block here
@@ -855,8 +862,7 @@ std::optional<Diffs> findCursorEditDiff(const QString& oldText, const QString& n
 
 } // namespace
 
-QList<Diff> diff(const QString& text1, const QString& text2,
-                 const std::optional<CursorInfo>& cursor, bool cleanup)
+QList<Diff> diff(const QString& text1, const QString& text2, const std::optional<CursorInfo>& cursor, bool cleanup)
 {
     // Public entry point; surrogate-pair fixing is always on, like fast-diff's export.
     return diffMain(text1, text2, cursor, cleanup, true);

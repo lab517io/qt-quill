@@ -124,8 +124,7 @@ private slots:
         OpIterator iter(m_delta.ops());
         iter.next(2);
         QList<Op> expected{Op::insert(QStringLiteral("llo"), {{"bold", true}}), Op::retain(3),
-                           Op::insert(QJsonObject{{"embed", 2}}, {{"src", "http://quilljs.com/"}}),
-                           Op::remove(4)};
+                           Op::insert(QJsonObject{{"embed", 2}}, {{"src", "http://quilljs.com/"}}), Op::remove(4)};
         QVERIFY(iter.rest() == expected);
         iter.next(3);
         expected.removeFirst();

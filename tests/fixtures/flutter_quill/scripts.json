@@ -1,0 +1,941 @@
+{
+ "flutter_quill": "11.6.0",
+ "scripts": [
+  {
+   "name": "backspace_at_list_item_start",
+   "steps": [
+    {
+     "type": "a"
+    },
+    {
+     "format": {
+      "list": "bullet"
+     }
+    },
+    {
+     "key": "enter"
+    },
+    {
+     "type": "b"
+    },
+    {
+     "select": [
+      2,
+      0
+     ]
+    },
+    {
+     "key": "backspace"
+    }
+   ],
+   "result": [
+    {
+     "insert": "ab"
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "list": "bullet"
+     }
+    }
+   ],
+   "selection": [
+    1,
+    0
+   ]
+  },
+  {
+   "name": "backspace_in_empty_list_item",
+   "steps": [
+    {
+     "type": "a"
+    },
+    {
+     "format": {
+      "list": "bullet"
+     }
+    },
+    {
+     "key": "enter"
+    },
+    {
+     "key": "backspace"
+    }
+   ],
+   "result": [
+    {
+     "insert": "a"
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "list": "bullet"
+     }
+    }
+   ],
+   "selection": [
+    1,
+    0
+   ]
+  },
+  {
+   "name": "backspace_merges_header_into_paragraph",
+   "steps": [
+    {
+     "type": "a"
+    },
+    {
+     "key": "enter"
+    },
+    {
+     "type": "b"
+    },
+    {
+     "format": {
+      "header": 2
+     }
+    },
+    {
+     "select": [
+      2,
+      0
+     ]
+    },
+    {
+     "key": "backspace"
+    }
+   ],
+   "result": [
+    {
+     "insert": "ab\n"
+    }
+   ],
+   "selection": [
+    1,
+    0
+   ]
+  },
+  {
+   "name": "backspace_merges_into_header",
+   "steps": [
+    {
+     "type": "a"
+    },
+    {
+     "format": {
+      "header": 2
+     }
+    },
+    {
+     "key": "enter"
+    },
+    {
+     "type": "b"
+    },
+    {
+     "select": [
+      2,
+      0
+     ]
+    },
+    {
+     "key": "backspace"
+    }
+   ],
+   "result": [
+    {
+     "insert": "ab"
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "header": 2
+     }
+    }
+   ],
+   "selection": [
+    1,
+    0
+   ]
+  },
+  {
+   "name": "blockquote_enter_twice_exits",
+   "steps": [
+    {
+     "type": "q"
+    },
+    {
+     "format": {
+      "blockquote": true
+     }
+    },
+    {
+     "key": "enter"
+    },
+    {
+     "type": "r"
+    },
+    {
+     "key": "enter"
+    },
+    {
+     "key": "enter"
+    },
+    {
+     "type": "out"
+    }
+   ],
+   "result": [
+    {
+     "insert": "q"
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "blockquote": true
+     }
+    },
+    {
+     "insert": "r"
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "blockquote": true
+     }
+    },
+    {
+     "insert": "out\n"
+    }
+   ],
+   "selection": [
+    7,
+    0
+   ]
+  },
+  {
+   "name": "bold_typing",
+   "steps": [
+    {
+     "type": "a"
+    },
+    {
+     "format": {
+      "bold": true
+     }
+    },
+    {
+     "type": "bc"
+    },
+    {
+     "format": {
+      "bold": null
+     }
+    },
+    {
+     "type": "d"
+    }
+   ],
+   "result": [
+    {
+     "insert": "a"
+    },
+    {
+     "insert": "bc",
+     "attributes": {
+      "bold": true
+     }
+    },
+    {
+     "insert": "d\n"
+    }
+   ],
+   "selection": [
+    4,
+    0
+   ]
+  },
+  {
+   "name": "bullet_list_continue_and_exit",
+   "steps": [
+    {
+     "type": "one"
+    },
+    {
+     "format": {
+      "list": "bullet"
+     }
+    },
+    {
+     "key": "enter"
+    },
+    {
+     "type": "two"
+    },
+    {
+     "key": "enter"
+    },
+    {
+     "key": "enter"
+    },
+    {
+     "type": "after"
+    }
+   ],
+   "result": [
+    {
+     "insert": "one"
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "list": "bullet"
+     }
+    },
+    {
+     "insert": "two"
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "list": "bullet"
+     }
+    },
+    {
+     "insert": "after\n"
+    }
+   ],
+   "selection": [
+    13,
+    0
+   ]
+  },
+  {
+   "name": "checked_item_continues_unchecked",
+   "steps": [
+    {
+     "type": "done"
+    },
+    {
+     "format": {
+      "list": "checked"
+     }
+    },
+    {
+     "key": "enter"
+    },
+    {
+     "type": "next"
+    }
+   ],
+   "result": [
+    {
+     "insert": "done"
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "list": "checked"
+     }
+    },
+    {
+     "insert": "next"
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "list": "checked"
+     }
+    }
+   ],
+   "selection": [
+    9,
+    0
+   ]
+  },
+  {
+   "name": "code_block_enter_twice_exits",
+   "steps": [
+    {
+     "type": "a = 1"
+    },
+    {
+     "format": {
+      "code-block": true
+     }
+    },
+    {
+     "key": "enter"
+    },
+    {
+     "type": "b = 2"
+    },
+    {
+     "key": "enter"
+    },
+    {
+     "key": "enter"
+    },
+    {
+     "type": "out"
+    }
+   ],
+   "result": [
+    {
+     "insert": "a = 1"
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "code-block": true
+     }
+    },
+    {
+     "insert": "b = 2"
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "code-block": true
+     }
+    },
+    {
+     "insert": "out\n"
+    }
+   ],
+   "selection": [
+    15,
+    0
+   ]
+  },
+  {
+   "name": "delete_selection_across_lines",
+   "steps": [
+    {
+     "type": "one"
+    },
+    {
+     "format": {
+      "header": 1
+     }
+    },
+    {
+     "key": "enter"
+    },
+    {
+     "type": "two"
+    },
+    {
+     "format": {
+      "list": "bullet"
+     }
+    },
+    {
+     "select": [
+      2,
+      3
+     ]
+    },
+    {
+     "key": "backspace"
+    }
+   ],
+   "result": [
+    {
+     "insert": "onwo"
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "list": "bullet"
+     }
+    }
+   ],
+   "selection": [
+    2,
+    0
+   ]
+  },
+  {
+   "name": "format_selection_across_lines",
+   "steps": [
+    {
+     "type": "one"
+    },
+    {
+     "key": "enter"
+    },
+    {
+     "type": "two"
+    },
+    {
+     "select": [
+      1,
+      5
+     ]
+    },
+    {
+     "format": {
+      "bold": true
+     }
+    },
+    {
+     "format": {
+      "list": "ordered"
+     }
+    }
+   ],
+   "result": [
+    {
+     "insert": "o"
+    },
+    {
+     "insert": "ne",
+     "attributes": {
+      "bold": true
+     }
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "list": "ordered"
+     }
+    },
+    {
+     "insert": "tw",
+     "attributes": {
+      "bold": true
+     }
+    },
+    {
+     "insert": "o"
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "list": "ordered"
+     }
+    }
+   ],
+   "selection": [
+    1,
+    5
+   ]
+  },
+  {
+   "name": "header_enter_at_end",
+   "steps": [
+    {
+     "type": "Title"
+    },
+    {
+     "format": {
+      "header": 1
+     }
+    },
+    {
+     "key": "enter"
+    },
+    {
+     "type": "body"
+    }
+   ],
+   "result": [
+    {
+     "insert": "Title"
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "header": 1
+     }
+    },
+    {
+     "insert": "body\n"
+    }
+   ],
+   "selection": [
+    10,
+    0
+   ]
+  },
+  {
+   "name": "header_enter_in_middle",
+   "steps": [
+    {
+     "type": "Title"
+    },
+    {
+     "format": {
+      "header": 2
+     }
+    },
+    {
+     "select": [
+      2,
+      0
+     ]
+    },
+    {
+     "key": "enter"
+    }
+   ],
+   "result": [
+    {
+     "insert": "Ti"
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "header": 2
+     }
+    },
+    {
+     "insert": "tle"
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "header": 2
+     }
+    }
+   ],
+   "selection": [
+    3,
+    0
+   ]
+  },
+  {
+   "name": "inline_format_over_enter",
+   "steps": [
+    {
+     "format": {
+      "italic": true
+     }
+    },
+    {
+     "type": "ab"
+    },
+    {
+     "key": "enter"
+    },
+    {
+     "type": "c"
+    }
+   ],
+   "result": [
+    {
+     "insert": "ab",
+     "attributes": {
+      "italic": true
+     }
+    },
+    {
+     "insert": "\n"
+    },
+    {
+     "insert": "c",
+     "attributes": {
+      "italic": true
+     }
+    },
+    {
+     "insert": "\n"
+    }
+   ],
+   "selection": [
+    4,
+    0
+   ]
+  },
+  {
+   "name": "link_does_not_extend_at_end",
+   "steps": [
+    {
+     "type": "x"
+    },
+    {
+     "select": [
+      0,
+      1
+     ]
+    },
+    {
+     "format": {
+      "link": "https://a.b"
+     }
+    },
+    {
+     "select": [
+      1,
+      0
+     ]
+    },
+    {
+     "type": "y"
+    }
+   ],
+   "result": [
+    {
+     "insert": "x",
+     "attributes": {
+      "link": "https://a.b"
+     }
+    },
+    {
+     "insert": "y\n"
+    }
+   ],
+   "selection": [
+    2,
+    0
+   ]
+  },
+  {
+   "name": "ordered_list_continue_and_exit",
+   "steps": [
+    {
+     "type": "one"
+    },
+    {
+     "format": {
+      "list": "ordered"
+     }
+    },
+    {
+     "key": "enter"
+    },
+    {
+     "type": "two"
+    },
+    {
+     "key": "enter"
+    },
+    {
+     "key": "enter"
+    },
+    {
+     "type": "after"
+    }
+   ],
+   "result": [
+    {
+     "insert": "one"
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "list": "ordered"
+     }
+    },
+    {
+     "insert": "two"
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "list": "ordered"
+     }
+    },
+    {
+     "insert": "after\n"
+    }
+   ],
+   "selection": [
+    13,
+    0
+   ]
+  },
+  {
+   "name": "shift_tab_outdents",
+   "steps": [
+    {
+     "type": "a"
+    },
+    {
+     "format": {
+      "list": "bullet"
+     }
+    },
+    {
+     "format": {
+      "indent": 2
+     }
+    },
+    {
+     "select": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "shift+tab"
+    }
+   ],
+   "result": [
+    {
+     "insert": "a"
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "list": "bullet",
+      "indent": 1
+     }
+    }
+   ],
+   "selection": [
+    0,
+    0
+   ]
+  },
+  {
+   "name": "tab_at_list_item_start_indents",
+   "steps": [
+    {
+     "type": "ab"
+    },
+    {
+     "format": {
+      "list": "bullet"
+     }
+    },
+    {
+     "select": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "tab"
+    }
+   ],
+   "result": [
+    {
+     "insert": "ab"
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "list": "bullet",
+      "indent": 1
+     }
+    }
+   ],
+   "selection": [
+    0,
+    0
+   ]
+  },
+  {
+   "name": "tab_in_empty_list_item_indents",
+   "steps": [
+    {
+     "type": "a"
+    },
+    {
+     "format": {
+      "list": "bullet"
+     }
+    },
+    {
+     "key": "enter"
+    },
+    {
+     "key": "tab"
+    },
+    {
+     "type": "b"
+    }
+   ],
+   "result": [
+    {
+     "insert": "a"
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "list": "bullet"
+     }
+    },
+    {
+     "insert": "b"
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "list": "bullet",
+      "indent": 1
+     }
+    }
+   ],
+   "selection": [
+    3,
+    0
+   ]
+  },
+  {
+   "name": "tab_in_paragraph",
+   "steps": [
+    {
+     "type": "ab"
+    },
+    {
+     "select": [
+      1,
+      0
+     ]
+    },
+    {
+     "key": "tab"
+    }
+   ],
+   "result": [
+    {
+     "insert": "a\tb\n"
+    }
+   ],
+   "selection": [
+    2,
+    0
+   ]
+  },
+  {
+   "name": "tab_inside_list_item",
+   "steps": [
+    {
+     "type": "ab"
+    },
+    {
+     "format": {
+      "list": "bullet"
+     }
+    },
+    {
+     "select": [
+      1,
+      0
+     ]
+    },
+    {
+     "key": "tab"
+    }
+   ],
+   "result": [
+    {
+     "insert": "a\tb"
+    },
+    {
+     "insert": "\n",
+     "attributes": {
+      "list": "bullet"
+     }
+    }
+   ],
+   "selection": [
+    2,
+    0
+   ]
+  }
+ ]
+}

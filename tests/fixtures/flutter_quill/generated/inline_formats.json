@@ -1,0 +1,197 @@
+[
+ {
+  "insert": "bold",
+  "attributes": {
+   "bold": true
+  }
+ },
+ {
+  "insert": " "
+ },
+ {
+  "insert": "italic",
+  "attributes": {
+   "italic": true
+  }
+ },
+ {
+  "insert": " "
+ },
+ {
+  "insert": "underline",
+  "attributes": {
+   "underline": true
+  }
+ },
+ {
+  "insert": " "
+ },
+ {
+  "insert": "strike",
+  "attributes": {
+   "strike": true
+  }
+ },
+ {
+  "insert": " "
+ },
+ {
+  "insert": "code",
+  "attributes": {
+   "code": true
+  }
+ },
+ {
+  "insert": " H"
+ },
+ {
+  "insert": "2",
+  "attributes": {
+   "script": "sub"
+  }
+ },
+ {
+  "insert": "O x"
+ },
+ {
+  "insert": "2",
+  "attributes": {
+   "script": "super"
+  }
+ },
+ {
+  "insert": " "
+ },
+ {
+  "insert": "small",
+  "attributes": {
+   "small": true
+  }
+ },
+ {
+  "insert": "\n"
+ },
+ {
+  "insert": "red",
+  "attributes": {
+   "small": true,
+   "color": "#FFF44336"
+  }
+ },
+ {
+  "insert": " ",
+  "attributes": {
+   "small": true
+  }
+ },
+ {
+  "insert": "on yellow",
+  "attributes": {
+   "small": true,
+   "background": "#FFFFEB3B"
+  }
+ },
+ {
+  "insert": " ",
+  "attributes": {
+   "small": true
+  }
+ },
+ {
+  "insert": "mono",
+  "attributes": {
+   "small": true,
+   "font": "monospace"
+  }
+ },
+ {
+  "insert": " ",
+  "attributes": {
+   "small": true
+  }
+ },
+ {
+  "insert": "serif",
+  "attributes": {
+   "small": true,
+   "font": "serif"
+  }
+ },
+ {
+  "insert": "\n"
+ },
+ {
+  "insert": "small",
+  "attributes": {
+   "small": true,
+   "font": "serif",
+   "size": "small"
+  }
+ },
+ {
+  "insert": " ",
+  "attributes": {
+   "small": true,
+   "font": "serif"
+  }
+ },
+ {
+  "insert": "large",
+  "attributes": {
+   "small": true,
+   "font": "serif",
+   "size": "large"
+  }
+ },
+ {
+  "insert": " ",
+  "attributes": {
+   "small": true,
+   "font": "serif"
+  }
+ },
+ {
+  "insert": "huge",
+  "attributes": {
+   "small": true,
+   "font": "serif",
+   "size": "huge"
+  }
+ },
+ {
+  "insert": " ",
+  "attributes": {
+   "small": true,
+   "font": "serif"
+  }
+ },
+ {
+  "insert": "twenty",
+  "attributes": {
+   "small": true,
+   "font": "serif",
+   "size": "20"
+  }
+ },
+ {
+  "insert": " link ",
+  "attributes": {
+   "small": true,
+   "font": "serif"
+  }
+ },
+ {
+  "insert": "all",
+  "attributes": {
+   "small": true,
+   "font": "serif",
+   "bold": true,
+   "italic": true,
+   "underline": true,
+   "color": "#FF2196F3"
+  }
+ },
+ {
+  "insert": "\n\n"
+ }
+]

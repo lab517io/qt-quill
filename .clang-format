@@ -1,20 +1,49 @@
+# clang-format 18 (ubuntu-24.04: clang-format-18). Checked by ci/format-check.sh.
 BasedOnStyle: LLVM
 IndentWidth: 4
-ColumnLimit: 100
+ColumnLimit: 120
+AccessModifierOffset: -4
+PointerAlignment: Left
 BreakBeforeBraces: Custom
 BraceWrapping:
   AfterClass: true
   AfterFunction: true
   AfterStruct: true
+  AfterUnion: true
   AfterNamespace: false
+  AfterEnum: false
   AfterControlStatement: Never
   BeforeElse: false
+  BeforeCatch: false
+  BeforeLambdaBody: false
   SplitEmptyFunction: false
-AccessModifierOffset: -4
+  SplitEmptyRecord: false
 AllowShortFunctionsOnASingleLine: Inline
 AllowShortIfStatementsOnASingleLine: Never
-PointerAlignment: Left
+AllowShortLoopsOnASingleLine: false
+AllowShortLambdasOnASingleLine: All
+AllowShortEnumsOnASingleLine: true
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
+AlwaysBreakTemplateDeclarations: Yes
+SpaceAfterTemplateKeyword: false
+BreakConstructorInitializers: BeforeColon
+ConstructorInitializerIndentWidth: 4
+ContinuationIndentWidth: 4
+PackConstructorInitializers: BinPack
+BreakInheritanceList: BeforeColon
+IndentCaseLabels: false
 NamespaceIndentation: None
 FixNamespaceComments: true
-IncludeBlocks: Regroup
+IncludeBlocks: Preserve
 SortIncludes: CaseSensitive
+ReflowComments: false
+BinPackArguments: true
+BinPackParameters: true
+AlignAfterOpenBracket: Align
+AlignOperands: Align
+BreakBeforeBinaryOperators: NonAssignment
+Cpp11BracedListStyle: true
+MaxEmptyLinesToKeep: 1
+KeepEmptyLinesAtTheStartOfBlocks: false
+BreakStringLiterals: false

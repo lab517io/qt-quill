@@ -78,14 +78,14 @@ public:
     QList<Op> filter(const std::function<bool(const Op&, qsizetype)>& predicate) const;
     void forEach(const std::function<void(const Op&, qsizetype)>& fn) const;
     std::pair<QList<Op>, QList<Op>> partition(const std::function<bool(const Op&)>& predicate) const;
-    template <class T, class F>
+    template<class T, class F>
     T reduce(F fn, T initial) const
     {
         for (qsizetype i = 0; i < m_ops.size(); ++i)
             initial = fn(std::move(initial), m_ops.at(i), i);
         return initial;
     }
-    template <class F>
+    template<class F>
     auto map(F fn) const -> QList<decltype(fn(std::declval<const Op&>(), qsizetype()))>
     {
         QList<decltype(fn(std::declval<const Op&>(), qsizetype()))> result;

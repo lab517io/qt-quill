@@ -1,0 +1,7 @@
+name: quillqt_dart_oracle
+description: Evaluates the quill-qt OT cases with dart_quill_delta (flutter_quill's Delta).
+publish_to: none
+environment:
+  sdk: ^3.0.0
+dependencies:
+  dart_quill_delta: any

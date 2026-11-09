@@ -4,7 +4,8 @@
   "description": "Reference outputs for the quill-qt C++ port (see README.md)",
   "type": "module",
   "scripts": {
-    "fastdiff": "node record-fastdiff.mjs ../../tests/fixtures/delta/fastdiff-cases.json"
+    "fastdiff": "node record-fastdiff.mjs ../../tests/fixtures/delta/fastdiff-cases.json",
+    "ot": "node generate.mjs --random 500 --seed 42"
   },
   "dependencies": {
     "fast-diff": "1.3.0",

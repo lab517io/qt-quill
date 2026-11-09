@@ -20,7 +20,10 @@ bool isMarker(const QJsonValue& v, const char* key)
 {
     return v.isObject() && v.toObject().contains(QLatin1String(key));
 }
-bool isUndefined(const QJsonValue& v) { return isMarker(v, "$u"); }
+bool isUndefined(const QJsonValue& v)
+{
+    return isMarker(v, "$u");
+}
 
 QJsonValue arg(const QJsonArray& args, int i)
 {
@@ -51,7 +54,10 @@ qsizetype toLength(const QJsonValue& v, qsizetype fallback)
     return qsizetype(v.toDouble());
 }
 
-bool toBool(const QJsonValue& v) { return !isUndefined(v) && v.toBool(); }
+bool toBool(const QJsonValue& v)
+{
+    return !isUndefined(v) && v.toBool();
+}
 
 std::optional<quill::fastdiff::CursorInfo> toCursor(const QJsonValue& v)
 {
@@ -70,7 +76,10 @@ std::optional<quill::fastdiff::CursorInfo> toCursor(const QJsonValue& v)
     return info;
 }
 
-QJsonValue deltaHandlerValue(const Delta& d) { return d.toJsonArray(); }
+QJsonValue deltaHandlerValue(const Delta& d)
+{
+    return d.toJsonArray();
+}
 
 void setHandlers(const QJsonArray& active)
 {
@@ -115,9 +124,8 @@ private slots:
                  "the recording was made from a failing slab/delta test run");
         m_records = root.value("records").toArray();
         QVERIFY(m_records.size() > 600);
-        qInfo("replaying %lld calls from %d slab/delta specs (commit %s)",
-              qlonglong(m_records.size()), root.value("specs").toInt(),
-              qPrintable(root.value("commit").toString()));
+        qInfo("replaying %lld calls from %d slab/delta specs (commit %s)", qlonglong(m_records.size()),
+              root.value("specs").toInt(), qPrintable(root.value("commit").toString()));
     }
 
     void replay_data()

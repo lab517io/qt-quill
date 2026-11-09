@@ -34,8 +34,8 @@ public:
         if (chance(30))
             a.insert("bold", allowNull && chance(30) ? QJsonValue(QJsonValue::Null) : QJsonValue(true));
         if (chance(20))
-            a.insert("color", allowNull && chance(30) ? QJsonValue(QJsonValue::Null)
-                                                      : QJsonValue(chance(50) ? "red" : "blue"));
+            a.insert("color",
+                     allowNull && chance(30) ? QJsonValue(QJsonValue::Null) : QJsonValue(chance(50) ? "red" : "blue"));
         if (chance(10))
             a.insert("header", allowNull && chance(30) ? QJsonValue(QJsonValue::Null) : QJsonValue(1 + below(3)));
         return a;
@@ -110,11 +110,11 @@ private slots:
             const Delta a = g.document();
             const Delta b = g.document();
             const Delta d = a.diff(b);
-            QVERIFY2(a.compose(d) == b, qPrintable(QStringLiteral("iteration %1: a=%2 b=%3 diff=%4")
-                                                       .arg(i)
-                                                       .arg(QString::fromUtf8(a.toJson()),
-                                                            QString::fromUtf8(b.toJson()),
-                                                            QString::fromUtf8(d.toJson()))));
+            QVERIFY2(a.compose(d) == b,
+                     qPrintable(QStringLiteral("iteration %1: a=%2 b=%3 diff=%4")
+                                    .arg(i)
+                                    .arg(QString::fromUtf8(a.toJson()), QString::fromUtf8(b.toJson()),
+                                         QString::fromUtf8(d.toJson()))));
         }
     }
 
@@ -140,8 +140,7 @@ private slots:
             QVERIFY2(base.compose(change).compose(inverted) == base,
                      qPrintable(QStringLiteral("iteration %1: base=%2 change=%3 inverted=%4")
                                     .arg(i)
-                                    .arg(QString::fromUtf8(base.toJson()),
-                                         QString::fromUtf8(change.toJson()),
+                                    .arg(QString::fromUtf8(base.toJson()), QString::fromUtf8(change.toJson()),
                                          QString::fromUtf8(inverted.toJson()))));
         }
     }
@@ -158,10 +157,8 @@ private slots:
             const Delta right = doc.compose(b).compose(b.transform(a, false));
             QVERIFY2(left == right, qPrintable(QStringLiteral("iteration %1: doc=%2 a=%3 b=%4 left=%5 right=%6")
                                                    .arg(i)
-                                                   .arg(QString::fromUtf8(doc.toJson()),
-                                                        QString::fromUtf8(a.toJson()),
-                                                        QString::fromUtf8(b.toJson()),
-                                                        QString::fromUtf8(left.toJson()),
+                                                   .arg(QString::fromUtf8(doc.toJson()), QString::fromUtf8(a.toJson()),
+                                                        QString::fromUtf8(b.toJson()), QString::fromUtf8(left.toJson()),
                                                         QString::fromUtf8(right.toJson()))));
         }
     }
@@ -173,9 +170,8 @@ private slots:
         // transformPosition(i, true) keeps the cursor before a concurrent
         // insert, transform(x, true) lets this delta's insert go first.
         const auto landing = [](const Delta& moved) {
-            return moved.ops().isEmpty() || !moved.ops().front().isCountRetain()
-                       ? qsizetype(0)
-                       : moved.ops().front().count();
+            return moved.ops().isEmpty() || !moved.ops().front().isCountRetain() ? qsizetype(0)
+                                                                                 : moved.ops().front().count();
         };
         Gen g(baseSeed() + 4);
         for (int i = 0; i < kIterations; ++i) {

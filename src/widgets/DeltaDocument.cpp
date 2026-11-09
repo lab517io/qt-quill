@@ -33,8 +33,7 @@ class Loader
 public:
     Loader(QTextDocument* doc, const LoadOptions& options, const StyleOptions& style)
         : m_doc(doc), m_options(options), m_style(style), m_cursor(doc)
-    {
-    }
+    {}
 
     void run(const Delta& delta, LoadResult& result)
     {
@@ -62,6 +61,7 @@ public:
         });
         Q_UNUSED(lineIndex);
         DeltaDocument::regroupLists(m_doc->firstBlock(), m_doc->lastBlock(), m_style);
+        DeltaDocument::updateBlockSpacing(m_doc->firstBlock(), m_doc->lastBlock(), m_style);
         m_cursor.endEditBlock();
     }
 
@@ -72,9 +72,8 @@ private:
             const QString& key = it.key();
             if (!formats::inlineKeys().contains(key) && !formats::lineKeys().contains(key)
                 && !formats::passiveKeys().contains(key)) {
-                result.warnings.append(QStringLiteral("line %1: unknown attribute \"%2\" preserved")
-                                           .arg(lineIndex + 1)
-                                           .arg(key));
+                result.warnings.append(
+                    QStringLiteral("line %1: unknown attribute \"%2\" preserved").arg(lineIndex + 1).arg(key));
             }
         }
         for (const QString& problem : formats::validate(attrs, line, m_style))
@@ -86,10 +85,9 @@ private:
         const QJsonObject embed = op.embed();
         const QString type = embed.isEmpty() ? QString() : embed.begin().key();
         if (embed.size() != 1) {
-            result.warnings.append(
-                QStringLiteral("line %1: embed should have exactly one key: %2")
-                    .arg(lineIndex + 1)
-                    .arg(compactJson(embed)));
+            result.warnings.append(QStringLiteral("line %1: embed should have exactly one key: %2")
+                                       .arg(lineIndex + 1)
+                                       .arg(compactJson(embed)));
         }
         const QTextCharFormat format = detail::embedCharFormat(embed, op.attributes(), lineAttrs, m_style);
         if (format.isImageFormat()) {
@@ -109,8 +107,7 @@ private:
 
 // QTextList::remove() adds the list's indent to the block to keep the text
 // in place; restore the indent the line attributes ask for.
-void removeFromList(QTextList* list, const QTextBlock& block, const AttributeMap& line,
-                    const StyleOptions& style)
+void removeFromList(QTextList* list, const QTextBlock& block, const AttributeMap& line, const StyleOptions& style)
 {
     list->remove(block);
     QTextCursor c(block);
@@ -185,14 +182,11 @@ LoadResult DeltaDocument::load(QTextDocument* doc, const Delta& deltaIn, const L
     return result;
 }
 
-void DeltaDocument::regroupLists(const QTextBlock& firstIn, const QTextBlock& lastIn,
-                                 const StyleOptions& style)
+void DeltaDocument::regroupLists(const QTextBlock& firstIn, const QTextBlock& lastIn, const StyleOptions& style)
 {
     if (!firstIn.isValid() || !lastIn.isValid())
         return;
-    const auto isListLine = [](const QTextBlock& b) {
-        return !formats::listGroup(lineAttributesOf(b)).isEmpty();
-    };
+    const auto isListLine = [](const QTextBlock& b) { return !formats::listGroup(lineAttributesOf(b)).isEmpty(); };
     // Extend to the whole run of list lines, since numbering depends on it.
     QTextBlock first = firstIn;
     while (first.previous().isValid() && isListLine(first.previous()))
@@ -231,6 +225,49 @@ void DeltaDocument::regroupLists(const QTextBlock& firstIn, const QTextBlock& la
                 slot.list = c.createList(wanted);
                 slot.group = group;
             }
+        }
+        if (b == last)
+            break;
+    }
+}
+
+namespace {
+/// Group of a line for flutter_quill's block spacing: 1 list, 2 quote, 3 code, 0 none.
+int spacingGroup(const QTextBlock& b)
+{
+    switch (BlockKind(b.blockFormat().intProperty(prop::BlockKind))) {
+    case BlockKind::ListItem:
+        return 1;
+    case BlockKind::Blockquote:
+        return 2;
+    case BlockKind::CodeBlock:
+        return 3;
+    default:
+        return formats::listGroup(lineAttributesOf(b)).isEmpty() ? 0 : 1; // list headers
+    }
+}
+} // namespace
+
+void DeltaDocument::updateBlockSpacing(const QTextBlock& firstIn, const QTextBlock& lastIn, const StyleOptions& style)
+{
+    if (!firstIn.isValid() || !lastIn.isValid())
+        return;
+    const QTextBlock first = firstIn.previous().isValid() ? firstIn.previous() : firstIn;
+    const QTextBlock last = lastIn.next().isValid() ? lastIn.next() : lastIn;
+    const double extra = style.scaledSpacing(style.blockGroupSpacingTop);
+    for (QTextBlock b = first; b.isValid(); b = b.next()) {
+        const int group = spacingGroup(b);
+        const bool starts = group != 0 && !(b.previous().isValid() && spacingGroup(b.previous()) == group);
+        const double wanted = starts ? extra : 0;
+        QTextBlockFormat f = b.blockFormat();
+        const double current = f.doubleProperty(prop::GroupSpacing);
+        if (!qFuzzyCompare(1.0 + current, 1.0 + wanted)) {
+            f.setTopMargin(f.topMargin() - current + wanted);
+            if (wanted > 0)
+                f.setProperty(prop::GroupSpacing, wanted);
+            else
+                f.clearProperty(prop::GroupSpacing);
+            QTextCursor(b).setBlockFormat(f);
         }
         if (b == last)
             break;
