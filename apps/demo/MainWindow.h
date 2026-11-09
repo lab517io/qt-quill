@@ -37,6 +37,7 @@ private:
     bool saveAs();
     bool writeFile(const QString& path);
     void exportText(bool html);
+    void insertCustomEmbed();
     void updateTitle();
     void updateStatus();
 

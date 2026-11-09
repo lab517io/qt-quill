@@ -1,0 +1,56 @@
+[
+ {
+  "insert": "Custom embeds as flutter_quill writes them\n"
+ },
+ {
+  "insert": {
+   "custom": "{\"notes\":\"[{\\\"insert\\\":\\\"Notes héllo — 日本語 🎉\\\\n\\\"},{\\\"insert\\\":\\\"bold\\\",\\\"attributes\\\":{\\\"bold\\\":true}},{\\\"insert\\\":\\\"\\\\n\\\"}]\"}"
+  }
+ },
+ {
+  "insert": "\n"
+ },
+ {
+  "insert": {
+   "custom": "{\"notes\":\"[{\\\"insert\\\":\\\"second\\\\n\\\"}]\"}"
+  }
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "ordered"
+  }
+ },
+ {
+  "insert": {
+   "custom": {
+    "poll": {
+     "question": "Tea or coffee?",
+     "options": [
+      "tea",
+      "coffee"
+     ]
+    }
+   }
+  }
+ },
+ {
+  "insert": "\n"
+ },
+ {
+  "insert": {
+   "custom": "not json { at all"
+  }
+ },
+ {
+  "insert": "\n"
+ },
+ {
+  "insert": {
+   "custom": "{\"unknownType\": {\"a\": [1, 2.5, null, true]}}"
+  }
+ },
+ {
+  "insert": " trailing text\n"
+ }
+]

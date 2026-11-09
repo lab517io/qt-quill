@@ -1,8 +1,10 @@
 #include "MainWindow.h"
 
 #include "DeltaInspector.h"
+#include "NotesEmbed.h"
 
 #include <quill/DeltaDocument.h>
+#include <quill/EmbedRegistry.h>
 #include <quill/QuillEditor.h>
 #include <quill/QuillFindBar.h>
 #include <quill/QuillToolbar.h>
@@ -10,7 +12,14 @@
 #include <QApplication>
 #include <QCloseEvent>
 #include <QDir>
+#include <QDialog>
+#include <QDialogButtonBox>
 #include <QDockWidget>
+#include <QFormLayout>
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QLineEdit>
+#include <QPlainTextEdit>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -54,6 +63,14 @@ MainWindow::MainWindow(QWidget* parent)
     connect(m_editor->document(), &QTextDocument::modificationChanged, this, &MainWindow::updateTitle);
     connect(m_editor, &quill::QuillEditor::linkActivated, this,
             [this](const QUrl& url) { statusBar()->showMessage(tr("Link: %1").arg(url.toString()), 5000); });
+    m_editor->embeds()->emplace<NotesEmbed>();
+    connect(m_editor, &quill::QuillEditor::embedActivated, this,
+            [this](const QString& type, const QJsonValue& data, int index) {
+                const QString value = data.isString()
+                                          ? data.toString()
+                                          : QString::fromUtf8(QJsonDocument(QJsonObject{{type, data}}).toJson(QJsonDocument::Compact));
+                statusBar()->showMessage(tr("Embed \"%1\" at %2: %3").arg(type).arg(index).arg(value.left(200)), 8000);
+            });
 
     buildMenus();
     m_name = tr("Untitled");
@@ -107,6 +124,8 @@ void MainWindow::buildMenus()
     edit->addAction(m_toolbar->action(QStringLiteral("redo")));
     edit->addSeparator();
     edit->addAction(tr("&Find"), QKeySequence::Find, m_findBar, &quill::QuillFindBar::activate);
+    edit->addSeparator();
+    edit->addAction(tr("Insert &custom embed..."), this, &MainWindow::insertCustomEmbed);
 
     QMenu* view = menuBar()->addMenu(tr("&View"));
     view->addAction(m_dock->toggleViewAction());
@@ -242,6 +261,34 @@ void MainWindow::exportText(bool html)
     const QString text = html ? m_editor->toHtml() : m_editor->getText().remove(QChar::ObjectReplacementCharacter);
     if (!f.open(QIODevice::WriteOnly) || f.write(text.toUtf8()) < 0 || !f.commit())
         QMessageBox::warning(this, tr("Export"), f.errorString());
+}
+
+void MainWindow::insertCustomEmbed()
+{
+    if (m_editor->isReadOnly())
+        return;
+    QDialog dialog(this);
+    dialog.setWindowTitle(tr("Insert custom embed"));
+    auto* form = new QFormLayout(&dialog);
+    auto* type = new QLineEdit(QStringLiteral("notes"), &dialog);
+    auto* data = new QPlainTextEdit(&dialog);
+    data->setPlainText(QStringLiteral("\"[{\\\"insert\\\":\\\"A note\\\\n\\\"}]\""));
+    data->setToolTip(tr("JSON value; text that is not valid JSON is used as a string"));
+    form->addRow(tr("Type:"), type);
+    form->addRow(tr("Data (JSON):"), data);
+    auto* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    form->addRow(buttons);
+    connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+    if (dialog.exec() != QDialog::Accepted || type->text().trimmed().isEmpty())
+        return;
+    // Parse as a JSON value (wrapped, so scalars parse too).
+    const QJsonDocument parsed = QJsonDocument::fromJson("[" + data->toPlainText().toUtf8() + "]");
+    const QJsonValue value = parsed.isArray() && parsed.array().size() == 1 ? parsed.array().first()
+                                                                            : QJsonValue(data->toPlainText());
+    const int index = m_editor->getSelection().index;
+    m_editor->insertBlockEmbed(index, QStringLiteral("custom"),
+                               quill::CustomEmbedRenderer::encode(type->text().trimmed(), value), quill::Source::User);
 }
 
 void MainWindow::updateTitle()

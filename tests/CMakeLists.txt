@@ -12,7 +12,8 @@ function(quillqt_add_test name)
         QUILLQT_TEST_OUTPUT_DIR="${CMAKE_BINARY_DIR}/test-output")
     add_test(NAME ${name} COMMAND ${name})
     # Unit tests never need a display.
-    set_tests_properties(${name} PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+    set_tests_properties(${name} PROPERTIES ENVIRONMENT
+        "QT_QPA_PLATFORM=offscreen;LSAN_OPTIONS=suppressions=${QUILLQT_TESTS_DIR}/lsan.supp")
 endfunction()
 
 add_subdirectory(smoke)

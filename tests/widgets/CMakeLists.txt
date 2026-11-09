@@ -5,7 +5,8 @@ foreach(test
         tst_editor_api
         tst_editor_keys
         tst_editor_changes
-        tst_toolbar)
+        tst_toolbar
+        tst_embeds)
     quillqt_add_test(${test} SOURCES ${test}.cpp LIBS QuillQt::Widgets)
     # White-box tests may use private headers.
     target_include_directories(${test} PRIVATE ${PROJECT_SOURCE_DIR}/src/widgets)

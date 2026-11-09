@@ -2,6 +2,7 @@
 
 #include "DocumentEdit.h"
 #include "ImageSize.h"
+#include "quill/EmbedRegistry.h"
 
 #include <QByteArray>
 #include <QHash>
@@ -95,8 +96,7 @@ private:
             detail::registerImageResource(m_doc, format.toImageFormat().name());
             m_cursor.insertImage(format.toImageFormat());
         } else {
-            // Other embeds render through a QTextObjectInterface registered
-            // for EmbedObjectType (milestone M7); until then they take no space.
+            // Drawn by the EmbedRegistry attached to the document.
             m_cursor.insertText(QString(QChar::ObjectReplacementCharacter), format);
         }
     }
@@ -175,6 +175,7 @@ LoadResult DeltaDocument::load(QTextDocument* doc, const Delta& deltaIn, const L
     if (!options.baseUrl.isEmpty())
         doc->setBaseUrl(options.baseUrl);
 
+    (options.embeds ? options.embeds : EmbedRegistry::shared())->attachTo(doc);
     Loader(doc, options, style).run(delta, result);
     setDocumentStyle(doc, style);
 

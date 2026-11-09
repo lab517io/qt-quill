@@ -39,6 +39,14 @@ QString normalizeText(const QString& text);
 /// not touched, so unchanged text does not show up in contentsChange.
 void restyleBlock(const QTextBlock& block, const Delta& line, const StyleOptions& style);
 
+/// The change that replaces [index, index + length) of `contents` with
+/// `embed`. With `block`, flutter_quill's InsertEmbedsRule: the embed gets a
+/// line of its own ("\n" before it with the line's attributes when it is
+/// not at a line start, a plain "\n" after it when it is not at a line end).
+/// `embedIndex` receives the embed's index in the result.
+Delta embedInsertChange(const Delta& contents, int index, int length, const QJsonObject& embed, bool block,
+                        int* embedIndex = nullptr);
+
 /// Attributes of the last op of `delta` (for a line Delta: the line attributes).
 AttributeMap lastAttributes(const Delta& delta);
 

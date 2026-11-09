@@ -1,5 +1,8 @@
 #include "quill/QuillToolbar.h"
 
+#include "DocumentEdit.h"
+#include "quill/EmbedRegistry.h"
+
 #include "ColorButton.h"
 #include "Icons.h"
 #include "LinkDialog.h"
@@ -454,8 +457,13 @@ void QuillToolbar::insertEmbed(const QString& type, const QString& value)
     if (!m_editor || m_editor->isReadOnly())
         return;
     const Range r = m_editor->getSelection();
-    m_editor->updateContents(Delta().retain(r.index).remove(r.length).insert(QJsonObject{{type, value}}), Source::User);
-    m_editor->setSelection(r.index + 1, 0, Source::Silent);
+    // Block embeds (image, video) go on a line of their own, as in flutter_quill.
+    const bool block = m_editor->embeds()->rendererFor(type, value)->isBlock();
+    int at = r.index;
+    const Delta change = detail::embedInsertChange(m_editor->getContents(), r.index, r.length,
+                                                   QJsonObject{{type, value}}, block, &at);
+    m_editor->updateContents(change, Source::User);
+    m_editor->setSelection(at + 1, 0, Source::Silent);
     refocus();
 }
 

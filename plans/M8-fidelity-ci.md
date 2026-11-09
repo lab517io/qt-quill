@@ -125,3 +125,13 @@ remote (GitHub/GitLab) decides the workflow file syntax; the scripts under
   and paragraphs (flutter_quill's DefaultStyles have per-header
   `VerticalSpacing`). Map it to block top/bottom margins in
   `formats::blockFormat` (pure, so export stays exact).
+
+## Notes from M7
+
+- Embed rendering goes through `EmbedRegistry` (`src/widgets/Embeds.cpp`);
+  screenshot comparisons of `embeds_*.json` need remote images off or a
+  local server (`tst_embeds` has a `QTcpServer` stub).
+- Block embeds have no vertical spacing around them yet (flutter_quill pads
+  image and video blocks); handle with the heading/paragraph spacing.
+- Formulas with `script` keep the attribute but are not drawn raised or
+  lowered.

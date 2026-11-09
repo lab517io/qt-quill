@@ -1,0 +1,53 @@
+[
+ {
+  "insert": "Videos\n"
+ },
+ {
+  "insert": {
+   "video": "https://www.youtube.com/watch?v=V4hgdKhIqtc&list=PLbhaS_83B97s78HsDTtplRTEhcFsqSqIK&index=1"
+  }
+ },
+ {
+  "insert": "\n"
+ },
+ {
+  "insert": {
+   "video": "https://example.com/clip.mp4"
+  },
+  "attributes": {
+   "width": "320",
+   "height": "180"
+  }
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "align": "center"
+  }
+ },
+ {
+  "insert": "Inline "
+ },
+ {
+  "insert": {
+   "video": "https://example.com/small.webm"
+  },
+  "attributes": {
+   "style": "width: 160px;"
+  }
+ },
+ {
+  "insert": " between text\n"
+ },
+ {
+  "insert": {
+   "video": "https://example.com/linked.mp4"
+  },
+  "attributes": {
+   "link": "https://example.com"
+  }
+ },
+ {
+  "insert": "\n"
+ }
+]

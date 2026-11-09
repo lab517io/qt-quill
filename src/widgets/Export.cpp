@@ -230,8 +230,12 @@ private:
         }
     }
 
-    void appendEmbed(Delta& delta, const QTextCharFormat& format, const AttributeMap& styledFor)
+    void appendEmbed(Delta& delta, const QTextCharFormat& formatIn, const AttributeMap& styledFor)
     {
+        // detail::embedCharFormat centres non-image embeds; that is not "script".
+        QTextCharFormat format = formatIn;
+        if (format.verticalAlignment() == QTextCharFormat::AlignMiddle)
+            format.setVerticalAlignment(QTextCharFormat::AlignNormal);
         AttributeMap attrs = DeltaDocument::inlineAttributes(format, styledFor, m_style);
         QJsonObject embed = format.property(prop::Embed).toJsonObject();
         if (format.isImageFormat()) {

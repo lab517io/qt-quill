@@ -1,0 +1,64 @@
+[
+ {
+  "insert": "Euler: "
+ },
+ {
+  "insert": {
+   "formula": "e^{i\\pi}+1=0"
+  }
+ },
+ {
+  "insert": ", and "
+ },
+ {
+  "insert": {
+   "formula": "\\int_0^\\infty e^{-x^2}\\,dx=\\frac{\\sqrt{\\pi}}{2}"
+  },
+  "attributes": {
+   "bold": true,
+   "color": "#FFE53935"
+  }
+ },
+ {
+  "insert": ".\nHeading "
+ },
+ {
+  "insert": {
+   "formula": "x^2"
+  }
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "header": 2
+  }
+ },
+ {
+  "insert": "Item with "
+ },
+ {
+  "insert": {
+   "formula": "α + β = γ"
+  },
+  "attributes": {
+   "script": "sub"
+  }
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "list": "bullet"
+  }
+ },
+ {
+  "insert": {
+   "formula": "E=mc^2"
+  }
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "align": "center"
+  }
+ }
+]

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "quill/EmbedRegistry.h"
 #include "quill/QuillEditor.h"
 
 #include <QList>
@@ -65,7 +66,13 @@ public:
     /// The change that replaces `r` with the clipboard or drop contents.
     Delta pasteChange(const QMimeData* source, const Range& r) const;
 
+    /// Activates the embed at `index` (handler, then embedActivated).
+    void activateEmbed(int index);
+    /// Handler and context of the embed at `index`.
+    std::pair<EmbedRenderer*, EmbedContext> embedInfo(int index) const;
+
     QuillEditor* q;
+    EmbedRegistry* embeds = nullptr;
     Delta contents = Delta().insert(QStringLiteral("\n"));
     StyleOptions style;
     QStringList pasteIgnored;

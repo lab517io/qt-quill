@@ -5,6 +5,7 @@
 #include "TestUtil.h"
 
 #include <quill/DeltaDocument.h>
+#include <quill/EmbedRegistry.h>
 #include <quill/QuillEditor.h>
 
 #include <QObject>
@@ -62,6 +63,8 @@ inline std::unique_ptr<quill::QuillEditor> makeEditor(bool show = true)
 {
     auto e = std::make_unique<quill::QuillEditor>();
     e->setVerifyChanges(true);
+    // Unit tests stay off the network (fixtures reference remote images).
+    e->embeds()->setRemoteImagesEnabled(false);
     e->resize(600, 400);
     if (show) {
         e->show();

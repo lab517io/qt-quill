@@ -1,0 +1,74 @@
+[
+ {
+  "insert": "Hello "
+ },
+ {
+  "insert": {
+   "mention": {
+    "id": 42,
+    "name": "Ada Lovelace"
+   }
+  },
+  "attributes": {
+   "bold": true
+  }
+ },
+ {
+  "insert": ", see "
+ },
+ {
+  "insert": {
+   "tag": "release-1.0"
+  },
+  "attributes": {
+   "link": "https://example.com/tags/1.0"
+  }
+ },
+ {
+  "insert": "\n"
+ },
+ {
+  "insert": {
+   "divider": true
+  }
+ },
+ {
+  "insert": "\n"
+ },
+ {
+  "insert": {
+   "table": [
+    [
+     "a",
+     "b"
+    ],
+    [
+     "c",
+     "d"
+    ]
+   ]
+  }
+ },
+ {
+  "insert": "\n"
+ },
+ {
+  "insert": {
+   "counter": 7
+  }
+ },
+ {
+  "insert": " "
+ },
+ {
+  "insert": {
+   "emoji": "🎉"
+  }
+ },
+ {
+  "insert": "\n",
+  "attributes": {
+   "blockquote": true
+  }
+ }
+]

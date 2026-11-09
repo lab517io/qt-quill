@@ -15,6 +15,7 @@
 
 namespace quill {
 
+class EmbedRegistry;
 class QuillEditorPrivate;
 
 /// A rich text editor whose content is a Quill Delta.
@@ -57,6 +58,10 @@ public:
     Delta insertText(int index, const QString& text, const AttributeMap& attributes = {},
                      Source source = Source::Api);
     Delta insertEmbed(int index, const QString& type, const QJsonValue& value, Source source = Source::Api);
+    /// Inserts an embed on a line of its own, as flutter_quill inserts block
+    /// embeds (images, videos, custom): the line is split around it when
+    /// `index` is not at a line start or end.
+    Delta insertBlockEmbed(int index, const QString& type, const QJsonValue& value, Source source = Source::Api);
     Delta deleteText(int index, int length, Source source = Source::Api);
 
     // --- Formatting ------------------------------------------------------------
@@ -83,6 +88,13 @@ public:
     Range getSelection() const;
     void setSelection(int index, int length = 0, Source source = Source::Api);
 
+    // --- Embeds ----------------------------------------------------------------
+    /// The handlers drawing this editor's embeds. Register handlers for own
+    /// embed keys or custom types here; remote images are enabled.
+    EmbedRegistry* embeds() const;
+    /// Index of the embed at viewport position `pos`, or -1.
+    int embedAt(const QPoint& pos) const;
+
     // --- Options ---------------------------------------------------------------
     StyleOptions styleOptions() const;
     /// Changes the styling and re-renders the document (contents unchanged).
@@ -106,6 +118,9 @@ Q_SIGNALS:
     void linkActivated(const QUrl& url);
     /// Ctrl+K: the host should ask for a URL and call format("link", url).
     void linkRequested();
+    /// A click (images: double click) on an embed whose handler did not
+    /// handle EmbedHandler::activate(), e.g. to play a video or edit a formula.
+    void embedActivated(const QString& type, const QJsonValue& data, int index);
 
 protected:
     /// Source URL for a pasted or dropped image; the default is a PNG data:
@@ -116,6 +131,8 @@ protected:
     void mousePressEvent(QMouseEvent* e) override;
     void mouseReleaseEvent(QMouseEvent* e) override;
     void mouseMoveEvent(QMouseEvent* e) override;
+    void mouseDoubleClickEvent(QMouseEvent* e) override;
+    bool viewportEvent(QEvent* e) override;
     void paintEvent(QPaintEvent* e) override;
     void changeEvent(QEvent* e) override;
     void dropEvent(QDropEvent* e) override;

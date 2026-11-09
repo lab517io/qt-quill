@@ -327,19 +327,34 @@ private slots:
 
     void embeds()
     {
-        start("[{'insert':'ab\\n'}]", 1, 1);
+        // Images and videos are block embeds: they get a line of their own
+        // (flutter_quill's InsertEmbedsRule); formulas stay inline.
+        start("[{'insert':'ab'},{'insert':'\\n','attributes':{'header':2}}]", 1, 1);
         bar->imageAnswer = QStringLiteral("file:///tmp/x.png");
         a("image")->trigger();
-        check(e->getContents(), delta("[{'insert':'a'},{'insert':{'image':'file:///tmp/x.png'}},{'insert':'\\n'}]"), __LINE__);
-        QCOMPARE(e->getSelection(), (Range{2, 0}));
+        check(e->getContents(), delta("[{'insert':'a'},{'insert':'\\n','attributes':{'header':2}},{'insert':{'image':'file:///tmp/x.png'}},"
+                                      "{'insert':'\\n','attributes':{'header':2}}]"), __LINE__);
+        QCOMPARE(e->getSelection(), (Range{3, 0}));
+        e->formatLine(3, 0, AttributeMap{{QStringLiteral("header"), QJsonValue::Null}});
         bar->videoAnswer = QStringLiteral("https://v");
         a("video")->trigger();
+        check(e->getContents(), delta("[{'insert':'a'},{'insert':'\\n','attributes':{'header':2}},{'insert':{'image':'file:///tmp/x.png'}},"
+                                      "{'insert':'\\n'},{'insert':{'video':'https://v'}},{'insert':'\\n'}]"), __LINE__);
+        QCOMPARE(e->getSelection(), (Range{5, 0}));
+        e->insertText(5, QStringLiteral(" x"));
+        e->setSelection(6, 0);
         bar->formulaAnswer = QStringLiteral("e=mc^2");
         a("formula")->trigger();
         bar->formulaAnswer.clear(); // cancelled
         a("formula")->trigger();
-        check(e->getContents(), delta("[{'insert':'a'},{'insert':{'image':'file:///tmp/x.png'}},{'insert':{'video':'https://v'}},"
-                                      "{'insert':{'formula':'e=mc^2'}},{'insert':'\\n'}]"), __LINE__);
+        check(e->getContents().slice(4), delta("[{'insert':{'video':'https://v'}},{'insert':' '},{'insert':{'formula':'e=mc^2'}},"
+                                               "{'insert':'x\\n'}]"), __LINE__);
+        QCOMPARE(e->getSelection(), (Range{7, 0}));
+        // In the middle of a line both halves keep the line format.
+        start("[{'insert':'abcd'},{'insert':'\\n','attributes':{'list':'bullet'}}]", 2, 0);
+        a("image")->trigger();
+        check(e->getContents(), delta("[{'insert':'ab'},{'insert':'\\n','attributes':{'list':'bullet'}},{'insert':{'image':'file:///tmp/x.png'}},"
+                                      "{'insert':'\\ncd'},{'insert':'\\n','attributes':{'list':'bullet'}}]"), __LINE__);
     }
 
     void historyAndReadOnly()

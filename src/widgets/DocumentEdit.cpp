@@ -11,6 +11,7 @@
 
 #include "ImageSize.h"
 #include "quill/DeltaDocument.h"
+#include "quill/EmbedRegistry.h"
 #include "quill/OpIterator.h"
 
 #include <QByteArray>
@@ -60,6 +61,10 @@ QTextCharFormat embedCharFormat(const QJsonObject& embed, const AttributeMap& at
         return img;
     }
     base.setObjectType(prop::EmbedObjectType);
+    // Inline embeds (formulas, chips) centre on the text; images sit on the
+    // baseline. Export ignores this alignment (see Export.cpp).
+    if (base.verticalAlignment() == QTextCharFormat::AlignNormal)
+        base.setVerticalAlignment(QTextCharFormat::AlignMiddle);
     return base;
 }
 
@@ -80,6 +85,42 @@ void registerImageResource(QTextDocument* doc, const QString& source)
     QImage image;
     if (image.loadFromData(bytes))
         doc->addResource(QTextDocument::ImageResource, url, image);
+}
+
+Delta embedInsertChange(const Delta& contents, int index, int length, const QJsonObject& embed, bool block,
+                        int* embedIndex)
+{
+    const Delta removal = Delta().retain(index).remove(length);
+    const Delta base = contents.compose(removal);
+    Delta insert = Delta().retain(index);
+    int at = index;
+    const auto textOf = [](const Delta& d) {
+        return d.ops().isEmpty() || !d.ops().first().isTextInsert() ? QString() : d.ops().first().text();
+    };
+    const bool newlineBefore = index == 0 || textOf(base.slice(index - 1, index)) == QLatin1String("\n");
+    const bool newlineAfter = textOf(base.slice(index, index + 1)) == QLatin1String("\n");
+    if (!block || (newlineBefore && newlineAfter)) {
+        insert.insert(embed);
+    } else {
+        AttributeMap lineStyle;
+        const Delta rest = base.slice(index);
+        for (const Op& op : rest.ops()) {
+            if (op.isTextInsert() && op.text().contains(QLatin1Char('\n'))) {
+                lineStyle = op.attributes();
+                break;
+            }
+        }
+        if (!newlineBefore) {
+            insert.insert(QStringLiteral("\n"), lineStyle);
+            ++at;
+        }
+        insert.insert(embed);
+        if (!newlineAfter)
+            insert.insert(QStringLiteral("\n"));
+    }
+    if (embedIndex)
+        *embedIndex = at;
+    return removal.compose(insert);
 }
 
 QString normalizeText(const QString& text)
@@ -399,6 +440,8 @@ Delta DeltaDocument::apply(QTextDocument* doc, const Delta& contents, const Delt
     const Delta qtChange = qtApplicable(contents, change, target);
     if (qtChange.isEmpty())
         return target;
+    if (!EmbedRegistry::registryOf(doc))
+        EmbedRegistry::shared()->attachTo(doc);
 
     QTextCursor c(doc);
     c.beginEditBlock();

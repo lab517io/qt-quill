@@ -1,0 +1,5 @@
+# LeakSanitizer suppressions for system libraries (not quill-qt code).
+# libproxy, used by QNetworkProxyFactory::systemProxyForQuery on the first
+# network request, keeps one-time allocations until exit.
+leak:libproxy.so
+leak:libpxbackend

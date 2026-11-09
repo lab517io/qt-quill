@@ -14,12 +14,17 @@ class QTextDocument;
 
 namespace quill {
 
+class EmbedRegistry;
+
 struct LoadOptions
 {
     StyleOptions style;
     /// Base URL for relative image URLs ("assets/x.png"). Empty: relative
     /// URLs resolve against the current directory.
     QUrl baseUrl;
+    /// Handlers that draw the embeds (EmbedRegistry::attachTo). Null: the
+    /// shared registry with the built-in handlers, without remote images.
+    EmbedRegistry* embeds = nullptr;
 };
 
 struct ExportOptions

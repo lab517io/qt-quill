@@ -5,7 +5,7 @@ the [Quill Delta](https://quilljs.com/docs/delta) format, compatible with
 [flutter_quill](https://pub.dev/packages/flutter_quill) and
 [Quill](https://github.com/slab/quill).
 
-**Status:** milestones M1 (skeleton), M2 (Delta core), M3 (Delta → QTextDocument), M4 (QTextDocument → Delta), M5 (editor widget) and M6 (toolbar, demo) done. See
+**Status:** milestones M1 (skeleton), M2 (Delta core), M3 (Delta → QTextDocument), M4 (QTextDocument → Delta), M5 (editor widget), M6 (toolbar, demo) and M7 (embeds) done. See
 [PLAN.md](PLAN.md) for the design and [plans/](plans/README.md) for the
 milestone plans.
 
@@ -115,6 +115,32 @@ on Enter and end on an empty item, Tab indents list items, Backspace at a
 line start outdents or removes the block format, `1. ` / `- ` / `[] ` start
 lists, Ctrl+B/I/U/Shift+X toggle formats. `DeltaDocument::apply()` applies a
 change Delta to a plain `QTextDocument` without the widget.
+
+## Embeds
+
+Images, videos, formulas, flutter_quill `custom` embeds and unknown keys are
+drawn by renderers in an `EmbedRegistry`; the embed object and its
+attributes always export unchanged. Remote images load in the background in
+`QuillEditor`.
+
+```cpp
+#include <quill/EmbedRegistry.h>
+#include <quill/Embeds.h>
+
+class PollEmbed : public quill::CustomEmbedRenderer {   // {"custom": "{\"poll\": ...}"}
+public:
+    PollEmbed() : CustomEmbedRenderer("poll") {}
+    QSizeF size(const quill::EmbedContext& c) const override { return {c.availableWidth, 80}; }
+    void paint(QPainter* p, const QRectF& r, const quill::EmbedContext& c) const override { /* ... */ }
+};
+
+editor.embeds()->emplace<PollEmbed>();
+editor.embeds()->find<quill::FormulaEmbed>()->setRenderer(renderTex);   // optional TeX renderer
+editor.embeds()->setNetworkAccessManager(&authenticatedManager);        // optional
+QObject::connect(&editor, &quill::QuillEditor::embedActivated,
+                 [](const QString& type, const QJsonValue& data, int index) { /* play video, ... */ });
+editor.insertBlockEmbed(index, "video", url);   // on its own line, as flutter_quill does
+```
 
 ## Demo
 

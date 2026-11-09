@@ -24,6 +24,9 @@
 #include <QTextBlock>
 #include <QTextDocument>
 #include <QTextFragment>
+#include <QTextLayout>
+#include <QToolTip>
+#include <QHelpEvent>
 
 namespace quill {
 
@@ -388,6 +391,7 @@ void QuillEditorPrivate::reload()
     suppress = true;
     LoadOptions options;
     options.style = style;
+    options.embeds = embeds;
     DeltaDocument::load(q->document(), current, options);
     suppress = false;
     contents = DeltaDocument::toDelta(q->document());
@@ -458,6 +462,8 @@ QuillEditor::QuillEditor(QWidget* parent) : QTextEdit(parent), d(std::make_uniqu
     d->style.codeBlockBackgroundOnBlocks = false;
     d->pasteIgnored = {key("font"), key("size"), key("color"), key("background")};
     d->verify = qEnvironmentVariableIntValue("QUILLQT_VERIFY") == 1;
+    d->embeds = new EmbedRegistry(this);
+    d->embeds->setRemoteImagesEnabled(true);
     viewport()->setMouseTracking(true);
 
     connect(document(), &QTextDocument::contentsChange, this,
@@ -491,6 +497,7 @@ Delta QuillEditor::setContents(const Delta& document, Source source)
         d->suppress = true;
         LoadOptions options;
         options.style = d->style;
+        options.embeds = d->embeds;
         DeltaDocument::load(this->document(), document, options);
         d->suppress = false;
         d->contents = DeltaDocument::toDelta(this->document());
@@ -553,6 +560,18 @@ Delta QuillEditor::insertEmbed(int index, const QString& type, const QJsonValue&
         return change;
     });
 }
+
+Delta QuillEditor::insertBlockEmbed(int index, const QString& type, const QJsonValue& value, Source source)
+{
+    return d->modify(source, [&] {
+        const Delta change = detail::embedInsertChange(d->contents, d->clampIndex(index), 0,
+                                                       QJsonObject{{type, value}}, true);
+        d->apply(change);
+        return change;
+    });
+}
+
+EmbedRegistry* QuillEditor::embeds() const { return d->embeds; }
 
 Delta QuillEditor::deleteText(int index, int length, Source source)
 {
@@ -716,6 +735,78 @@ QPointF documentPos(const QTextEdit* e, const QPoint& p)
 }
 } // namespace
 
+int QuillEditor::embedAt(const QPoint& pos) const
+{
+    QTextDocument* doc = document();
+    const QPointF p = documentPos(this, pos);
+    const int hit = cursorForPosition(pos).position();
+    for (const int at : {hit - 1, hit}) {
+        if (at < 0 || doc->characterAt(at) != QChar::ObjectReplacementCharacter)
+            continue;
+        const QTextBlock b = doc->findBlock(at);
+        const int rel = at - b.position();
+        const QTextLine line = b.layout()->lineForTextPosition(rel);
+        if (!line.isValid())
+            continue;
+        const QRectF br = doc->documentLayout()->blockBoundingRect(b);
+        const qreal x1 = line.cursorToX(rel), x2 = line.cursorToX(rel + 1);
+        const QRectF r(br.left() + std::min(x1, x2), br.top() + line.y(), std::abs(x2 - x1), line.height());
+        if (!r.contains(p))
+            continue;
+        QTextCursor c(doc);
+        c.setPosition(at + 1);
+        const QTextCharFormat f = c.charFormat();
+        if (f.hasProperty(prop::EmbedType) || f.isImageFormat())
+            return at;
+    }
+    return -1;
+}
+
+std::pair<EmbedRenderer*, EmbedContext> QuillEditorPrivate::embedInfo(int index) const
+{
+    QTextCursor c(q->document());
+    c.setPosition(index + 1);
+    EmbedRegistry* registry = EmbedRegistry::registryOf(q->document());
+    if (!registry)
+        registry = embeds;
+    const EmbedContext ctx = registry->context(q->document(), index, c.charFormat());
+    return {registry->rendererFor(ctx.key, ctx.data), ctx};
+}
+
+void QuillEditorPrivate::activateEmbed(int index)
+{
+    auto [handler, ctx] = embedInfo(index);
+    if (!handler->activate(q, ctx))
+        Q_EMIT q->embedActivated(ctx.key, ctx.data, index);
+}
+
+void QuillEditor::mouseDoubleClickEvent(QMouseEvent* e)
+{
+    QTextEdit::mouseDoubleClickEvent(e);
+    if (e->button() != Qt::LeftButton)
+        return;
+    const int at = embedAt(e->pos());
+    if (at >= 0 && d->embedInfo(at).first->activatesOnDoubleClick())
+        d->activateEmbed(at);
+}
+
+bool QuillEditor::viewportEvent(QEvent* e)
+{
+    if (e->type() == QEvent::ToolTip) {
+        const auto* help = static_cast<QHelpEvent*>(e);
+        const int at = embedAt(help->pos());
+        if (at >= 0) {
+            auto [handler, ctx] = d->embedInfo(at);
+            const QString tip = handler->toolTip(ctx);
+            if (!tip.isEmpty()) {
+                QToolTip::showText(help->globalPos(), tip, viewport());
+                return true;
+            }
+        }
+    }
+    return QTextEdit::viewportEvent(e);
+}
+
 void QuillEditor::mousePressEvent(QMouseEvent* e)
 {
     d->pressPos = e->pos();
@@ -746,8 +837,15 @@ void QuillEditor::mouseReleaseEvent(QMouseEvent* e)
     if (e->button() == Qt::LeftButton && (e->pos() - d->pressPos).manhattanLength() < 4
         && (isReadOnly() || (e->modifiers() & Qt::ControlModifier))) {
         const QString href = anchorAt(e->pos());
-        if (!href.isEmpty())
+        if (!href.isEmpty()) {
             Q_EMIT linkActivated(QUrl(href));
+            return;
+        }
+    }
+    if (e->button() == Qt::LeftButton && (e->pos() - d->pressPos).manhattanLength() < 4) {
+        const int at = embedAt(e->pos());
+        if (at >= 0 && !d->embedInfo(at).first->activatesOnDoubleClick())
+            d->activateEmbed(at);
     }
 }
 
@@ -757,7 +855,9 @@ void QuillEditor::mouseMoveEvent(QMouseEvent* e)
     const bool link = !anchorAt(e->pos()).isEmpty() && (isReadOnly() || (e->modifiers() & Qt::ControlModifier));
     const bool marker = !isReadOnly()
                         && document()->documentLayout()->blockWithMarkerAt(documentPos(this, e->pos())).isValid();
-    viewport()->setCursor(link || marker ? Qt::PointingHandCursor : (isReadOnly() ? Qt::ArrowCursor : Qt::IBeamCursor));
+    const int embed = embedAt(e->pos());
+    const bool clickable = embed >= 0 && !d->embedInfo(embed).first->activatesOnDoubleClick();
+    viewport()->setCursor(link || marker || clickable ? Qt::PointingHandCursor : (isReadOnly() ? Qt::ArrowCursor : Qt::IBeamCursor));
 }
 
 // --- Decorations ---------------------------------------------------------------------

@@ -124,19 +124,19 @@ strings in flutter_quill style (`"300"`), emitting a change Delta via
 
 ## Tasks
 
-- [ ] `EmbedHandler`, `EmbedRegistry`, attach to document layout; generic
+- [x] `EmbedHandler`, `EmbedRegistry`, attach to document layout; generic
       handler replaces the M3 placeholder.
-- [ ] `ImageLoader` with QNetworkAccessManager, cache, redirects, error
+- [x] `ImageLoader` with QNetworkAccessManager, cache, redirects, error
       image; tests with a local `QTcpServer`-based HTTP stub.
-- [ ] Video, formula, custom handlers; `CustomEmbed::registerType`.
-- [ ] `QuillEditor::embedActivated(const QString& type, const QJsonValue& data)`
+- [x] Video, formula, custom handlers; `CustomEmbed::registerType`.
+- [x] `QuillEditor::embedActivated(const QString& type, const QJsonValue& data)`
       signal and click routing (`handleClick`).
-- [ ] Toolbar insert actions (M6) switched to `insertEmbed` with the right
+- [x] Toolbar insert actions (M6) switched to `insertEmbed` with the right
       keys; "Insert custom" in the demo with a JSON editor for testing.
-- [ ] Fixtures: `embeds_video.json`, `embeds_formula.json`,
+- [x] Fixtures: `embeds_video.json`, `embeds_formula.json`,
       `embeds_custom_flutter_quill.json` (real `custom` string payloads),
       `embeds_unknown.json`.
-- [ ] `tst_embeds`: load → render to QImage (non-blank at embed rect) →
+- [x] `tst_embeds`: load → render to QImage (non-blank at embed rect) →
       export equals input; registry precedence; custom sub-type dispatch;
       remote image load completion updates layout (spy on
       `documentLayoutChanged`).
@@ -154,3 +154,74 @@ strings in flutter_quill style (`"300"`), emitting a change Delta via
   `intrinsicSize` interacts with line height; test very tall embeds.
 - flutter_quill versions differ in whether `custom` data is a JSON string or
   an object; `accepts()` handles both, export keeps the original form.
+
+## Outcome (2026-11-09)
+
+Done. Debug, Release and ASan/UBSan builds clean; 16 ctest entries green
+(`tst_embeds` added, 23 cases); long fuzz runs (3000 API steps per
+document, 20 000 key events) without drift.
+
+- Public `EmbedRegistry.h` (`EmbedRenderer`, `EmbedContext`,
+  `CustomEmbedRenderer`, `EmbedRegistry`) and `Embeds.h` (`ImageEmbed`,
+  `VideoEmbed`, `FormulaEmbed`, `GenericEmbed`). One dispatcher object is
+  registered on the document layout for `prop::EmbedObjectType` *and*
+  `QTextFormat::ImageObject`, so images are drawn by `ImageEmbed` too
+  (natural size, width/height/style attributes with aspect ratio, shrunk to
+  the line, placeholder while loading, broken-image box when missing; this
+  replaces Qt's stretched file icon).
+- `DeltaDocument::load` attaches `LoadOptions::embeds` or
+  `EmbedRegistry::shared()` (built-ins, no network); `apply()` attaches the
+  shared one to documents that have none. `QuillEditor::embeds()` is the
+  editor's own registry with remote images on.
+- Remote images: `ImageLoader` (private) on a `QNetworkAccessManager`
+  (host-replaceable), redirects (no less safe), 30 s timeout, 64 MiB
+  per-download cap, bounded cache (default 64 MiB), failures remembered;
+  on arrival the image becomes a document resource and only the fragments
+  showing it are relaid out (`markContentsDirty`, no `contentsChange`, so no
+  change Delta). Tested against a local `QTcpServer` stub (200, 404,
+  redirect, request outliving its document, cache hit, shared registry not
+  fetching).
+- Video: 16:9 frame with play button and URL, 640 px max alone on its line,
+  320 px inline, width/height/style honoured, optional thumbnail provider.
+  Formula: monospace TeX box, `FormulaEmbed::setRenderer()` for real
+  rendering. Unknown keys and custom types without a renderer: a chip with
+  the key or custom type.
+- Inline embeds other than images use vertical alignment `AlignMiddle` so
+  they centre on the text; the exporter ignores that alignment, and an
+  explicit `script` attribute still wins.
+- `QuillEditor`: `embedActivated(type, data, index)` on click (images:
+  double click) unless `EmbedRenderer::activate()` handles it, `embedAt()`,
+  pointing-hand cursor and per-renderer tooltips, `insertBlockEmbed()`
+  (flutter_quill's InsertEmbedsRule). The toolbar inserts image and video
+  (renderers with `isBlock()`) on their own line, formulas inline.
+- Demo: a `NotesEmbed` custom renderer for flutter_quill's example "notes"
+  type (card with the note's text, click to edit), Edit > Insert custom
+  embed (type + JSON data), embed activations shown in the status bar, the
+  four new fixtures as samples.
+- Fixtures: `embeds_video.json`, `embeds_formula.json`,
+  `embeds_custom_flutter_quill.json` (string payloads with nested Delta
+  JSON, non-ASCII and emoji, object payload, invalid JSON),
+  `embeds_unknown.json`. All round-trip byte-identically through
+  `QTextDocument` and `QuillEditor`.
+
+### Deviations
+
+- **flutter_quill's custom payload is `{"<type>": data}`** (CustomBlockEmbed
+  `toJsonString`), not `{"type": ..., "data": ...}` as the plan said.
+  `CustomEmbedRenderer::parse()` takes the string or object form;
+  `encode()` writes the string form.
+- **`EmbedRenderer`, not `EmbedHandler`**: `quill::EmbedHandler` already is
+  the Delta core's embed OT hook (M2). Renderers are plain classes
+  (`size()`, `paint()`, `activate()`), not `QTextObjectInterface`s, and one
+  dispatcher serves all keys instead of an object type per handler.
+- **No `makeFormat()` / `toJson()` hooks**: formats stay a pure function of
+  the Delta (one code path for load, apply and export), and nothing
+  normalises on export since image resizing was not done.
+- **`insertEmbed()` keeps Quill's semantics** (inline at the index);
+  own-line insertion is the separate `insertBlockEmbed()`.
+- **Embeds sharing a line with text stay inline** with that text, like
+  flutter_quill's `WidgetSpan`s; an embed alone on its line is a block.
+- **Image resize handles** (optional) not done.
+- **Tests stay offline**: `testutil::makeEditor` turns remote images off;
+  `tests/lsan.supp` suppresses libproxy's one-time allocations that the
+  first network request causes.

@@ -1,6 +1,8 @@
 add_library(quillqt_widgets STATIC
     include/quill/Colors.h
     include/quill/DeltaDocument.h
+    include/quill/EmbedRegistry.h
+    include/quill/Embeds.h
     include/quill/Formats.h
     include/quill/QuillEditor.h
     include/quill/QuillFindBar.h
@@ -11,6 +13,10 @@ add_library(quillqt_widgets STATIC
     DeltaDocument.cpp
     DocumentEdit.cpp
     DocumentEdit.h
+    EmbedRegistry.cpp
+    Embeds.cpp
+    ImageLoader.cpp
+    ImageLoader.h
     Export.cpp
     ImageSize.cpp
     ImageSize.h
