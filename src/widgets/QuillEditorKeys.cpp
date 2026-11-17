@@ -27,6 +27,8 @@ void QuillEditor::keyPressEvent(QKeyEvent* e)
         return;
     }
     const Qt::KeyboardModifiers mods = e->modifiers() & ~Qt::KeypadModifier;
+    if (d->resizeKey(e))
+        return;
     if (d->history && (e->matches(QKeySequence::Undo) || e->matches(QKeySequence::Redo))) {
         if (e->matches(QKeySequence::Undo))
             d->history->undo();

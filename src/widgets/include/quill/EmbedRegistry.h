@@ -80,6 +80,11 @@ public:
     /// The painter's pen is the text colour.
     virtual void paint(QPainter* painter, const QRectF& rect, const EmbedContext& c) const = 0;
 
+    /// Whether QuillEditor offers resize handles for this embed (images).
+    /// The size is written to the embed's attributes as flutter_quill or
+    /// Quill.js do (QuillEditor::setImageSizeAttributes).
+    virtual bool resizable() const;
+
     /// Images activate on a double click, everything else on a click.
     virtual bool activatesOnDoubleClick() const;
     /// Called when the embed is activated in `editor`. Return true when the
@@ -165,6 +170,9 @@ public:
     void attachTo(QTextDocument* doc);
     /// What a handler knows about the embed at `position` with `format`.
     EmbedContext context(QTextDocument* doc, int position, const QTextFormat& format);
+    /// The size the embed is drawn with: its handler's size, kept within the
+    /// available width. The layout may add spacing below it.
+    QSizeF drawnSize(QTextDocument* doc, int position, const QTextFormat& format);
 
     // --- Images ------------------------------------------------------------------
     enum class ImageState { Unknown, Loading, Loaded, Failed };

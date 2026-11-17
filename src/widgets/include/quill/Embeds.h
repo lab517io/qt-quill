@@ -25,6 +25,7 @@ public:
     QSizeF size(const EmbedContext& c) const override;
     void paint(QPainter* painter, const QRectF& rect, const EmbedContext& c) const override;
     bool activatesOnDoubleClick() const override;
+    bool resizable() const override;
     QString toolTip(const EmbedContext& c) const override;
 
     /// Size of an image without size attributes that is not loaded (yet).

@@ -51,6 +51,7 @@ const probed = [
   'flutter_quill/generated/block_formats.json',
   'quillqt_exports/keyboard.json',
   'quillqt_exports/toolbar.json',
+  'quillqt_exports/image_resize.json',
 ];
 
 double? cssLength(String? v) {

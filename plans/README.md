@@ -24,7 +24,7 @@ Decisions fixed on 2026-11-08 (see `../PLAN.md`, section 8):
 | 10 ✅ | [M10-rendering-fidelity.md](M10-rendering-fidelity.md) | Spacing measured in flutter_quill: block embeds, group spacing by attributes, code panel padding, formula `script` | 7, 8 |
 | 11 ✅ | [M11-large-documents.md](M11-large-documents.md) | Benchmarks and budgets for big documents, fixes for the hot paths, scaling check in ctest | 5, 8 |
 | 12 ✅ | [M12-collaboration.md](M12-collaboration.md) | Collaboration example: client–server OT, Delta undo history, remote cursors, `quill-collab` app | 2, 5, 6, 11 |
-| 13 | [M13-image-resize.md](M13-image-resize.md) | Image resize handles, size written the flutter_quill way | 7, 10 |
+| 13 ✅ | [M13-image-resize.md](M13-image-resize.md) | Image resize handles, size written the flutter_quill way | 7, 10 |
 
 Each plan has the same sections: Goal, Deliverables, Design, Tasks, Tests,
 Exit criteria, Risks. Tasks are checkboxes so progress can be tracked by

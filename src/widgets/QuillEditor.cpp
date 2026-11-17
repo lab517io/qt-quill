@@ -576,6 +576,19 @@ QuillEditor::QuillEditor(QWidget* parent) : QTextEdit(parent), d(std::make_uniqu
         d->sanitizeTypingFormat();
     });
     connect(this, &QTextEdit::selectionChanged, this, [this] {
+        // Resize frame of a selected image on or off.
+        const int framed = d->selectedEmbed();
+        if (framed >= 0 || d->resize.framed >= 0)
+            viewport()->update();
+        d->resize.framed = framed;
+        // No caret next to a selected image: the frame shows the selection.
+        if (framed >= 0 && d->resize.caretWidth < 0) {
+            d->resize.caretWidth = cursorWidth();
+            setCursorWidth(0);
+        } else if (framed < 0 && d->resize.caretWidth >= 0) {
+            setCursorWidth(d->resize.caretWidth);
+            d->resize.caretWidth = -1;
+        }
         d->syncSelection();
         // Collapsing a selection keeps the cursor position (no
         // cursorPositionChanged), e.g. after formatting a link.
@@ -926,10 +939,6 @@ void QuillEditor::redo()
 
 void QuillEditor::contextMenuEvent(QContextMenuEvent* e)
 {
-    if (!d->history) {
-        QTextEdit::contextMenuEvent(e);
-        return;
-    }
     const std::unique_ptr<QMenu> menu(d->contextMenu(e->pos()));
     if (menu)
         menu->exec(e->globalPos());
@@ -938,7 +947,10 @@ void QuillEditor::contextMenuEvent(QContextMenuEvent* e)
 QMenu* QuillEditorPrivate::contextMenu(const QPoint& pos)
 {
     QMenu* menu = q->createStandardContextMenu(pos);
-    if (!menu || !history)
+    if (!menu)
+        return menu;
+    addResizeActions(menu, pos);
+    if (!history)
         return menu;
     // QWidgetTextControl's menu wires Undo / Redo to the QTextDocument stack.
     for (QAction* a : menu->actions()) {
@@ -1055,6 +1067,8 @@ bool QuillEditor::viewportEvent(QEvent* e)
 void QuillEditor::mousePressEvent(QMouseEvent* e)
 {
     d->pressPos = e->pos();
+    if (d->resizePress(e))
+        return;
     if (e->button() == Qt::LeftButton && !isReadOnly()) {
         const QTextBlock b = document()->documentLayout()->blockWithMarkerAt(documentPos(this, e->pos()));
         if (b.isValid() && b.blockFormat().marker() != QTextBlockFormat::MarkerType::NoMarker) {
@@ -1074,6 +1088,8 @@ void QuillEditor::mousePressEvent(QMouseEvent* e)
 
 void QuillEditor::mouseReleaseEvent(QMouseEvent* e)
 {
+    if (d->resizeRelease(e))
+        return;
     if (d->markerPressed) {
         d->markerPressed = false;
         e->accept();
@@ -1097,6 +1113,8 @@ void QuillEditor::mouseReleaseEvent(QMouseEvent* e)
 
 void QuillEditor::mouseMoveEvent(QMouseEvent* e)
 {
+    if (d->resizeMove(e))
+        return;
     QTextEdit::mouseMoveEvent(e);
     if (d->cursors)
         d->cursors->hover(e->pos());
@@ -1168,9 +1186,11 @@ void QuillEditor::paintEvent(QPaintEvent* e)
         flush();
     }
     QTextEdit::paintEvent(e);
-    if (d->cursors) {
+    if (d->cursors || d->resize.index >= 0 || d->selectedEmbed() >= 0) {
         QPainter p(viewport());
-        d->cursors->paint(p);
+        d->paintResizeFrame(p);
+        if (d->cursors)
+            d->cursors->paint(p);
     }
 }
 

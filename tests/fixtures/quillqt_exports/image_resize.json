@@ -1,0 +1,42 @@
+[
+    {
+        "insert": "Resized images\n"
+    },
+    {
+        "attributes": {
+            "style": "width: 240.0; height: 160.0; "
+        },
+        "insert": {
+            "image": "https://flutter.github.io/assets-for-api-docs/assets/widgets/owl.jpg"
+        }
+    },
+    {
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "style": "margin: 4px; mobileAlignment: center; width: 320.0; height: 180.0; "
+        },
+        "insert": {
+            "image": "https://flutter.github.io/assets-for-api-docs/assets/widgets/owl.jpg"
+        }
+    },
+    {
+        "attributes": {
+            "align": "center"
+        },
+        "insert": "\n"
+    },
+    {
+        "attributes": {
+            "height": "80",
+            "width": "120"
+        },
+        "insert": {
+            "image": "https://flutter.github.io/assets-for-api-docs/assets/widgets/owl.jpg"
+        }
+    },
+    {
+        "insert": "\nafter\n"
+    }
+]

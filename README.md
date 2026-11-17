@@ -5,7 +5,7 @@ the [Quill Delta](https://quilljs.com/docs/delta) format, compatible with
 [flutter_quill](https://pub.dev/packages/flutter_quill) and
 [Quill](https://github.com/slab/quill).
 
-**Status:** milestones M1 (skeleton), M2 (Delta core), M3 (Delta → QTextDocument), M4 (QTextDocument → Delta), M5 (editor widget), M6 (toolbar, demo), M7 (embeds), M8 (fidelity harness, CI), M9a (portability groundwork on Linux), M10 (rendering fidelity), M11 (large documents) and M12 (collaboration) done; M9 (native Windows and macOS) waits for those machines. See
+**Status:** milestones M1 (skeleton), M2 (Delta core), M3 (Delta → QTextDocument), M4 (QTextDocument → Delta), M5 (editor widget), M6 (toolbar, demo), M7 (embeds), M8 (fidelity harness, CI), M9a (portability groundwork on Linux), M10 (rendering fidelity), M11 (large documents), M12 (collaboration) and M13 (image resize) done; M9 (native Windows and macOS) waits for those machines. See
 [PLAN.md](PLAN.md) for the design and [plans/](plans/README.md) for the
 milestone plans.
 
@@ -152,6 +152,19 @@ QObject::connect(&editor, &quill::QuillEditor::embedActivated,
                  [](const QString& type, const QJsonValue& data, int index) { /* play video, ... */ });
 editor.insertBlockEmbed(index, "video", url);   // on its own line, as flutter_quill does
 ```
+
+**Resizing images:** a click selects an image and shows corner handles;
+dragging one resizes it keeping the aspect ratio (Shift: freely), from
+16 px up to the line width, Escape cancels. The context menu adds original
+size, fit width and 25 / 50 / 100 %. One drag is one change Delta and one
+undo step. The size is written as flutter_quill_extensions writes it,
+`"style": "width: 240.0; height: 135.0; "` with the other declarations
+kept, or, for an image that already uses Quill.js `width` / `height`, in
+those (`setImageSizeAttributes()` forces either). `resizeEmbed()` does the
+same from code; `setImageResizeEnabled(false)` turns the handles off, and
+read-only editors have none. Videos are not resizable (flutter_quill has
+no resizing for them); a custom renderer can opt in with
+`EmbedRenderer::resizable()`.
 
 ## Demo
 

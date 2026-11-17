@@ -38,6 +38,10 @@ bool EmbedRenderer::activatesOnDoubleClick() const
 {
     return false;
 }
+bool EmbedRenderer::resizable() const
+{
+    return false;
+}
 bool EmbedRenderer::activate(QuillEditor*, const EmbedContext&)
 {
     return false;
@@ -95,6 +99,14 @@ QString CustomEmbedRenderer::encode(const QString& type, const QJsonValue& data)
 
 namespace {
 
+QSizeF clampedSize(const EmbedRegistry* registry, const EmbedContext& c)
+{
+    QSizeF s = registry->rendererFor(c.key, c.data)->size(c);
+    if (c.availableWidth > 0 && s.width() > c.availableWidth)
+        s = QSizeF(c.availableWidth, s.height() * c.availableWidth / s.width());
+    return s.expandedTo(QSizeF(1, 1));
+}
+
 /// Registered on a document layout for images and embeds; forwards to the
 /// registry's handlers.
 class EmbedObject : public QObject, public QTextObjectInterface
@@ -109,11 +121,10 @@ public:
     QSizeF intrinsicSize(QTextDocument* doc, int pos, const QTextFormat& format) override
     {
         const EmbedContext c = m_registry->context(doc, pos, format);
-        QSizeF s = m_registry->rendererFor(c.key, c.data)->size(c);
-        if (c.availableWidth > 0 && s.width() > c.availableWidth)
-            s = QSizeF(c.availableWidth, s.height() * c.availableWidth / s.width());
-        return s.expandedTo(QSizeF(1, 1)) + QSizeF(0, descentBelow(c));
+        return drawnSize(c) + QSizeF(0, descentBelow(c));
     }
+
+    QSizeF drawnSize(const EmbedContext& c) const { return clampedSize(m_registry, c); }
 
     void drawObject(QPainter* painter, const QRectF& rect, QTextDocument* doc, int pos,
                     const QTextFormat& format) override
@@ -263,6 +274,11 @@ void EmbedRegistry::attachTo(QTextDocument* doc)
     QAbstractTextDocumentLayout* layout = doc->documentLayout();
     layout->registerHandler(prop::EmbedObjectType, d->object);
     layout->registerHandler(QTextFormat::ImageObject, d->object);
+}
+
+QSizeF EmbedRegistry::drawnSize(QTextDocument* doc, int position, const QTextFormat& format)
+{
+    return clampedSize(this, context(doc, position, format));
 }
 
 EmbedContext EmbedRegistry::context(QTextDocument* doc, int position, const QTextFormat& format)

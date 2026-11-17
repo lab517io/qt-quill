@@ -7,6 +7,7 @@
 #include "quill/Source.h"
 
 #include <QImage>
+#include <QSizeF>
 #include <QStringList>
 #include <QTextEdit>
 #include <QUrl>
@@ -50,6 +51,13 @@ public:
     /// formats; a checked item continues unchecked.
     enum class EditingRules { FlutterQuill, QuillJs };
     Q_ENUM(EditingRules)
+
+    /// Which attributes resizing an image writes. Auto (default): the
+    /// image's own spelling, i.e. Quill.js width / height when it has them
+    /// and no size in "style", otherwise flutter_quill_extensions' "style"
+    /// ("width: 240.0; height: 135.0; ", other declarations kept).
+    enum class ImageSizeAttributes { Auto, FlutterQuill, QuillJs };
+    Q_ENUM(ImageSizeAttributes)
 
     explicit QuillEditor(QWidget* parent = nullptr);
     ~QuillEditor() override;
@@ -115,7 +123,22 @@ public:
     /// Index of the embed at viewport position `pos`, or -1.
     int embedAt(const QPoint& pos) const;
 
+    /// Gives the embed at `index` (an image, or another embed whose handler
+    /// is resizable()) the size `size` in pixels, rounded, written as
+    /// imageSizeAttributes() says; an invalid size restores the natural size
+    /// (size attributes removed). One formatText change.
+    Delta resizeEmbed(int index, const QSizeF& size, Source source = Source::Api);
+
     // --- Options ---------------------------------------------------------------
+    /// Resize handles on images (default on): a click selects an image, its
+    /// corner handles resize it keeping the aspect ratio (Shift: freely),
+    /// Escape cancels; the context menu has original size, fit width and
+    /// 25 / 50 / 100 %. One drag is one change and one undo step. Not in
+    /// read-only editors.
+    void setImageResizeEnabled(bool on);
+    bool isImageResizeEnabled() const;
+    ImageSizeAttributes imageSizeAttributes() const;
+    void setImageSizeAttributes(ImageSizeAttributes spelling);
     StyleOptions styleOptions() const;
     /// Changes the styling and re-renders the document (contents unchanged).
     void setStyleOptions(const StyleOptions& style);

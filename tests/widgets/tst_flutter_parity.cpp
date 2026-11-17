@@ -347,6 +347,32 @@ private Q_SLOTS:
         recordExport(QStringLiteral("keyboard"), e->getContents());
     }
 
+    // Images resized in quill-qt (M13); flutter_quill must render them at the
+    // written size (geometry_test.dart probes this export).
+    void imageResizeExport()
+    {
+        auto e = testutil::makeEditor(true);
+        const auto a = [](const char* json) {
+            return QJsonDocument::fromJson(QByteArray(json).replace('\'', '"')).object();
+        };
+        const QString owl = QStringLiteral("https://flutter.github.io/assets-for-api-docs/assets/widgets/owl.jpg");
+        e->setContents(Delta()
+                           .insert(QStringLiteral("Resized images\n"))
+                           .insert(QJsonObject{{QStringLiteral("image"), owl}})
+                           .insert(QStringLiteral("\n"))
+                           .insert(QJsonObject{{QStringLiteral("image"), owl}},
+                                   a("{'style':'margin: 4px; mobileAlignment: center'}"))
+                           .insert(QStringLiteral("\n"), a("{'align':'center'}"))
+                           .insert(QJsonObject{{QStringLiteral("image"), owl}}, a("{'width':'90'}"))
+                           .insert(QStringLiteral("\nafter\n")));
+        // Natural size of an unloaded image is the placeholder; give each a size.
+        e->resizeEmbed(15, QSizeF(240.3, 160.4), Source::User);
+        e->resizeEmbed(17, QSizeF(320, 180), Source::User);
+        e->resizeEmbed(19, QSizeF(120, 80), Source::User); // Quill.js width/height
+        QCOMPARE(e->verificationFailures(), 0);
+        recordExport(QStringLiteral("image_resize"), e->getContents());
+    }
+
     void exportRandomEdits()
     {
         const QStringList inlineKeys{QStringLiteral("bold"), QStringLiteral("italic"), QStringLiteral("underline"),

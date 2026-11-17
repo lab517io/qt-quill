@@ -120,6 +120,11 @@ bool ImageEmbed::activatesOnDoubleClick() const
     return true;
 }
 
+bool ImageEmbed::resizable() const
+{
+    return true;
+}
+
 QSizeF ImageEmbed::size(const EmbedContext& c) const
 {
     const QTextImageFormat f = c.format.toImageFormat();

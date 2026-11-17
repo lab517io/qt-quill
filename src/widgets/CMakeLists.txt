@@ -20,6 +20,7 @@ add_library(quillqt_widgets STATIC
     EmbedRegistry.cpp
     Embeds.cpp
     ImageLoader.cpp
+    ImageResize.cpp
     ImageLoader.h
     Export.cpp
     ImageSize.cpp
