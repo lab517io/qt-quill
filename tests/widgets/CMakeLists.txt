@@ -8,7 +8,9 @@ foreach(test
         tst_toolbar
         tst_embeds
         tst_flutter_parity
-        tst_paste)
+        tst_paste
+        tst_history
+        tst_remote_cursors)
     set(gui GUI)
     if(test STREQUAL "tst_colors") # QTEST_GUILESS_MAIN
         set(gui "")
@@ -21,7 +23,7 @@ endforeach()
 # The same widget suites at device pixel ratio 2 and under other widget
 # styles (marker hit-tests, decorations, icons). Linux reproduces HiDPI and
 # the Windows style; real platforms are covered by M9.
-foreach(test tst_editor_keys tst_editor_changes tst_toolbar tst_embeds tst_flutter_parity)
+foreach(test tst_editor_keys tst_editor_changes tst_toolbar tst_embeds tst_flutter_parity tst_remote_cursors)
     add_test(NAME ${test}-hidpi COMMAND ${test} ${QUILLQT_TEST_ARGS})
     set_tests_properties(${test}-hidpi PROPERTIES ENVIRONMENT
         "QT_QPA_PLATFORM=offscreen;QT_SCALE_FACTOR=2;LSAN_OPTIONS=suppressions=${QUILLQT_TESTS_DIR}/lsan.supp")
@@ -31,3 +33,16 @@ foreach(test tst_editor_keys tst_editor_changes tst_toolbar tst_embeds tst_flutt
             "QT_QPA_PLATFORM=offscreen;LSAN_OPTIONS=suppressions=${QUILLQT_TESTS_DIR}/lsan.supp")
     endforeach()
 endforeach()
+
+# The editing suites again with the Delta undo model (QuillEditor::installHistory).
+foreach(test tst_editor_keys tst_editor_api tst_toolbar tst_embeds tst_paste)
+    add_test(NAME ${test}-history COMMAND ${test} ${QUILLQT_TEST_ARGS})
+    set_tests_properties(${test}-history PROPERTIES ENVIRONMENT
+        "QT_QPA_PLATFORM=offscreen;QUILLQT_TEST_HISTORY=1;LSAN_OPTIONS=suppressions=${QUILLQT_TESTS_DIR}/lsan.supp")
+endforeach()
+
+# Editors collaborating through the example's server and session.
+if(TARGET quillqt_collab_example)
+    quillqt_add_test(tst_collab GUI SOURCES tst_collab.cpp LIBS quillqt_collab_example)
+    target_include_directories(tst_collab PRIVATE ${PROJECT_SOURCE_DIR}/src/widgets)
+endif()

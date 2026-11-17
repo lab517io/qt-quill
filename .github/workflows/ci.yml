@@ -132,6 +132,11 @@ jobs:
       - run: ci/install-deps-ubuntu.sh
       - run: ci/build.sh Release
       - run: ci/screenshot.sh release
+      # quill-delta (JavaScript) clients against the quill-collab server (M12).
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: ci/check-collab-node.sh release
       - uses: actions/upload-artifact@v4
         with:
           name: screenshots

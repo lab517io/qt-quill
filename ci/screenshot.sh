@@ -25,4 +25,7 @@ for s in $samples; do
     run "$DEMO" --offline --sample "$s" --screenshot "$OUT/$name.png"
     run "$DEMO" --offline --sample "$s" --dark --screenshot "$OUT/$name-dark.png"
 done
+# The collaboration example: two windows editing at once over loopback TCP.
+COLLAB="$ROOT/build/$CFG/apps/collab/quill-collab"
+[ -x "$COLLAB" ] && run "$COLLAB" --local 3 --screenshot "$OUT/collab.png"
 echo "screenshots in $OUT"

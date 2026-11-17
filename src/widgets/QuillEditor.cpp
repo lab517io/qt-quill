@@ -11,13 +11,16 @@
 #include "ClipboardHtml.h"
 #include "DocumentEdit.h"
 #include "quill/DeltaDocument.h"
+#include "quill/RemoteCursors.h"
 
 #include <QAbstractTextDocumentLayout>
 #include <QBuffer>
+#include <QContextMenuEvent>
 #include <QDropEvent>
 #include <QHelpEvent>
 #include <QImageReader>
 #include <QJsonArray>
+#include <QMenu>
 #include <QMimeData>
 #include <QMouseEvent>
 #include <QPainter>
@@ -189,6 +192,25 @@ Delta QuillEditorPrivate::modify(Source src, const std::function<Delta()>& fn)
     const bool track = depth == 0 && !before.hasSelection();
     const AttributeMap typing = track ? typingAttributes() : AttributeMap();
     const AttributeMap lineBefore = track ? styledFor(before.block()) : AttributeMap();
+    // Quill's shiftRange: a change that is not the user's moves the
+    // selection with transformPosition(.., priority = true), so that text a
+    // peer inserts at the caret goes after it. Qt would move the caret past it.
+    const bool shift = depth == 0 && src != Source::User && !loading;
+    const int anchorBefore = before.anchor();
+    const int positionBefore = before.position();
+    // An open input method composition (preedit) is drawn by the caret's
+    // block layout at a block-relative position, which Qt does not move with
+    // the caret. Take it off while the change is applied, put it back at the
+    // caret after.
+    QString preedit;
+    QList<QTextLayout::FormatRange> preeditFormats;
+    if (shift && before.block().layout() && !before.block().layout()->preeditAreaText().isEmpty()) {
+        QTextLayout* layout = before.block().layout();
+        preedit = layout->preeditAreaText();
+        preeditFormats = layout->formats();
+        layout->setPreeditArea(-1, QString());
+        layout->clearFormats();
+    }
     ++depth;
     source = src;
     const Delta input = fn();
@@ -215,6 +237,25 @@ Delta QuillEditorPrivate::modify(Source src, const std::function<Delta()>& fn)
                 change = input;
         } catch (const DeltaError&) {
         }
+    }
+    if (shift && contents != old) {
+        const auto moved = [&](int pos) { return clampIndex(int(change.transformPosition(pos, true))); };
+        QTextCursor c = q->textCursor();
+        const int anchor = moved(anchorBefore), position = moved(positionBefore);
+        if (c.anchor() != anchor || c.position() != position) {
+            ++depth; // reported once below
+            c.setPosition(anchor);
+            c.setPosition(position, QTextCursor::KeepAnchor);
+            q->setTextCursor(c);
+            --depth;
+        }
+    }
+    if (!preedit.isEmpty()) {
+        const QTextCursor c = q->textCursor();
+        QTextLayout* layout = c.block().layout();
+        layout->setPreeditArea(c.position() - c.block().position(), preedit);
+        layout->setFormats(preeditFormats);
+        q->document()->markContentsDirty(c.block().position(), c.block().length());
     }
     if (depth == 0) {
         log.clear();
@@ -560,7 +601,8 @@ Delta QuillEditor::getContents(int index, int length) const
 
 Delta QuillEditor::setContents(const Delta& document, Source source)
 {
-    return d->modify(source, [&] {
+    d->loading = true;
+    const Delta change = d->modify(source, [&] {
         const Delta old = d->contents;
         d->suppress = true;
         LoadOptions options;
@@ -575,6 +617,10 @@ Delta QuillEditor::setContents(const Delta& document, Source source)
         d->log.append(change);
         return change;
     });
+    d->loading = false;
+    if (d->history)
+        d->history->clear();
+    return change;
 }
 
 Delta QuillEditor::updateContents(const Delta& change, Source source)
@@ -806,6 +852,107 @@ void QuillEditor::setPasteIgnoredAttributes(const QStringList& keys)
     d->pasteIgnored = keys;
 }
 
+History* QuillEditor::installHistory(const HistoryOptions& options)
+{
+    if (d->history) {
+        d->history->setOptions(options);
+        return d->history;
+    }
+    const bool undo = isUndoAvailable(), redo = isRedoAvailable();
+    document()->setUndoRedoEnabled(false);
+    d->lastUndoSteps = d->lastRedoSteps = 0;
+    d->history = new History(this, options);
+    connect(d->history, &History::undoAvailable, this, &QTextEdit::undoAvailable);
+    connect(d->history, &History::redoAvailable, this, &QTextEdit::redoAvailable);
+    if (undo)
+        Q_EMIT undoAvailable(false);
+    if (redo)
+        Q_EMIT redoAvailable(false);
+    return d->history;
+}
+
+void QuillEditor::removeHistory()
+{
+    if (!d->history)
+        return;
+    const bool undo = isUndoAvailable(), redo = isRedoAvailable();
+    delete d->history;
+    d->history = nullptr;
+    document()->setUndoRedoEnabled(true);
+    d->lastUndoSteps = d->lastRedoSteps = 0;
+    if (undo)
+        Q_EMIT undoAvailable(false);
+    if (redo)
+        Q_EMIT redoAvailable(false);
+}
+
+RemoteCursors* QuillEditor::remoteCursors()
+{
+    if (!d->cursors)
+        d->cursors = new RemoteCursors(this);
+    return d->cursors;
+}
+
+History* QuillEditor::history() const
+{
+    return d->history;
+}
+
+bool QuillEditor::isUndoAvailable() const
+{
+    return d->history ? d->history->canUndo() : document()->isUndoAvailable();
+}
+
+bool QuillEditor::isRedoAvailable() const
+{
+    return d->history ? d->history->canRedo() : document()->isRedoAvailable();
+}
+
+void QuillEditor::undo()
+{
+    if (d->history)
+        d->history->undo();
+    else
+        QTextEdit::undo();
+}
+
+void QuillEditor::redo()
+{
+    if (d->history)
+        d->history->redo();
+    else
+        QTextEdit::redo();
+}
+
+void QuillEditor::contextMenuEvent(QContextMenuEvent* e)
+{
+    if (!d->history) {
+        QTextEdit::contextMenuEvent(e);
+        return;
+    }
+    const std::unique_ptr<QMenu> menu(d->contextMenu(e->pos()));
+    if (menu)
+        menu->exec(e->globalPos());
+}
+
+QMenu* QuillEditorPrivate::contextMenu(const QPoint& pos)
+{
+    QMenu* menu = q->createStandardContextMenu(pos);
+    if (!menu || !history)
+        return menu;
+    // QWidgetTextControl's menu wires Undo / Redo to the QTextDocument stack.
+    for (QAction* a : menu->actions()) {
+        const bool isUndo = a->objectName() == QLatin1String("edit-undo");
+        const bool isRedo = a->objectName() == QLatin1String("edit-redo");
+        if (!isUndo && !isRedo)
+            continue;
+        QObject::disconnect(a, &QAction::triggered, nullptr, nullptr);
+        a->setEnabled(!q->isReadOnly() && (isUndo ? q->isUndoAvailable() : q->isRedoAvailable()));
+        QObject::connect(a, &QAction::triggered, q, isUndo ? &QuillEditor::undo : &QuillEditor::redo);
+    }
+    return menu;
+}
+
 void QuillEditor::setVerifyChanges(bool on)
 {
     d->verify = on;
@@ -951,6 +1098,8 @@ void QuillEditor::mouseReleaseEvent(QMouseEvent* e)
 void QuillEditor::mouseMoveEvent(QMouseEvent* e)
 {
     QTextEdit::mouseMoveEvent(e);
+    if (d->cursors)
+        d->cursors->hover(e->pos());
     const bool link = !anchorAt(e->pos()).isEmpty() && (isReadOnly() || (e->modifiers() & Qt::ControlModifier));
     const bool marker =
         !isReadOnly() && document()->documentLayout()->blockWithMarkerAt(documentPos(this, e->pos())).isValid();
@@ -1019,6 +1168,10 @@ void QuillEditor::paintEvent(QPaintEvent* e)
         flush();
     }
     QTextEdit::paintEvent(e);
+    if (d->cursors) {
+        QPainter p(viewport());
+        d->cursors->paint(p);
+    }
 }
 
 void QuillEditor::changeEvent(QEvent* e)

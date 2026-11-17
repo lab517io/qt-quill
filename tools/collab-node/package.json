@@ -1,0 +1,9 @@
+{
+  "name": "quillqt-collab-node",
+  "private": true,
+  "description": "A quill-delta client for the quill-collab server (interoperability check)",
+  "type": "module",
+  "dependencies": {
+    "quill-delta": "5.1.0"
+  }
+}

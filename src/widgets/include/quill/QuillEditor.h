@@ -2,6 +2,7 @@
 
 #include "quill/Delta.h"
 #include "quill/Formats.h"
+#include "quill/History.h"
 #include "quill/Range.h"
 #include "quill/Source.h"
 
@@ -16,6 +17,7 @@
 namespace quill {
 
 class EmbedRegistry;
+class RemoteCursors;
 class QuillEditorPrivate;
 
 /// A rich text editor whose content is a Quill Delta.
@@ -58,6 +60,12 @@ public:
     /// Replaces the document. Resets the undo history (unlike Quill.js).
     Delta setContents(const Delta& document, Source source = Source::Api);
     /// Applies a change Delta. See DeltaDocument::apply for the rules.
+    ///
+    /// Like every editing method called with a source other than
+    /// Source::User, it moves the selection as Quill does
+    /// (transformPosition with priority): text inserted at the caret, e.g.
+    /// by a collaborator, goes after it. An open input method composition
+    /// moves along.
     Delta updateContents(const Delta& change, Source source = Source::Api);
     /// Plain text; embeds are U+FFFC so indices stay aligned (flutter_quill's
     /// getPlainText; Quill.js drops embeds).
@@ -118,11 +126,39 @@ public:
     QStringList pasteIgnoredAttributes() const;
     void setPasteIgnoredAttributes(const QStringList& keys);
 
+    // --- Undo ------------------------------------------------------------------
+    /// Replaces the QTextDocument undo stack with a Delta-based History
+    /// (flutter_quill's undo model); collaborative editing needs it, with
+    /// HistoryOptions::userOnly. The undo keys, the context menu, undo(),
+    /// redo() and QuillToolbar then use it. Calling it again changes the
+    /// options and keeps the steps.
+    History* installHistory(const HistoryOptions& options = {});
+    /// Back to the QTextDocument undo stack (empty).
+    void removeHistory();
+    /// The installed History, or nullptr.
+    History* history() const;
+    /// Whether undo() / redo() would change something (either undo model);
+    /// undoAvailable() and redoAvailable() signal changes of these.
+    bool isUndoAvailable() const;
+    bool isRedoAvailable() const;
+
+    // --- Collaboration ---------------------------------------------------------
+    /// Other users' cursors, painted over the text (created on first use).
+    RemoteCursors* remoteCursors();
+
     /// Testing aid: after every change, compare the tracked contents with a
     /// full export and count mismatches (then resynchronise). Also enabled by
     /// the environment variable QUILLQT_VERIFY=1.
     void setVerifyChanges(bool on);
     int verificationFailures() const;
+
+public Q_SLOTS:
+    /// Undo and redo through the installed History, or QTextEdit's. They
+    /// hide QTextEdit::undo() / redo(), which are not virtual: called
+    /// through a QTextEdit pointer with a History installed, those do
+    /// nothing (the QTextDocument stack is off).
+    void undo();
+    void redo();
 
 Q_SIGNALS:
     void textChange(const quill::Delta& change, const quill::Delta& oldContents, quill::Source source);
@@ -150,6 +186,7 @@ protected:
     bool viewportEvent(QEvent* e) override;
     void paintEvent(QPaintEvent* e) override;
     void changeEvent(QEvent* e) override;
+    void contextMenuEvent(QContextMenuEvent* e) override;
     void dropEvent(QDropEvent* e) override;
     bool canInsertFromMimeData(const QMimeData* source) const override;
     void insertFromMimeData(const QMimeData* source) override;

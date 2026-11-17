@@ -8,6 +8,7 @@
 
 #include <functional>
 
+class QMenu;
 class QMimeData;
 class QTextBlock;
 
@@ -17,6 +18,8 @@ class QuillEditorPrivate
 {
 public:
     explicit QuillEditorPrivate(QuillEditor* editor) : q(editor) {}
+    /// White-box tests.
+    static QuillEditorPrivate* get(QuillEditor* editor) { return editor->d.get(); }
 
     struct Line
     {
@@ -76,6 +79,10 @@ public:
     /// The change that replaces `r` with the clipboard or drop contents.
     Delta pasteChange(const QMimeData* source, const Range& r) const;
 
+    /// The context menu at viewport position `pos`, with Undo / Redo wired
+    /// to the History when one is installed. The caller owns it.
+    QMenu* contextMenu(const QPoint& pos);
+
     /// Activates the embed at `index` (handler, then embedActivated).
     void activateEmbed(int index);
     /// Handler and context of the embed at `index`.
@@ -87,11 +94,14 @@ public:
     StyleOptions style;
     QStringList pasteIgnored;
     QuillEditor::EditingRules rules = QuillEditor::EditingRules::FlutterQuill;
+    History* history = nullptr;
+    RemoteCursors* cursors = nullptr;
 
     int depth = 0;
     Source source = Source::User;
     QList<Delta> log;
     bool suppress = false;
+    bool loading = false; ///< in setContents
     int lastUndoSteps = 0;
     int lastRedoSteps = 0;
     bool commandAdded = false;

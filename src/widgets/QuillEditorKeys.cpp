@@ -27,6 +27,14 @@ void QuillEditor::keyPressEvent(QKeyEvent* e)
         return;
     }
     const Qt::KeyboardModifiers mods = e->modifiers() & ~Qt::KeypadModifier;
+    if (d->history && (e->matches(QKeySequence::Undo) || e->matches(QKeySequence::Redo))) {
+        if (e->matches(QKeySequence::Undo))
+            d->history->undo();
+        else
+            d->history->redo();
+        ensureCursorVisible();
+        return;
+    }
     if (e->matches(QKeySequence::Bold)) {
         d->toggle(key("bold"));
         return;
@@ -316,8 +324,11 @@ bool QuillEditorPrivate::handleSpace()
     else if (marker == QLatin1String("-") || marker == QLatin1String("*"))
         value = key("bullet");
 
-    // Insert the space first, so that undo brings back the typed marker.
+    // Insert the space first, so that undo brings back the typed marker
+    // (with a History: in a step of its own, as Quill cuts off around it).
     q->insertText(r.index, QStringLiteral(" "), typingAttributes(), Source::User);
+    if (history)
+        history->cutoff();
     const int textLength = line.end - line.start;
     const int prefixLength = int(prefix.size());
     const Delta change = Delta()
@@ -326,6 +337,8 @@ bool QuillEditorPrivate::handleSpace()
                              .retain(textLength - prefixLength)
                              .retain(1, resolveLine(line.attrs, {{key("list"), value}}));
     q->updateContents(change, Source::User);
+    if (history)
+        history->cutoff();
     q->setSelection(line.start, 0, Source::Silent);
     return true;
 }

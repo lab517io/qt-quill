@@ -5,7 +5,7 @@ the [Quill Delta](https://quilljs.com/docs/delta) format, compatible with
 [flutter_quill](https://pub.dev/packages/flutter_quill) and
 [Quill](https://github.com/slab/quill).
 
-**Status:** milestones M1 (skeleton), M2 (Delta core), M3 (Delta → QTextDocument), M4 (QTextDocument → Delta), M5 (editor widget), M6 (toolbar, demo), M7 (embeds), M8 (fidelity harness, CI), M9a (portability groundwork on Linux), M10 (rendering fidelity) and M11 (large documents) done; M9 (native Windows and macOS) waits for those machines. See
+**Status:** milestones M1 (skeleton), M2 (Delta core), M3 (Delta → QTextDocument), M4 (QTextDocument → Delta), M5 (editor widget), M6 (toolbar, demo), M7 (embeds), M8 (fidelity harness, CI), M9a (portability groundwork on Linux), M10 (rendering fidelity), M11 (large documents) and M12 (collaboration) done; M9 (native Windows and macOS) waits for those machines. See
 [PLAN.md](PLAN.md) for the design and [plans/](plans/README.md) for the
 milestone plans.
 
@@ -169,6 +169,65 @@ build/debug/apps/demo/quill-demo [file.json] [--sample showcase.json] [--dark] [
 ci/screenshot.sh       # one PNG per embedded sample, light and dark
 ```
 
+## Collaboration
+
+![quill-collab](docs/collab.png)
+
+Several `QuillEditor`s can edit one document at the same time, in one
+process or across the network, the way Quill and flutter_quill apps do:
+client–server operational transformation on Quill Deltas. The library has
+the pieces; `apps/collab` (`quill-collab`) shows how they fit.
+
+| Piece | What it does |
+|---|---|
+| `quill::OtClient` (Delta library) | The client state machine (ot.js / ShareDB model): one change in flight, later local changes buffered, server changes transformed against both. No I/O. |
+| `quill::OtServer` (Delta library) | The document, revision and change log: transforms an incoming change against the changes since its base revision, rejects invalid ones, recognises resends after a reconnect. No I/O. |
+| `QuillEditor::installHistory()` | Replaces Qt's undo stack with `quill::History`, a port of flutter_quill's / Quill's Delta history. With `HistoryOptions::userOnly`, Ctrl+Z undoes only the local user's changes, also after remote edits arrived (the steps are transformed). Keys, context menu, `undo()` / `redo()` and `QuillToolbar` use it. |
+| `QuillEditor::remoteCursors()` | Peers' carets, selections and name flags, moved with every change until the next cursor update. |
+
+The rules for a host:
+
+```cpp
+editor.installHistory({/*delay*/ 400, /*maxStack*/ 100, /*userOnly*/ true});
+client.send  = [&](qint64 rev, const quill::Delta& change) { /* to the server */ };
+client.apply = [&](const quill::Delta& change) { editor.updateContents(change, quill::Source::Api); };
+QObject::connect(&editor, &quill::QuillEditor::textChange,
+                 [&](const quill::Delta& change, const quill::Delta&, quill::Source source) {
+                     if (source == quill::Source::User)  // typing, toolbar, undo/redo
+                         client.applyClient(change);      // not the remote changes applied above
+                 });
+// server messages: client.applyServer(change) for others' changes, client.serverAck() for ours
+```
+
+- Remote changes go in with `Source::Api`: they are not sent back, the
+  `History` transforms its steps instead of recording them, and the local
+  selection moves as in Quill (text a peer inserts at the caret goes after
+  it). An open input method composition moves with the caret.
+- Cursor positions cross the wire in the server's coordinates:
+  `OtClient::transformToServer()` before sending (best sent when nothing is
+  in flight), `transformFromServer()` on arrival.
+- The server's changes win ties, on the server and in every client, so all
+  copies converge.
+
+`quill-collab` speaks line-delimited JSON over TCP with Deltas in Quill.js
+JSON form (protocol in `apps/collab/Protocol.h`). `ci/check-collab-node.sh`
+lets three JavaScript clients built on the `quill-delta` npm package edit
+against the C++ server; they converge. Swapping in `QWebSocket` would let
+browsers connect.
+
+```sh
+quill-collab --local 3                       # server + 3 windows side by side
+quill-collab --serve 7777 [--doc start.json] # headless server
+quill-collab --connect host:7777 --name Ann  # client window
+```
+
+Each window has a latency setting (0–5 s) and an offline switch to show
+concurrent edits and buffering by hand; after going back online the client
+receives what it missed and resends its pending change. Not covered: server
+persistence and authentication, ShareDB protocol compatibility, embed
+changes inside embeds (`retain: {type: change}`), CRDT-style offline merge of
+long-diverged copies.
+
 ## Compatibility checks
 
 - **Delta core vs quill-delta:** 4074 operation cases (hand-written plus 500
@@ -246,6 +305,7 @@ ci/check-oracle.sh     # regenerate the OT oracle (Node, optional Dart) and fail
 ci/check-flutter.sh    # flutter_quill compatibility (Flutter)
 ci/format-check.sh     # clang-format-18 (--fix to format)
 ci/bench.sh            # large-document timings against tools/bench/budgets.json (Release tree)
+ci/check-collab-node.sh # quill-delta (Node.js) clients against the quill-collab server
 build/debug/apps/demo/quill-demo --sample showcase.json
 ```
 
@@ -255,12 +315,14 @@ build/debug/apps/demo/quill-demo --sample showcase.json
 src/delta/     QuillQt::Delta sources, public headers in include/quill/
 src/widgets/   QuillQt::Widgets sources, public headers in include/quill/
 apps/demo/     quill-demo
+apps/collab/   quill-collab: collaborative editing example (server, client session, transports)
 tests/         QtTest suites and fixtures
 ci/            provider-neutral build and test scripts
 tools/oracle/  Node.js scripts that record reference behaviour into tests/fixtures
 tools/dart-oracle/    the same OT cases on dart_quill_delta
 tools/flutter-check/  flutter_quill compatibility tests (Flutter)
 tools/bench/   quill-bench: large-document timings (M11)
+tools/collab-node/    quill-delta client for the quill-collab server (interoperability check)
 .github/workflows/    CI: build/test (Debug, Release, ASan+UBSan), oracle, flutter_quill, screenshots, format
 plans/         milestone plans
 ```

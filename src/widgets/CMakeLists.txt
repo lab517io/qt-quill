@@ -4,10 +4,12 @@ add_library(quillqt_widgets STATIC
     include/quill/EmbedRegistry.h
     include/quill/Embeds.h
     include/quill/Formats.h
+    include/quill/History.h
     include/quill/QuillEditor.h
     include/quill/QuillFindBar.h
     include/quill/QuillToolbar.h
     include/quill/Range.h
+    include/quill/RemoteCursors.h
     include/quill/Source.h
     ClipboardHtml.cpp
     ClipboardHtml.h
@@ -23,11 +25,13 @@ add_library(quillqt_widgets STATIC
     ImageSize.cpp
     ImageSize.h
     Formats.cpp
+    History.cpp
     QuillEditor.cpp
     QuillEditor_p.h
     QuillEditorKeys.cpp
     QuillFindBar.cpp
     QuillToolbar.cpp
+    RemoteCursors.cpp
     ColorButton.cpp
     ColorButton.h
     Icons.cpp

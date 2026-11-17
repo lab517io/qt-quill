@@ -268,8 +268,8 @@ void QuillToolbar::setEditor(QuillEditor* editor)
         m_editorConnections << connect(editor, &QuillEditor::editorChange, this, refresh)
                             << connect(editor, &QTextEdit::currentCharFormatChanged, this, refresh)
                             << connect(editor, &QTextEdit::cursorPositionChanged, this, refresh)
-                            << connect(editor->document(), &QTextDocument::undoAvailable, this, refresh)
-                            << connect(editor->document(), &QTextDocument::redoAvailable, this, refresh)
+                            << connect(editor, &QTextEdit::undoAvailable, this, refresh)
+                            << connect(editor, &QTextEdit::redoAvailable, this, refresh)
                             << connect(editor, &QuillEditor::linkRequested, this, [this] { editLink(); })
                             << connect(editor, &QObject::destroyed, this, [this] {
                                    // While destroyed() is emitted the QPointer is still set and
@@ -547,8 +547,8 @@ void QuillToolbar::updateState()
     const ColorDialect dialect = DeltaDocument::documentStyle(m_editor->document()).colorDialect;
     m_color->setCurrentColor(colors::parse(f.value(key("color")).toString(), dialect));
     m_background->setCurrentColor(colors::parse(f.value(key("background")).toString(), dialect));
-    m_actions.value(key("undo"))->setEnabled(editable && m_editor->document()->isUndoAvailable());
-    m_actions.value(key("redo"))->setEnabled(editable && m_editor->document()->isRedoAvailable());
+    m_actions.value(key("undo"))->setEnabled(editable && m_editor->isUndoAvailable());
+    m_actions.value(key("redo"))->setEnabled(editable && m_editor->isRedoAvailable());
     if (m_findBar)
         m_actions.value(key("search"))->setChecked(m_findBar->isVisible());
     m_updating = false;

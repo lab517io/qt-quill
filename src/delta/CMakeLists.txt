@@ -4,6 +4,8 @@ add_library(quillqt_delta STATIC
     include/quill/FastDiff.h
     include/quill/Op.h
     include/quill/OpIterator.h
+    include/quill/OtClient.h
+    include/quill/OtServer.h
     include/quill/Version.h
     Attributes.cpp
     Delta.cpp
@@ -11,6 +13,8 @@ add_library(quillqt_delta STATIC
     Json.cpp
     Op.cpp
     OpIterator.cpp
+    OtClient.cpp
+    OtServer.cpp
     Version.cpp
 )
 add_library(QuillQt::Delta ALIAS quillqt_delta)

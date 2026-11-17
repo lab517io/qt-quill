@@ -462,6 +462,8 @@ private slots:
         ChangeRecorder rec(e.get());
         e->setContents(delta("[{'insert':'ab\\n'}]"));
         e->formatLine(0, 0, attrs("{'list':'bullet'}"));
+        if (e->history()) // changes within its delay are one step
+            e->history()->cutoff();
         e->insertText(2, QStringLiteral("c"), attrs("{'bold':true}"));
         e->undo();
         check(e->getContents(), delta("[{'insert':'ab'},{'insert':'\\n','attributes':{'list':'bullet'}}]"), __LINE__);

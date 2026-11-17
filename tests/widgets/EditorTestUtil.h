@@ -65,6 +65,9 @@ inline std::unique_ptr<quill::QuillEditor> makeEditor(bool show = true)
     e->setVerifyChanges(true);
     // Unit tests stay off the network (fixtures reference remote images).
     e->embeds()->setRemoteImagesEnabled(false);
+    // The suites run a second time with the Delta undo model.
+    if (qEnvironmentVariableIntValue("QUILLQT_TEST_HISTORY") == 1)
+        e->installHistory();
     e->resize(600, 400);
     if (show) {
         e->show();

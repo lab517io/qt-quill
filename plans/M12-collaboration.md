@@ -175,37 +175,37 @@ inspector) with a status line (connection, revision, peers, pending ops).
 
 ## Tasks
 
-- [ ] `OtClient` + `OtServer` with unit tests (ot.js's test cases for the
+- [x] `OtClient` + `OtServer` with unit tests (ot.js's test cases for the
       state machine, ported).
-- [ ] Simulated-network fuzz: K clients, random local edits (reuse the M2
+- [x] Simulated-network fuzz: K clients, random local edits (reuse the M2
       random Delta generator against current contents), random delivery
       delays with per-connection FIFO; after draining, every client and the
       server equal the same Delta. Seeds fixed, 2000 runs in CI, longer runs
       by env var like the M5 fuzzers.
-- [ ] `History`: port Quill's `test/unit/modules/history.ts` cases (delay
+- [x] `History`: port Quill's `test/unit/modules/history.ts` cases (delay
       merge, maxStack, userOnly, transform against api changes, selection
       after undo); add flutter_quill's history cases to the flutter check
       if its test suite has them.
-- [ ] `QuillEditor::setHistory` wiring: keys, context menu, toolbar, signals;
+- [x] `QuillEditor::setHistory` wiring: keys, context menu, toolbar, signals;
       Qt undo disabled; all existing tests still pass with and without a
       `History` (run `tst_editor_keys` and `tst_toolbar` both ways).
-- [ ] Pin `updateContents` selection behaviour for the concurrent cases
+- [x] Pin `updateContents` selection behaviour for the concurrent cases
       above; fix what breaks (IME preedit is the likely one).
-- [ ] `RemoteCursors` with transform tests and a painting test (grab the
+- [x] `RemoteCursors` with transform tests and a painting test (grab the
       viewport, check the caret colour column, as `decorationsArePainted`
       does; HiDPI variant).
-- [ ] `apps/collab`: protocol, server, client session, `--local N`, latency
+- [x] `apps/collab`: protocol, server, client session, `--local N`, latency
       panel, reconnect.
-- [ ] `tst_collab`: three editors + in-process server over an in-memory
+- [x] `tst_collab`: three editors + in-process server over an in-memory
       transport; random typing through `QTest` key events and API edits,
       random latency; converge; undo on one editor never removes another
       editor's text; with `QUILLQT_VERIFY=1`.
-- [ ] Smoke test: `quill-collab --local 2 --screenshot` over real loopback
+- [x] Smoke test: `quill-collab --local 2 --screenshot` over real loopback
       TCP (offscreen), plus `ci/screenshot.sh` entry.
-- [ ] Optional: `tools/collab-node/` — a Node client using `quill-delta`
+- [x] Optional: `tools/collab-node/` — a Node client using `quill-delta`
       that joins the server and makes random edits, proving the wire format
       is plain Quill Delta (runs in the oracle CI job, Node is already there).
-- [ ] README "Collaboration" section: model, the integration points
+- [x] README "Collaboration" section: model, the integration points
       (`OtClient`, `History`, `RemoteCursors`, which `Source` goes where),
       limits.
 
@@ -262,3 +262,80 @@ inspector) with a status line (connection, revision, peers, pending ops).
    vs QtWebSockets (browser clients could connect directly, adds a dependency).
 4. **ShareDB compatibility**: not in M12 (recommended); the
    `OtClient`/`OtServer` split leaves room for a ShareDB adapter later.
+
+## Outcome (2026-11-17)
+
+Done with the recommended defaults (C++ server in `quill-collab`, Delta
+`History` opt-in, TCP + line-delimited JSON, no ShareDB).
+
+### Library
+
+- `quill::OtClient` / `quill::OtServer` (Delta library, Qt Core only):
+  ot.js's three client states, server log with tie-break "server first",
+  validation (unknown revision, too long, final newline removed) and resend
+  recognition by `(clientId, sequence)`. `transformFromServer()` /
+  `transformToServer()` map cursor positions.
+- `quill::History` + `QuillEditor::installHistory()` / `removeHistory()` /
+  `history()` / `isUndoAvailable()` / `isRedoAvailable()` / `undo()` /
+  `redo()`: Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y, the context menu, the toolbar
+  and the slots go through it; `QTextDocument` undo is off while installed;
+  `setContents` clears it; list autofill cuts off steps as in Quill.
+- Selection under non-user changes follows Quill's `shiftRange`
+  (`transformPosition(.., true)`) for every API method except
+  `setContents`; an open IME preedit is moved with the caret (Qt left it at
+  the old block-relative position, also on another line).
+- `QuillEditor::remoteCursors()` → `quill::RemoteCursors`: caret, tinted
+  selection (also across lines and line breaks), name flag for 2 s after a
+  move or on hover; moved with every text change; repaints only the cursor's
+  rects on updates.
+
+### Example
+
+`apps/collab`: `Channel` (TCP and in-memory, ordered artificial latency),
+`CollabServer`, `CollabSession` (editor glue), `CollabWindow` (toolbar,
+status line, latency, offline switch, Delta inspector from the demo),
+`quill-collab --serve | --connect | --local N [--screenshot]`. The building
+blocks are a static library so that `tst_collab` drives the same code.
+
+### Tests
+
+| Test | Result |
+|---|---|
+| `tst_ot_client` | state machine, server; convergence fuzz 2 / 3 / 5 clients and with disconnects, 2000 runs each in ctest, 100 000 in a long run, clean. A wrong tie-break or a missing replay acknowledgement is caught within the first runs. |
+| `tst_history` | Quill's history tests (getLastChangeIndex, stack limit, merge, transform against API changes, preserve intention, remote changes, breaking up an insert), both selection rules, every undo path with a remote change in between |
+| `tst_collab` | remote insert at the caret, remote delete of the selection, IME composition (also moved to a new line), mouse drag; 3 editors over in-memory channels with random latency: key typing, API edits, line and inline formats, undo/redo, going offline; converge with 0 verification failures, and no undo removes another editor's text (12 rounds in ctest; 450 rounds in long runs, clean). Recording remote changes in the History is caught at once. |
+| `tst_remote_cursors` | transforms, painting (caret column, flag, selection tint) at 1× and 2×, flag timeout and hover |
+| `*-history` ctest variants | `tst_editor_keys`, `tst_editor_api`, `tst_toolbar`, `tst_embeds`, `tst_paste` run again with a `History` installed |
+| `quill-collab-smoke` | `--local 2` over loopback TCP: scripted concurrent edits converge and every window shows every peer's selection where it is |
+| `ci/check-collab-node.sh` | 3 clients on the JavaScript `quill-delta` package against the C++ server converge (screenshots job) |
+
+### Found on the way
+
+- A cursor sent while the client has changes in flight cannot be mapped to
+  the server's document exactly (inside a pending insert it lands after the
+  insert). The session sends it once the changes are acknowledged; peers
+  move the old one along with the changes meanwhile.
+- The local caret stays before a peer's insert at it (Quill), peers move
+  their copy after it: the session sends the cursor again when a remote
+  change moved it.
+- Reconnecting while a previous connection was still joining applied the
+  replay twice (found by the long fuzz): the old channel is now detached
+  and closed first.
+
+### Deviations from the plan
+
+- `HistoryOptions` defaults are flutter_quill's (`delay` 400 ms,
+  `userOnly` false), not 1000 ms / true; the session sets `userOnly`. Steps
+  are single Deltas as in Quill 2 (the redo inverse is computed when
+  undoing, from the change actually applied). The selection after undo
+  follows `editingRules()`: FlutterQuill collapses after the step's
+  retains and inserts, QuillJs restores the recorded range.
+- The API is `installHistory(options)` instead of `setHistory(unique_ptr)`.
+- `QuillEditor::undo()` / `redo()` hide QTextEdit's non-virtual slots;
+  through a `QTextEdit*` they do nothing while a History is installed.
+- The server drops a resend silently (Duplicate); the reconnect replay
+  acknowledges it instead.
+- If the editor normalises a remote change, the session sends the
+  difference as a local change (no case seen in the fuzz).
+- The Node check runs in the screenshots job (it needs the C++ build), not
+  in the oracle job.
