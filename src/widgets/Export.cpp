@@ -11,6 +11,7 @@
 
 #include "ImageSize.h"
 
+#include <QHash>
 #include <QJsonObject>
 #include <QTextBlock>
 #include <QTextCursor>
@@ -165,7 +166,7 @@ public:
             if (block.position() >= to)
                 break;
             checkFrame(block);
-            const AttributeMap line = DeltaDocument::lineAttributes(block, m_style);
+            const AttributeMap line = lineAttributes(block);
             // Text in a block styled by quill-qt was styled for the line
             // attributes stored on the block, so inline attributes are derived
             // against those, not against line changes made since (e.g. a header
@@ -182,7 +183,7 @@ public:
                 if (fStart >= fEnd)
                     continue;
                 const QString text = fragment.text().mid(fStart - fragment.position(), fEnd - fStart);
-                appendFragment(delta, text, fragment.charFormat(), styledFor, line);
+                appendFragment(delta, text, fragment.charFormatIndex(), fragment.charFormat(), styledFor, line);
             }
             const int separator = block.position() + block.length() - 1;
             if (separator >= from && separator < to)
@@ -204,14 +205,14 @@ private:
         }
     }
 
-    void appendFragment(Delta& delta, const QString& text, const QTextCharFormat& format, const AttributeMap& styledFor,
-                        const AttributeMap& line)
+    void appendFragment(Delta& delta, const QString& text, int formatIndex, const QTextCharFormat& format,
+                        const AttributeMap& styledFor, const AttributeMap& line)
     {
         // Embeds are one character each; Qt may merge identical ones into one fragment.
         qsizetype runStart = 0;
         const auto flushText = [&](qsizetype until) {
             if (until > runStart)
-                appendText(delta, text.mid(runStart, until - runStart), format, styledFor, line);
+                appendText(delta, text.mid(runStart, until - runStart), formatIndex, format, styledFor, line);
         };
         for (qsizetype i = 0; i < text.size(); ++i) {
             if (text.at(i) == QChar::ObjectReplacementCharacter) {
@@ -223,10 +224,10 @@ private:
         flushText(text.size());
     }
 
-    void appendText(Delta& delta, const QString& text, const QTextCharFormat& format, const AttributeMap& styledFor,
-                    const AttributeMap& line)
+    void appendText(Delta& delta, const QString& text, int formatIndex, const QTextCharFormat& format,
+                    const AttributeMap& styledFor, const AttributeMap& line)
     {
-        const AttributeMap attrs = DeltaDocument::inlineAttributes(format, styledFor, m_style);
+        const AttributeMap attrs = inlineAttributes(formatIndex, format, styledFor);
         // Soft line breaks (Shift+Enter) do not exist in Quill: each becomes a
         // "\n" carrying the line's attributes, i.e. a line of its own.
         const QStringList parts = text.split(QChar::LineSeparator);
@@ -235,6 +236,36 @@ private:
                 delta.insert(QStringLiteral("\n"), line);
             delta.insert(parts.at(i), attrs);
         }
+    }
+
+    /// DeltaDocument::lineAttributes, cached per block format and list format
+    /// (all it depends on).
+    AttributeMap lineAttributes(const QTextBlock& block)
+    {
+        const QTextList* list = block.textList();
+        const std::pair<int, int> key{block.blockFormatIndex(), list ? list->formatIndex() : -1};
+        const auto it = m_lineCache.constFind(key);
+        if (it != m_lineCache.constEnd())
+            return *it;
+        const AttributeMap attrs = DeltaDocument::lineAttributes(block, m_style);
+        m_lineCache.insert(key, attrs);
+        return attrs;
+    }
+
+    /// DeltaDocument::inlineAttributes, cached per document format and line
+    /// attributes: a document uses few formats, and deriving the attributes
+    /// was most of the export time.
+    AttributeMap inlineAttributes(int formatIndex, const QTextCharFormat& format, const AttributeMap& styledFor)
+    {
+        QList<std::pair<AttributeMap, AttributeMap>>& entries = m_inlineCache[formatIndex];
+        for (const auto& [line, attrs] : std::as_const(entries)) {
+            if (line == styledFor)
+                return attrs;
+        }
+        const AttributeMap attrs = DeltaDocument::inlineAttributes(format, styledFor, m_style);
+        if (entries.size() < 8)
+            entries.append({styledFor, attrs});
+        return attrs;
     }
 
     void appendEmbed(Delta& delta, const QTextCharFormat& formatIn, const AttributeMap& styledFor)
@@ -304,6 +335,8 @@ private:
     QStringList* m_warnings;
     bool m_warnedFrame = false;
     AttributeMap* m_attrsForStyle = nullptr;
+    QHash<int, QList<std::pair<AttributeMap, AttributeMap>>> m_inlineCache;
+    QHash<std::pair<int, int>, AttributeMap> m_lineCache;
 };
 
 } // namespace

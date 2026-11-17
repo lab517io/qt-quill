@@ -37,6 +37,58 @@ class TestEditorApi : public QObject
     Q_OBJECT
 
 private slots:
+    // Regrouping lists after an edit must not rebuild lists the edit did not
+    // touch (it did, for every edit in a long list, milestone M11), and must
+    // still regroup what changed.
+    void editsKeepUntouchedLists()
+    {
+        auto e = testutil::makeEditor(false);
+        Delta doc;
+        const char* types[] = {"bullet", "ordered", "unchecked"};
+        for (int i = 0; i < 60; ++i) {
+            doc.insert(QStringLiteral("item %1").arg(i));
+            AttributeMap a{{QStringLiteral("list"), QString::fromLatin1(types[(i / 7) % 3])}};
+            if (const int indent = (i * 5) % 4)
+                a.insert(QStringLiteral("indent"), indent);
+            doc.insert(QStringLiteral("\n"), a);
+        }
+        e->setContents(doc);
+        QTextDocument* d = e->document();
+        // Addresses only: Qt deletes a list when its last line leaves it.
+        const auto lists = [d] {
+            QList<quintptr> out;
+            for (QTextBlock b = d->begin(); b.isValid(); b = b.next())
+                out << quintptr(b.textList());
+            return out;
+        };
+        const QList<quintptr> before = lists();
+
+        // Text and inline formats do not change list structure.
+        e->insertText(e->getLength() / 2, QStringLiteral("x"));
+        e->formatText(10, 30, {{QStringLiteral("bold"), true}});
+        QCOMPARE(lists(), before);
+        QCOMPARE(e->verificationFailures(), 0);
+
+        // Changing one item of a flat list splits it: the items before keep
+        // their list, the changed one and those after get new ones.
+        Delta flat;
+        for (int i = 0; i < 30; ++i)
+            flat.insert(QStringLiteral("flat %1\n").arg(i));
+        e->setContents(flat);
+        e->formatLine(0, e->getLength(), {{QStringLiteral("list"), QStringLiteral("bullet")}});
+        const QList<quintptr> flatBefore = lists();
+        QCOMPARE(flatBefore.at(0), flatBefore.at(29));
+        e->formatLine(int(d->findBlockByNumber(10).position()), 1,
+                      {{QStringLiteral("list"), QStringLiteral("ordered")}});
+        const QList<quintptr> after = lists();
+        for (int i = 0; i < 10; ++i)
+            QCOMPARE(after.at(i), flatBefore.at(0));
+        QVERIFY(after.at(10) != after.at(0));
+        QVERIFY(after.at(11) != after.at(10));
+        QCOMPARE(after.at(11), after.at(29));
+        QCOMPARE(e->verificationFailures(), 0); // grouping equals a regroup from scratch
+    }
+
     void initialState()
     {
         auto e = testutil::makeEditor(false);

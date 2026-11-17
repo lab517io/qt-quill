@@ -57,6 +57,14 @@ Delta flutterDeleteChange(const Delta& contents, int index, int length);
 /// Attributes of the last op of `delta` (for a line Delta: the line attributes).
 AttributeMap lastAttributes(const Delta& delta);
 
+/// DeltaDocument::apply(); `exact` (optional) is set when the result is
+/// exactly contents.compose(change), i.e. the change needed no
+/// normalisation.
+Delta applyChange(QTextDocument* doc, const Delta& contents, const Delta& change, bool* exact);
+
+/// Number of the first line whose list membership differs from what
+/// DeltaDocument::regroupLists would build from scratch, or -1 (verify mode).
+int staleListGrouping(const QTextDocument* doc, const StyleOptions& style);
 /// Whether updateBlockSpacing(first, last) would change anything.
 bool blockSpacingStale(const QTextBlock& first, const QTextBlock& last, const StyleOptions& style);
 /// Number of the first line whose vertical margins are not what

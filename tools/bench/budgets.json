@@ -1,0 +1,17 @@
+{
+ "comment": "M11 budgets for quill-bench at --scale 1 (Release). 'ratio' budgets compare with plain Qt (a QTextEdit with the same document) measured in the same run, so they hold on any machine; 'ms' budgets are absolute and were met on the development machine (ci/bench.sh allows 3x on other machines).",
+ "budgets": [
+  {"corpus": "mixed", "scenario": "load", "stat": "median", "ratio": 1.25, "baseline": "qt-load"},
+  {"corpus": "plain", "scenario": "load", "stat": "median", "ratio": 1.25, "baseline": "qt-load"},
+  {"corpus": "mixed", "scenario": "type-middle", "stat": "median", "ratio": 1.3, "baseline": "qt-typing"},
+  {"corpus": "nested-lists", "scenario": "type-middle", "stat": "median", "ratio": 1.3, "baseline": "qt-typing"},
+  {"corpus": "long-line", "scenario": "type-middle", "stat": "median", "ratio": 1.2, "baseline": "qt-typing"},
+  {"corpus": "mixed", "scenario": "update-1char", "stat": "median", "ratio": 1.5, "baseline": "qt-typing"},
+  {"corpus": "nested-lists", "scenario": "update-1char", "stat": "median", "ratio": 1.5, "baseline": "qt-typing"},
+  {"corpus": "long-line", "scenario": "update-1char", "stat": "median", "ratio": 1.2, "baseline": "qt-typing"},
+  {"corpus": "mixed", "scenario": "paste-undo", "stat": "max", "ms": 150},
+  {"corpus": "mixed", "scenario": "getContents", "stat": "median", "ms": 0.5},
+  {"corpus": "mixed", "scenario": "scroll", "stat": "p95", "ms": 16},
+  {"corpus": "plain", "scenario": "export", "stat": "median", "ms": 300}
+ ]
+}

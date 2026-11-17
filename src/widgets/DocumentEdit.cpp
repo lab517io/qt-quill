@@ -209,19 +209,32 @@ AttributeMap lastAttributes(const Delta& delta)
 
 namespace {
 
-bool rangeHasFormat(const QTextBlock& block, int from, int to, const QTextCharFormat& format)
+/// Walks a block's fragments once, in order, for consecutive ranges.
+class FragmentWalker
 {
-    for (QTextBlock::iterator it = block.begin(); !it.atEnd(); ++it) {
-        const QTextFragment f = it.fragment();
-        if (f.position() + f.length() <= from)
-            continue;
-        if (f.position() >= to)
-            break;
-        if (!(f.charFormat() == format))
-            return false;
+public:
+    explicit FragmentWalker(const QTextBlock& block) : m_it(block.begin()) {}
+
+    /// Whether every fragment overlapping [from, to) has `format`. Calls
+    /// must come with increasing, non-overlapping ranges.
+    bool rangeHas(int from, int to, const QTextCharFormat& format)
+    {
+        while (!m_it.atEnd() && end(m_it.fragment()) <= from)
+            ++m_it;
+        for (QTextBlock::iterator j = m_it; !j.atEnd(); ++j) {
+            const QTextFragment f = j.fragment();
+            if (f.position() >= to)
+                break;
+            if (!(f.charFormat() == format))
+                return false;
+        }
+        return true;
     }
-    return true;
-}
+
+private:
+    static int end(const QTextFragment& f) { return f.position() + f.length(); }
+    QTextBlock::iterator m_it;
+};
 
 } // namespace
 
@@ -247,18 +260,30 @@ void restyleBlock(const QTextBlock& block, const Delta& line, const StyleOptions
     if (!(block.charFormat() == bcf))
         c.setBlockCharFormat(bcf);
 
+    // Find the ranges whose format differs in one pass over the fragments
+    // (checking each op from the block start was quadratic in long lines),
+    // then change them.
+    struct Change
+    {
+        int from, to;
+        QTextCharFormat format;
+    };
+    QList<Change> changes;
+    FragmentWalker fragments(block);
     int pos = block.position();
     const Delta content = line.slice(0, line.length() - 1);
     for (const Op& op : content.ops()) {
         const int n = int(op.length());
         const QTextCharFormat format = op.isEmbed() ? embedCharFormat(op.embed(), op.attributes(), lineAttrs, style)
                                                     : formats::charFormat(op.attributes(), lineAttrs, style);
-        if (!rangeHasFormat(block, pos, pos + n, format)) {
-            c.setPosition(pos);
-            c.setPosition(pos + n, QTextCursor::KeepAnchor);
-            c.setCharFormat(format);
-        }
+        if (!fragments.rangeHas(pos, pos + n, format))
+            changes.append({pos, pos + n, format});
         pos += n;
+    }
+    for (const Change& ch : std::as_const(changes)) {
+        c.setPosition(ch.from);
+        c.setPosition(ch.to, QTextCursor::KeepAnchor);
+        c.setCharFormat(ch.format);
     }
 }
 
@@ -344,6 +369,16 @@ Delta normalizeChange(const Delta& contents, const Delta& change)
             continue;
         }
         qsizetype n = op.length();
+        if (op.isDelete() || attrs.isEmpty()) {
+            // Plain retains and deletes keep their length (cut at the end of
+            // the document); skip without building the ops.
+            const qsizetype skipped = base.skip(n);
+            if (op.isDelete())
+                out.remove(skipped);
+            else
+                out.retain(skipped);
+            continue;
+        }
         while (n > 0 && base.hasNext()) {
             const Op piece = base.next(n);
             n -= piece.length();
@@ -492,11 +527,19 @@ Delta DeltaDocument::apply(QTextDocument* doc, const Delta& change)
 
 Delta DeltaDocument::apply(QTextDocument* doc, const Delta& contents, const Delta& changeIn)
 {
-    const StyleOptions style = documentStyle(doc);
+    return detail::applyChange(doc, contents, changeIn, nullptr);
+}
+
+Delta detail::applyChange(QTextDocument* doc, const Delta& contents, const Delta& changeIn, bool* exact)
+{
+    const StyleOptions style = DeltaDocument::documentStyle(doc);
     const Delta change = normalizeChange(contents, changeIn);
     Delta target = contents.compose(change);
-    if (!endsWithNewline(target))
+    const bool newline = !endsWithNewline(target);
+    if (newline)
         target.insert(QStringLiteral("\n"));
+    if (exact)
+        *exact = !newline && change == changeIn;
     const Delta qtChange = qtApplicable(contents, change, target);
     if (qtChange.isEmpty())
         return target;

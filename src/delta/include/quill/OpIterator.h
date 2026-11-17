@@ -25,6 +25,14 @@ public:
     Op::Type peekType() const;
     /// The remaining ops, starting with what is left of the current one.
     QList<Op> rest();
+    /// Index of the current op, and how much of it was consumed.
+    qsizetype index() const { return m_index; }
+    qsizetype offset() const { return m_offset; }
+    /// Skips `count` whole ops; only at an op boundary (offset() == 0).
+    void skipOps(qsizetype count) { m_index += count; }
+    /// Skips `length` units (fewer when the ops end first) without building
+    /// the skipped ops; returns how many were skipped.
+    qsizetype skip(qsizetype length);
 
 private:
     const QList<Op>& m_ops;

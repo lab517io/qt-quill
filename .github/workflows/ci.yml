@@ -48,6 +48,22 @@ jobs:
             build/*/Testing/Temporary/LastTest.log
             build/*/test-output/
 
+  # Large-document timings (M11). Reports only: shared runners are too noisy
+  # to fail on absolute times; tst_scaling in the matrix catches complexity
+  # regressions.
+  bench:
+    name: bench (large documents)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: ci/install-deps-ubuntu.sh
+      - run: ci/build.sh Release
+      - run: ci/bench.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bench
+          path: build/release/bench.json
+
   # Not verified yet: no Windows / macOS machine or remote so far (M9).
   build-windows:
     name: windows (MSVC 2022, Qt 6.8.3)

@@ -9,6 +9,7 @@ project(QuillQt
 option(QUILLQT_BUILD_DEMO  "Build the quill-demo application" ${PROJECT_IS_TOP_LEVEL})
 option(QUILLQT_BUILD_TESTS "Build the quill-qt test-suite"   ${PROJECT_IS_TOP_LEVEL})
 option(QUILLQT_WERROR      "Treat compiler warnings as errors (CI)" OFF)
+option(QUILLQT_BUILD_BENCH "Build quill-bench (large-document timings)" ${PROJECT_IS_TOP_LEVEL})
 
 find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Widgets Network)
 
@@ -35,4 +36,9 @@ endif()
 
 if(QUILLQT_BUILD_TESTS)
     add_subdirectory(tests)
+endif()
+
+if(QUILLQT_BUILD_BENCH)
+    find_package(Qt6 6.4 REQUIRED COMPONENTS Test)
+    add_subdirectory(tools/bench)
 endif()

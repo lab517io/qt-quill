@@ -67,6 +67,10 @@ public:
     bool operator!=(const Op& other) const { return !(*this == other); }
 
 private:
+    friend class Delta;
+    /// Appends to a text insert in place (amortised O(1); Delta::push).
+    void appendText(const QString& text) { m_text.append(text); }
+
     Type m_type = Type::Retain;
     bool m_isEmbed = false;
     qsizetype m_count = Infinity;

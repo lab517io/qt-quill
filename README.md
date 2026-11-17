@@ -5,7 +5,7 @@ the [Quill Delta](https://quilljs.com/docs/delta) format, compatible with
 [flutter_quill](https://pub.dev/packages/flutter_quill) and
 [Quill](https://github.com/slab/quill).
 
-**Status:** milestones M1 (skeleton), M2 (Delta core), M3 (Delta → QTextDocument), M4 (QTextDocument → Delta), M5 (editor widget), M6 (toolbar, demo), M7 (embeds), M8 (fidelity harness, CI), M9a (portability groundwork on Linux) and M10 (rendering fidelity) done; M9 (native Windows and macOS) waits for those machines. See
+**Status:** milestones M1 (skeleton), M2 (Delta core), M3 (Delta → QTextDocument), M4 (QTextDocument → Delta), M5 (editor widget), M6 (toolbar, demo), M7 (embeds), M8 (fidelity harness, CI), M9a (portability groundwork on Linux), M10 (rendering fidelity) and M11 (large documents) done; M9 (native Windows and macOS) waits for those machines. See
 [PLAN.md](PLAN.md) for the design and [plans/](plans/README.md) for the
 milestone plans.
 
@@ -213,6 +213,28 @@ surrogates. quill-qt writes custom embeds as strings
 - **Deployment** (not yet verified): `windeployqt quill-demo.exe`,
   `macdeployqt quill-demo.app`.
 
+## Performance
+
+Measured with `tools/bench` (`quill-bench`, Release build, offscreen) on
+generated documents; "Qt" is a plain `QTextEdit` holding the same document,
+i.e. the cost of Qt's own text layout:
+
+| Document | Load | Typing a key | One-character `updateContents` |
+|---|---|---|---|
+| 1 MB, 36 000 formatted runs, lists, quotes, code, images | 0.49 s (Qt 0.49 s) | 12 ms (Qt 10 ms) | 13 ms |
+| 3.8 MB plain text, 100 000 lines | 2.0 s (Qt 1.8 s) | 49 ms (Qt 46 ms) | 63 ms |
+| one paragraph of 200 000 characters | 0.16 s (Qt 0.13 s) | 67 ms (Qt 67 ms) | 68 ms |
+| 5 000 nested list items | 0.22 s (Qt 0.15 s) | 7.7 ms (Qt 6.5 ms) | 7.8 ms |
+
+`getContents()` shares the document instead of copying it. Undo or redo of
+a 1 000-line paste takes about 0.1 s in the 1 MB document. Each change still
+copies the document's op list once (about 2 ms per megabyte of formatted
+text), and undo/redo exports the whole document to find what changed.
+`setVerifyChanges()` / `QUILLQT_VERIFY` checks every change against a full
+export and is meant for tests only. `ci/bench.sh` runs the benchmark and
+compares it with `tools/bench/budgets.json`; `tst_scaling` checks in every
+test run that edits do not get slower with document size.
+
 ## Building and testing
 
 ```sh
@@ -223,6 +245,7 @@ ci/build.ps1, test.ps1 # Windows / MSVC equivalents
 ci/check-oracle.sh     # regenerate the OT oracle (Node, optional Dart) and fail on drift
 ci/check-flutter.sh    # flutter_quill compatibility (Flutter)
 ci/format-check.sh     # clang-format-18 (--fix to format)
+ci/bench.sh            # large-document timings against tools/bench/budgets.json (Release tree)
 build/debug/apps/demo/quill-demo --sample showcase.json
 ```
 
@@ -237,6 +260,7 @@ ci/            provider-neutral build and test scripts
 tools/oracle/  Node.js scripts that record reference behaviour into tests/fixtures
 tools/dart-oracle/    the same OT cases on dart_quill_delta
 tools/flutter-check/  flutter_quill compatibility tests (Flutter)
+tools/bench/   quill-bench: large-document timings (M11)
 .github/workflows/    CI: build/test (Debug, Release, ASan+UBSan), oracle, flutter_quill, screenshots, format
 plans/         milestone plans
 ```

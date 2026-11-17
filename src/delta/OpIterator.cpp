@@ -37,6 +37,25 @@ Op OpIterator::next(qsizetype length)
     Q_UNREACHABLE();
 }
 
+qsizetype OpIterator::skip(qsizetype length)
+{
+    qsizetype skipped = 0;
+    while (length > 0 && m_index < m_ops.size()) {
+        const qsizetype left = m_ops.at(m_index).length() - m_offset;
+        if (length >= left) {
+            skipped += left;
+            length -= left;
+            ++m_index;
+            m_offset = 0;
+        } else {
+            m_offset += length;
+            skipped += length;
+            length = 0;
+        }
+    }
+    return skipped;
+}
+
 const Op* OpIterator::peek() const
 {
     return m_index < m_ops.size() ? &m_ops.at(m_index) : nullptr;

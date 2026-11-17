@@ -132,7 +132,9 @@ Delta& Delta::push(const Op& newOp)
         }
         if (newOp.attributes() == lastOp->attributes()) {
             if (newOp.isTextInsert() && lastOp->isTextInsert()) {
-                m_ops[index - 1] = Op::insert(lastOp->text() + newOp.text(), newOp.attributes());
+                // In place: building a new string each time is quadratic
+                // for long runs of pushes (exporting plain text line by line).
+                m_ops[index - 1].appendText(newOp.text());
                 return *this;
             }
             if (newOp.isCountRetain() && lastOp->isCountRetain()) {
@@ -212,15 +214,10 @@ Delta Delta::slice(qsizetype start, qsizetype end) const
 {
     QList<Op> ops;
     OpIterator iter(m_ops);
-    qsizetype index = 0;
+    qsizetype index = start > 0 ? iter.skip(start) : 0;
     while (index < end && iter.hasNext()) {
-        Op nextOp;
-        if (index < start) {
-            nextOp = iter.next(start - index);
-        } else {
-            nextOp = iter.next(end - index);
-            ops.append(nextOp);
-        }
+        const Op nextOp = iter.next(end - index);
+        ops.append(nextOp);
         index += nextOp.length();
     }
     return Delta(std::move(ops));
@@ -368,11 +365,16 @@ Delta Delta::compose(const Delta& other) const
     QList<Op> ops;
     const Op* firstOther = otherIter.peek();
     if (firstOther && firstOther->isCountRetain() && !firstOther->hasAttributes()) {
+        // The inserts before the change are copied unchanged, in one go.
         qsizetype firstLeft = firstOther->count();
-        while (thisIter.peekType() == Op::Type::Insert && thisIter.peekLength() <= firstLeft) {
-            firstLeft -= thisIter.peekLength();
-            ops.append(thisIter.next());
+        qsizetype prefix = 0;
+        while (prefix < m_ops.size() && m_ops.at(prefix).isInsert() && m_ops.at(prefix).length() <= firstLeft) {
+            firstLeft -= m_ops.at(prefix).length();
+            ++prefix;
         }
+        ops.reserve(m_ops.size() + other.m_ops.size());
+        ops.append(m_ops.constBegin(), m_ops.constBegin() + prefix);
+        thisIter.skipOps(prefix);
         if (firstOther->count() - firstLeft > 0)
             otherIter.next(firstOther->count() - firstLeft);
     }
@@ -411,8 +413,13 @@ Delta Delta::compose(const Delta& other) const
 
                 // Optimization if rest of other is just retain
                 if (!otherIter.hasNext() && delta.m_ops.back() == newOp) {
-                    const Delta rest(thisIter.rest());
-                    return delta.concat(rest).chop();
+                    // Copy the rest unchanged, in place (concat() would copy
+                    // everything again).
+                    if (thisIter.hasNext()) {
+                        delta.push(thisIter.next());
+                        delta.m_ops.append(m_ops.constBegin() + thisIter.index(), m_ops.constEnd());
+                    }
+                    return delta.chop();
                 }
                 // Other op should be delete, we could be an insert or retain
                 // Insert + delete cancels out

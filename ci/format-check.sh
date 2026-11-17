@@ -8,7 +8,7 @@ CF="${CLANG_FORMAT:-$(command -v clang-format-18 || command -v clang-format || t
 "$CF" --version
 cd "$ROOT"
 mapfile -t files < <(git ls-files --cached --others --exclude-standard -- \
-    'src/*.cpp' 'src/*.h' 'apps/*.cpp' 'apps/*.h' 'tests/*.cpp' 'tests/*.h')
+    'src/*.cpp' 'src/*.h' 'apps/*.cpp' 'apps/*.h' 'tests/*.cpp' 'tests/*.h' 'tools/bench/*.cpp' 'tools/bench/*.h')
 if [ "${1:-}" = "--fix" ]; then
     "$CF" -i --style=file "${files[@]}"
 else

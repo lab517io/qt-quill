@@ -207,7 +207,9 @@ Delta QuillEditorPrivate::modify(Source src, const std::function<Delta()>& fn)
     for (qsizetype i = logStart; i < log.size(); ++i)
         tracked = tracked.compose(log.at(i));
     Delta change = tracked;
-    if (!input.isEmpty()) {
+    if (log.size() - logStart == 1 && log.at(logStart) == input) {
+        change = input; // applied exactly as given (see apply())
+    } else if (!input.isEmpty()) {
         try {
             if (old.compose(input) == contents)
                 change = input;
@@ -233,10 +235,12 @@ void QuillEditorPrivate::apply(const Delta& change)
     // is the target apply() computed.
     const Delta old = contents;
     Delta target;
+    bool exact = false;
     suppress = true;
     try {
-        target = DeltaDocument::apply(q->document(), contents, change);
+        target = detail::applyChange(q->document(), contents, change, &exact);
     } catch (const DeltaError& e) {
+        exact = false;
         qWarning("quill: cannot apply change: %s", e.what());
         target = DeltaDocument::toDelta(q->document());
     }
@@ -248,17 +252,24 @@ void QuillEditorPrivate::apply(const Delta& change)
             qWarning("quill: applied change does not export as expected\n  change: %s\n  expected: %s\n  actual: %s",
                      change.toJson().constData(), target.toJson().constData(), actual.toJson().constData());
             target = actual;
+            exact = false;
         }
         verifySpacing("apply");
     }
     if (target == old)
         return;
     contents = target;
+    // The change as given, when it is what was applied (known without
+    // composing the whole document again when it needed no normalisation).
     Delta applied;
-    try {
-        if (old.compose(change) == target)
-            applied = change;
-    } catch (const DeltaError&) {
+    if (exact) {
+        applied = change;
+    } else {
+        try {
+            if (old.compose(change) == target)
+                applied = change;
+        } catch (const DeltaError&) {
+        }
     }
     log.append(applied.isEmpty() ? old.diff(target) : applied);
 }
@@ -364,6 +375,12 @@ void QuillEditorPrivate::onContentsChange(int pos, int removed, int added)
 
 void QuillEditorPrivate::verifySpacing(const char* where)
 {
+    const int ungrouped = detail::staleListGrouping(q->document(), docStyle());
+    if (ungrouped >= 0) {
+        ++failures;
+        qWarning("quill: line %d is in the wrong list after %s", ungrouped, where);
+        DeltaDocument::regroupLists(q->document()->firstBlock(), q->document()->lastBlock(), docStyle());
+    }
     const int stale = detail::staleBlockSpacing(q->document(), docStyle());
     if (stale >= 0) {
         ++failures;
@@ -536,6 +553,8 @@ QuillEditor::~QuillEditor()
 Delta QuillEditor::getContents(int index, int length) const
 {
     index = std::max(index, 0);
+    if (index == 0 && length >= d->contents.length())
+        return d->contents; // shared, not copied
     return d->contents.slice(index, index + qsizetype(std::max(length, 0)));
 }
 

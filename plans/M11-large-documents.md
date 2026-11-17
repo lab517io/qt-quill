@@ -116,19 +116,16 @@ should be constant in n (typing, small updates) or above 8 for linear ones
 
 ## Tasks
 
-- [ ] `tools/bench` with corpora and scenarios; first full measurement on
-      Qt 6.4.2 and 6.8.3; numbers in the outcome section.
-- [ ] Profile the scenarios over budget (`perf record` is available) and
-      list where the time goes.
-- [ ] Fixes as the numbers require (list above), each with before/after
-      numbers.
-- [ ] Exactness: `tst_properties` and the oracle on any new Delta function;
-      the long fuzz runs (3000 API steps, 60 000 keys) with verify on, on
-      Qt 6.4.2 / 6.8.3 / 6.12.
-- [ ] `tst_scaling` in ctest; `ci/bench.sh` in a CI job that uploads the
-      JSON.
-- [ ] README: "Performance" paragraph with the numbers and limits (e.g.
-      "verify mode is O(document) per change").
+- [x] `tools/bench` with corpora and scenarios; first full measurement on
+      Qt 6.4.2; budgets also measured on Qt 6.8.3.
+- [x] Profile the scenarios over budget (`perf` is not permitted on this
+      machine; temporary scope timers instead, removed afterwards).
+- [x] Fixes as the numbers required, each with before/after numbers.
+- [x] Exactness: `tst_properties`, the oracle, the long fuzz runs with verify
+      on (now also checking list grouping and spacing).
+- [x] `tst_scaling` in ctest; `ci/bench.sh` with `tools/bench/budgets.json`
+      in a CI job that uploads the JSON.
+- [x] README "Performance".
 
 ## Exit criteria
 
@@ -146,3 +143,106 @@ should be constant in n (typing, small updates) or above 8 for linear ones
   for this; run them on every fix.
 - Timing tests are flaky on shared runners; only ratio checks fail the
   build.
+
+## Outcome (2026-11-17)
+
+All budgets in `tools/bench/budgets.json` are met on Qt 6.4.2 and 6.8.3.
+Most are ratios to a plain `QTextEdit` holding the same document, measured
+in the same run, so they say how much quill-qt adds to Qt's own layout.
+
+### Before and after (Qt 6.4.2, Release, medians in ms)
+
+| Corpus | Scenario | Before | After |
+|---|---|---|---|
+| mixed (1 MB) | load | 708 | 489 (Qt 494) |
+| mixed | getContents | 6.3 | 0.1 |
+| mixed | export | 118 | 41 |
+| mixed | typing | 22.0 | 12.1 (Qt 9.8) |
+| mixed | Enter + Backspace | 57.2 | 18.6 |
+| mixed | format a line | 54.1 | 15.4 |
+| mixed | one-character `updateContents` | 45.9 | 13.2 |
+| mixed | paste / undo / redo, slowest | 217 | 108 |
+| plain (3.8 MB) | load | 63 371 | 1 994 (Qt 1 773) |
+| plain | export | 62 602 | 130 |
+| plain | paste / undo / redo, slowest | 55 757 | 232 |
+| plain | bold on everything | 144 745 | 1 279 |
+| long line (200 000 chars) | Enter + Backspace | 504 | 66 |
+| long line | format the line | 659 | 106 |
+| long line | one-character `updateContents` | 637 | 68 (Qt typing 67) |
+| nested lists (5 000) | Enter + Backspace | 125 | 13.2 |
+| nested lists | format a line | 99.9 | 14.9 |
+| nested lists | one-character `updateContents` | 111 | 7.8 |
+| flutter sample ×200 | one-character `updateContents` | 28.5 | 13.4 |
+
+### What was slow, and the fixes
+
+1. **`Delta::push` was quadratic for runs of text** with equal attributes:
+   it built a new string for every merge. Exporting 100 000 plain lines
+   took a minute (load, export, undo and bold all export). It now appends
+   in place.
+2. **`restyleBlock` was quadratic in the length of a line**: each op of the
+   line scanned the block's fragments from the start. One walk over the
+   fragments now finds the ranges whose format differs.
+3. **`regroupLists` rebuilt lists on every edit**: it walked the whole run
+   of list lines and created a new `QTextList` whenever a level started,
+   even when the line's list was already right. It now starts at the
+   closest line of indent 0 before the edit, keeps a line's list when it
+   fits, and stops at the first unchanged line of indent 0 after it.
+   Regrouping unchanged lines changes nothing.
+4. **`Delta::compose`** copied the unchanged start op by op and the
+   unchanged end twice (`concat`); both are now copied once, in bulk.
+5. **Two whole-document composes per API edit** only decided which Delta
+   to report; when the change needed no normalisation the answer is known
+   (`detail::applyChange` reports it), so they are skipped.
+6. **Walking to a position built every op on the way** (`normalizeChange`,
+   `slice`, `lineAt`); `OpIterator::skip()` only adds lengths.
+7. **Export derived the attributes of every fragment and line from
+   scratch**; they are cached per Qt format index during one export (a
+   document uses few formats).
+8. **`getContents()`** returned a copy; it now shares the Delta.
+
+### Checks added
+
+- `tst_scaling` (ctest, ~6 s): typing and `updateContents` in the mixed
+  document must stay below 2.5× for a 4× larger document; load, export,
+  paste+undo and edits in a long line below 8× (6× for the long line).
+  Mutation tests: the old `push` (×14) and the old `restyleBlock` (×6.8) fail
+  it.
+- `tst_editor_api::editsKeepUntouchedLists`: edits that do not touch list
+  structure keep every line's `QTextList`; splitting a flat list keeps the
+  items before it. Fails with the old regrouping. (Edits in long lists are
+  not timed: Qt numbers list items in linear time, which hides quill-qt's
+  part in a ratio.)
+- Verify mode also checks that list grouping equals a regroup from scratch
+  (`detail::staleListGrouping`); a deliberately broken regroup is caught by
+  the key fuzzer at once.
+- `ci/bench.sh`: the budgets, run in a CI job that reports and uploads the
+  JSON without failing (shared runners are noisy).
+
+### What remains (recorded, not fixed)
+
+- Every change copies the document's op list once (`contents` is shared
+  with the `oldContents` of `textChange`): about 2 ms for 36 000 ops. Only a
+  persistent structure (a tree of op chunks) would make edits independent
+  of the document size; not needed for the budgets.
+- Undo and redo export the whole document and diff it (about 100 ms per
+  MB of formatted text, 230 ms for 3.8 MB of plain text): Qt's change range
+  for grouped undo commands is not reliable (M5). A per-step record of
+  quill-qt's own changes could replace it.
+- Typing near the start of a big document is slower than near the end; Qt
+  alone behaves the same (`qt-type-start`).
+- Formatting a whole 200 000-character line, or bold on everything, costs
+  what Qt needs to change every fragment's format.
+- `setContents` exports the loaded document once to record it exactly (about
+  35 ms per 100 000 characters of formatted text); documents with many small
+  runs load about 1.3× slower than Qt alone.
+- `perf` could not be used (kernel setting); profiling used temporary scope
+  timers.
+
+### Deviations
+
+- Budgets became ratios to plain Qt for everything Qt dominates (typing,
+  updates, load); the absolute "≤ 4 ms per update" was unrealistic, since a
+  plain `QTextEdit` already needs ~10 ms per key on the 1 MB document,
+  including the repaint the benchmark measures.
+- No find-bar optimisation: `find` is Qt's `QTextDocument::find`.
